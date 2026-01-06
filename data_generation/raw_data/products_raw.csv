@@ -1,0 +1,51 @@
+product_id,product_name,brand,category,selling_price,cost_price,status,promotion_type,bogo_flag,discount_percentage,promotion_start_date,promotion_end_date,discontinuation_date,stock_quantity
+PROD001,Classic CP Dumplings,CP,Frozen Food,7.91,5.7,Active,Buy One Get One,True,,2024-08-21,2024-08-25,,216
+PROD002,Classic Coca-Cola Cola,Coca-Cola,Beverages,2.63,1.53,Active,,False,,,,,279
+PROD003,Deluxe Vanish Wipes,Vanish,Cleaning Supplies,20.62,10.35,Active,,False,,,,,174
+PROD004,Deluxe Huggies Wipes,Huggies,Baby Products,10.62,6.72,Active,,False,,,,,135
+PROD005,Premium Nestle Soda,Nestle,Beverages,7.81,4.01,Active,,False,,,,,185
+PROD006,Premium Nike Dumbbells,Nike,"Lifestyle & Recreation (Fitness, Toys, Travel)",332.33,276.47,Discontinued,Buy One Get One,True,,2024-01-10,2024-01-14,2024-04-19,194
+PROD007,Classic Johnson's Powder,Johnson's,Baby Products,25.36,14.54,Active,Discounted,False,7.0,2024-03-22,2024-04-03,,87
+PROD008,Extra Lock&Lock Food Containers,Lock&Lock,"Home & Living (Kitchenware, Storage, Bedding)",116.94,104.88,Active,,False,,,,,166
+PROD009,Deluxe Pepsi Cola,Pepsi,Beverages,3.81,1.6,Active,,False,,,,,161
+PROD010,Extra Premier Soap Refills,Premier,Household Essentials,6.0,3.25,Active,,False,,,,,299
+PROD011,Classic Clorox Scrub Brush,Clorox,Cleaning Supplies,24.94,13.5,Active,,False,,,,,56
+PROD012,Premium Sunkist Tomatoes,Sunkist,Fresh Produce,2.23,1.07,Active,,False,,,,,283
+PROD013,Deluxe Nature Valley Chips,Nature Valley,Snacks,7.8,3.92,Active,,False,,,,,1
+PROD014,Premium Huggies Formula,Huggies,Baby Products,52.88,31.96,Active,,False,,,,,78
+PROD015,Premium Sadia Salmon,Sadia,Meat & Seafood,31.95,19.88,Active,,False,,,,,157
+PROD016,Premium Colgate Lotion,Colgate,Health & Beauty,7.03,4.71,Active,,False,,,,,64
+PROD017,Classic Local Farm Spinach,Local Farm,Fresh Produce,1.69,0.95,Active,,False,,,,,276
+PROD018,Deluxe Hada Soap Refills,Hada,Household Essentials,14.27,9.35,Active,,False,,,,,173
+PROD019,Classic Ritz Nuts,Ritz,Snacks,6.09,2.45,Active,,False,,,,,34
+PROD020,Classic Heaven & Earth Cola,Heaven & Earth,Beverages,2.95,1.61,Active,,False,,,,,292
+PROD021,Extra Samsonite Yoga Mat,Samsonite,"Lifestyle & Recreation (Fitness, Toys, Travel)",404.71,265.94,Active,,False,,,,,216
+PROD022,Premium Clorox Bleach,Clorox,Cleaning Supplies,3.39,2.44,Active,,False,,,,,98
+PROD023,Extra Premier Trash Bags,Premier,Household Essentials,7.14,4.56,Active,,False,,,,,281
+PROD024,Premium CP Ice Cream,CP,Frozen Food,24.32,18.92,Active,,False,,,,,248
+PROD025,Premium Quaker Muesli,Quaker,Breakfast Foods,6.62,3.31,Active,Discounted,False,19.0,2024-09-25,2024-10-02,,216
+PROD026,Classic Zojirushi Food Containers,Zojirushi,"Home & Living (Kitchenware, Storage, Bedding)",92.53,82.41,Active,,False,,,,,160
+PROD027,Extra Coca-Cola Soda,Coca-Cola,Beverages,4.52,2.96,Active,Discounted,False,7.0,2024-09-03,2024-09-08,,35
+PROD028,Premium Marigold Yogurt,Marigold,Dairy & Eggs,14.24,9.55,Active,,False,,,,,41
+PROD029,Classic Ajax Scrub Brush,Ajax,Cleaning Supplies,17.4,10.34,Active,,False,,,,,153
+PROD030,Premium Maggi Rice,Maggi,Rice & Noodles,7.69,6.15,Discontinued,,False,,,,2024-11-21,109
+PROD031,Deluxe Samsung Blender,Samsung,Electronics & Appliances,883.25,812.43,Active,,False,,,,,278
+PROD032,Deluxe Ayam Brand Soup,Ayam Brand,Canned Goods,9.39,4.1,Active,,False,,,,,54
+PROD033,Deluxe Lock&Lock Bedsheets,Lock&Lock,"Home & Living (Kitchenware, Storage, Bedding)",183.42,149.54,Active,,False,,,,,135
+PROD034,Premium Panasonic Air Fryer,Panasonic,Electronics & Appliances,110.45,89.01,Active,,False,,,,,66
+PROD035,Extra Huggies Cream,Huggies,Baby Products,35.85,19.33,Active,,False,,,,,76
+PROD036,Classic IKEA Bedsheets,IKEA,"Home & Living (Kitchenware, Storage, Bedding)",131.79,80.73,Active,Discounted,False,6.0,2024-02-01,2024-02-09,,107
+PROD037,Extra Colgate Shampoo,Colgate,Health & Beauty,48.77,37.18,Active,,False,,,,,83
+PROD038,Classic San Remo Cooking Oil,San Remo,Pantry Staples,14.99,8.99,Active,,False,,,,,127
+PROD039,Extra Huggies Diapers,Huggies,Baby Products,52.97,42.4,Active,,False,,,,,235
+PROD040,Classic Ocean Fresh Beef,Ocean Fresh,Meat & Seafood,6.06,3.32,Active,Buy One Get One,True,,2024-06-03,2024-06-10,,179
+PROD041,Deluxe Panasonic Vacuum Cleaner,Panasonic,Electronics & Appliances,940.45,685.43,Discontinued,,False,,,,2024-01-11,135
+PROD042,Extra Coca-Cola Soda,Coca-Cola,Beverages,3.42,2.17,Active,Discounted,False,8.0,2024-03-20,2024-03-29,,295
+PROD043,Extra Hada Toilet Paper,Hada,Household Essentials,2.05,1.59,Active,,False,,,,,100
+PROD044,Deluxe Farmhouse Chicken,Farmhouse,Meat & Seafood,33.04,22.0,Active,Discounted,False,14.0,2024-07-03,2024-07-16,,209
+PROD045,Classic Dettol Razors,Dettol,Personal Care,10.1,7.4,Active,,False,,,,,89
+PROD046,Premium Adidas Suitcase,Adidas,"Lifestyle & Recreation (Fitness, Toys, Travel)",155.42,103.05,Active,,False,,,,,164
+PROD047,Classic Koka Vermicelli,Koka,Rice & Noodles,8.4,6.2,Discontinued,,False,,,,2024-01-10,43
+PROD048,Classic Del Monte Tomatoes,Del Monte,Canned Goods,7.06,3.38,Active,,False,,,,,125
+PROD049,Extra Kellogg's Muesli,Kellogg's,Breakfast Foods,22.5,15.14,Active,,False,,,,,204
+PROD050,Premium Dove Toothpaste,Dove,Health & Beauty,39.59,22.83,Active,,False,,,,,237

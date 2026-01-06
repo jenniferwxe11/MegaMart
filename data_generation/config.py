@@ -1,5 +1,7 @@
 NUM_CUSTOMERS = 100
 NUM_PHYSICAL_STORES = 5
+NUM_PRODUCTS = 50
+
 
 MONTH_WEIGHTS_2024 = {
     1: 0.5,
@@ -15,6 +17,7 @@ MONTH_WEIGHTS_2024 = {
     11: 1.8,  # 11.11
     12: 2.0,  # 12.12 + Christmas
 }
+
 
 TARGET_SEGMENT = {
     "New Customers": 0.2,
@@ -77,4 +80,169 @@ MALL_TO_AREA = {
     "Marine Parade Central": "Marine Parade",
     "The Grandstand": "Bukit Timah",
     "Hillion Mall": "Bukit Panjang",
+}
+
+
+CATEGORIES = [
+    "Snacks",
+    "Beverages",
+    "Dairy & Eggs",
+    "Frozen Food",
+    "Fresh Produce",
+    "Pantry Staples",
+    "Household Essentials",
+    "Health & Beauty",
+    "Baby Products",
+    "Canned Goods",
+    "Personal Care",
+    "Meat & Seafood",
+    "Bakery",
+    "Cleaning Supplies",
+    "Rice & Noodles",
+    "Breakfast Foods",
+    "Electronics & Appliances",
+    "Home & Living (Kitchenware, Storage, Bedding)",
+    "Lifestyle & Recreation (Fitness, Toys, Travel)",
+]
+
+
+BRANDS = {
+    "Snacks": ["Lays", "Pringles", "Oreo", "Jack n Jill", "Ritz", "Nature Valley"],
+    "Beverages": ["Coca-Cola", "Pepsi", "Heaven & Earth", "Nestle", "Pokka"],
+    "Dairy & Eggs": ["Farmhouse", "Marigold", "Meiji", "Nestlé", "SCS"],
+    "Frozen Food": ["CP", "McCain", "Farmpride", "First Pride"],
+    "Fresh Produce": ["Dole", "Sunkist", "Zespri", "Local Farm"],
+    "Pantry Staples": ["Knife", "Lee Kum Kee", "Ayam Brand", "San Remo", "FairPrice"],
+    "Household Essentials": ["Kleenex", "FairPrice", "Hada", "Premier"],
+    "Health & Beauty": ["Colgate", "Dove", "Nivea", "L'Oreal", "Sensodyne"],
+    "Baby Products": ["Pampers", "Huggies", "MamyPoko", "Johnson's"],
+    "Canned Goods": ["Ayam Brand", "Campbell's", "Del Monte", "Heinz"],
+    "Personal Care": [
+        "Gillette",
+        "Schick",
+        "Lifebuoy",
+        "Dettol",
+        "Pantene",
+        "Head & Shoulders",
+    ],
+    "Meat & Seafood": ["Ben's Farm", "Sadia", "Ocean Fresh", "Farmhouse"],
+    "Bakery": ["Gardenia", "Sunshine", "Bimbo"],
+    "Cleaning Supplies": ["Mr Muscle", "Vanish", "Ajax", "Clorox"],
+    "Rice & Noodles": ["Royal Umbrella", "SongHe", "Maggi", "Koka"],
+    "Breakfast Foods": ["Kellogg's", "Quaker", "Post", "Nestlé"],
+    "Electronics & Appliances": [
+        "Philips",
+        "Xiaomi",
+        "Samsung",
+        "Panasonic",
+        "Dyson",
+    ],
+    "Home & Living (Kitchenware, Storage, Bedding)": [
+        "IKEA",
+        "Lock&Lock",
+        "Tefal",
+        "Zojirushi",
+        "HomeBasics",
+    ],
+    "Lifestyle & Recreation (Fitness, Toys, Travel)": [
+        "Decathlon",
+        "Nike",
+        "Adidas",
+        "Samsonite",
+        "LEGO",
+    ],
+}
+
+
+CATEGORY_ITEMS = {
+    "Snacks": ["Chips", "Biscuits", "Bars", "Cookies", "Nuts"],
+    "Beverages": ["Cola", "Juice", "Tea", "Coffee", "Soda", "Energy Drinks"],
+    "Dairy & Eggs": ["Milk", "Cheese", "Butter", "Yogurt", "Cream", "Eggs"],
+    "Frozen Food": ["Pizza", "Fries", "Dumplings", "Frozen Veggies", "Ice Cream"],
+    "Fresh Produce": ["Apples", "Bananas", "Carrots", "Tomatoes", "Spinach"],
+    "Pantry Staples": ["Cooking Oil", "Salt", "Sugar", "Flour", "Sauces", "Seasoning"],
+    "Household Essentials": [
+        "Toilet Paper",
+        "Trash Bags",
+        "Detergent Pods",
+        "Soap Refills",
+    ],
+    "Health & Beauty": ["Toothpaste", "Lotion", "Shampoo", "Conditioner", "Body Wash"],
+    "Baby Products": ["Diapers", "Wipes", "Powder", "Cream", "Formula"],
+    "Canned Goods": ["Tomatoes", "Corn", "Beans", "Tuna", "Soup"],
+    "Personal Care": ["Deodorant", "Shaving Foam", "Razors", "Hand Sanitizer"],
+    "Meat & Seafood": ["Chicken", "Beef", "Fish", "Prawns", "Salmon", "Bacon"],
+    "Bakery": ["Bread", "Cake", "Buns", "Croissant", "Muffin"],
+    "Cleaning Supplies": ["Bleach", "All-purpose Spray", "Scrub Brush", "Wipes"],
+    "Rice & Noodles": ["Rice", "Pasta", "Noodles", "Vermicelli", "Spaghetti"],
+    "Breakfast Foods": ["Cereal", "Oats", "Granola", "Muesli", "Porridge"],
+    "Electronics & Appliances": [
+        "Headphones",
+        "Blender",
+        "Air Fryer",
+        "Smartwatch",
+        "Vacuum Cleaner",
+    ],
+    "Home & Living (Kitchenware, Storage, Bedding)": [
+        "Cookware",
+        "Food Containers",
+        "Bedsheets",
+        "Pillows",
+        "Storage Boxes",
+    ],
+    "Lifestyle & Recreation (Fitness, Toys, Travel)": [
+        "Dumbbells",
+        "Yoga Mat",
+        "Board Games",
+        "Suitcase",
+        "Sports Bottle",
+    ],
+}
+
+
+# Approximate price ranges per category
+CATEGORY_PRICE_RANGES = {
+    "Snacks": (0.5, 10.0),
+    "Beverages": (1.0, 8.0),
+    "Dairy & Eggs": (2.0, 15.0),
+    "Frozen Food": (3.0, 25.0),
+    "Fresh Produce": (0.5, 5.0),
+    "Pantry Staples": (1.0, 20.0),
+    "Household Essentials": (2.0, 30.0),
+    "Health & Beauty": (3.0, 50.0),
+    "Baby Products": (5.0, 60.0),
+    "Canned Goods": (1.0, 10.0),
+    "Personal Care": (3.0, 40.0),
+    "Meat & Seafood": (5.0, 50.0),
+    "Bakery": (1.0, 15.0),
+    "Cleaning Supplies": (2.0, 25.0),
+    "Rice & Noodles": (1.5, 15.0),
+    "Breakfast Foods": (3.0, 25.0),
+    "Electronics & Appliances": (20.0, 1000.0),
+    "Home & Living (Kitchenware, Storage, Bedding)": (5.0, 300.0),
+    "Lifestyle & Recreation (Fitness, Toys, Travel)": (5.0, 500.0),
+}
+
+
+# Cost price as % of selling price:
+CATEGORY_COST_MARGIN = {
+    "Snacks": (0.4, 0.7),
+    "Beverages": (0.4, 0.7),
+    "Dairy & Eggs": (0.5, 0.8),
+    "Frozen Food": (0.5, 0.8),
+    "Fresh Produce": (0.3, 0.6),
+    "Pantry Staples": (0.5, 0.8),
+    "Household Essentials": (0.5, 0.8),
+    "Health & Beauty": (0.5, 0.85),
+    "Baby Products": (0.5, 0.85),
+    "Canned Goods": (0.4, 0.75),
+    "Personal Care": (0.5, 0.85),
+    "Meat & Seafood": (0.5, 0.75),
+    "Bakery": (0.4, 0.7),
+    "Cleaning Supplies": (0.5, 0.8),
+    "Rice & Noodles": (0.5, 0.8),
+    "Breakfast Foods": (0.5, 0.8),
+    "Electronics & Appliances": (0.7, 0.95),
+    "Home & Living (Kitchenware, Storage, Bedding)": (0.6, 0.9),
+    "Lifestyle & Recreation (Fitness, Toys, Travel)": (0.6, 0.9),
 }
