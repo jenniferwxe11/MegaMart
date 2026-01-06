@@ -1,0 +1,7 @@
+store_id,store_name,area,region,store_type
+STOR001,MegaMart Junction 8,Bishan,Central,Physical Store
+STOR002,MegaMart JEM,Jurong East,West,Physical Store
+STOR003,MegaMart The Grandstand,Bukit Timah,Central,Physical Store
+STOR004,MegaMart Hillion Mall,Bukit Panjang,West,Physical Store
+STOR005,MegaMart Blk 189 Clementi Street,Clementi,West,Physical Store
+STOR006,MegaMart Online,Nationwide,Nationwide,Online Website
