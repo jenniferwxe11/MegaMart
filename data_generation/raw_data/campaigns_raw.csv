@@ -1,0 +1,201 @@
+campaign_id,name,campaign_type,target_segment,category,channel,offer_type,discount_percentage,discount_code,free_shipping,start_date,end_date,budget,is_ab_test,kpi_conversion_uplift_target,kpi_revenue_uplift_target,kpi_engagement_target
+CAMP001,MegaMart CNY Beverages Deals,seasonal,New Customers,Beverages,Email,Discount on Category,9.0,CNYBEV9,False,2024-02-10 00:00:00,2024-02-17 00:00:00,48800,True,0.061,0.223,0.281
+CAMP002,MegaMart CNY Beverages Deals,seasonal,Active Customers,Beverages,SMS,Discount on Category,5.0,CNYBEV5,False,2024-02-10 00:00:00,2024-02-17 00:00:00,6600,True,0.027,0.05,0.064
+CAMP003,MegaMart CNY Beverages Deals,seasonal,Churn Risk Customers,Beverages,Email,Discount on Category,27.0,CNYBEV27,False,2024-02-10 00:00:00,2024-02-17 00:00:00,36200,False,0.078,0.131,0.173
+CAMP004,MegaMart CNY Beverages Deals,seasonal,High Spenders,Beverages,Email,Discount on Category,27.0,CNYBEV27,False,2024-02-10 00:00:00,2024-02-17 00:00:00,28200,True,0.06,0.076,0.241
+CAMP005,MegaMart CNY Beverages Deals,seasonal,Budget Shoppers,Beverages,Push Notifications,Discount on Category,17.0,CNYBEV17,False,2024-02-10 00:00:00,2024-02-17 00:00:00,6800,True,0.03,0.046,0.073
+CAMP006,MegaMart CNY Lifestyle & Recreation Sale,seasonal,New Customers,Lifestyle & Recreation,SMS,Discount on Category,17.0,CNYL&R17,False,2024-02-10 00:00:00,2024-02-17 00:00:00,5700,False,0.031,0.055,0.079
+CAMP007,MegaMart CNY Lifestyle & Recreation Sale,seasonal,Active Customers,Lifestyle & Recreation,Email,Discount on Category,11.0,CNYL&R11,False,2024-02-10 00:00:00,2024-02-17 00:00:00,46700,False,0.056,0.2,0.324
+CAMP008,MegaMart CNY Lifestyle & Recreation Sale,seasonal,Churn Risk Customers,Lifestyle & Recreation,Email,Discount on Category,8.0,CNYL&R8,False,2024-02-10 00:00:00,2024-02-17 00:00:00,25400,True,0.052,0.12,0.147
+CAMP009,MegaMart CNY Lifestyle & Recreation Sale,seasonal,High Spenders,Lifestyle & Recreation,SMS,Discount on Category,26.0,CNYL&R26,False,2024-02-10 00:00:00,2024-02-17 00:00:00,18000,True,0.061,0.097,0.092
+CAMP010,MegaMart CNY Lifestyle & Recreation Sale,seasonal,Budget Shoppers,Lifestyle & Recreation,SMS,Discount on Category,28.0,CNYL&R28,False,2024-02-10 00:00:00,2024-02-17 00:00:00,16500,True,0.036,0.072,0.165
+CAMP011,MegaMart CNY Frozen Food Deals,seasonal,New Customers,Frozen Food,Push Notifications,Discount on Category,26.0,CNYFROZEN26,False,2024-02-10 00:00:00,2024-02-17 00:00:00,21800,True,0.077,0.119,0.119
+CAMP012,MegaMart CNY Frozen Food Deals,seasonal,Active Customers,Frozen Food,Email,Discount on Category,17.0,CNYFROZEN17,False,2024-02-10 00:00:00,2024-02-17 00:00:00,18000,True,0.034,0.114,0.137
+CAMP013,MegaMart CNY Frozen Food Deals,seasonal,Churn Risk Customers,Frozen Food,Email,Discount on Category,25.0,CNYFROZEN25,False,2024-02-10 00:00:00,2024-02-17 00:00:00,33200,True,0.071,0.185,0.193
+CAMP014,MegaMart CNY Frozen Food Deals,seasonal,High Spenders,Frozen Food,Push Notifications,Discount on Category,28.0,CNYFROZEN28,False,2024-02-10 00:00:00,2024-02-17 00:00:00,37300,True,0.091,0.179,0.205
+CAMP015,MegaMart CNY Frozen Food Deals,seasonal,Budget Shoppers,Frozen Food,SMS,Discount on Category,12.0,CNYFROZEN12,False,2024-02-10 00:00:00,2024-02-17 00:00:00,9600,True,0.037,0.043,0.071
+CAMP016,MegaMart CNY Deals,seasonal,New Customers,,SMS,Free Shipping,,FREESHIPPING,True,2024-02-10 00:00:00,2024-02-17 00:00:00,45100,False,0.093,0.087,0.226
+CAMP017,MegaMart CNY Offer,seasonal,Churn Risk Customers,,SMS,Free Shipping,,FREESHIPPING,True,2024-02-10 00:00:00,2024-02-17 00:00:00,36800,True,0.118,0.068,0.256
+CAMP018,MegaMart CNY Offer,seasonal,Budget Shoppers,,SMS,Free Shipping,,FREESHIPPING,True,2024-02-10 00:00:00,2024-02-17 00:00:00,42500,True,0.08,0.122,0.169
+CAMP019,MegaMart CNY Offer,seasonal,Active Customers,,SMS,Discount on Cart,21.0,CNYSAVE21,False,2024-02-10 00:00:00,2024-02-17 00:00:00,12200,False,0.042,0.047,0.113
+CAMP020,MegaMart CNY Deals,seasonal,High Spenders,,Email,Discount on Cart,9.0,CNYSAVE9,False,2024-02-10 00:00:00,2024-02-17 00:00:00,25000,True,0.081,0.109,0.197
+CAMP021,MegaMart Christmas Electronics & Appliances Deals,seasonal,New Customers,Electronics & Appliances,Email,Discount on Category,6.0,XMASELEC6,False,2024-12-22 00:00:00,2024-12-28 00:00:00,16300,True,0.064,0.108,0.09
+CAMP022,MegaMart Christmas Electronics & Appliances Deals,seasonal,Active Customers,Electronics & Appliances,Push Notifications,Discount on Category,29.0,XMASELEC29,False,2024-12-22 00:00:00,2024-12-28 00:00:00,35400,True,0.106,0.084,0.205
+CAMP023,MegaMart Christmas Electronics & Appliances Deals,seasonal,Churn Risk Customers,Electronics & Appliances,Email,Discount on Category,21.0,XMASELEC21,False,2024-12-22 00:00:00,2024-12-28 00:00:00,40300,True,0.085,0.104,0.239
+CAMP024,MegaMart Christmas Electronics & Appliances Deals,seasonal,High Spenders,Electronics & Appliances,Push Notifications,Discount on Category,27.0,XMASELEC27,False,2024-12-22 00:00:00,2024-12-28 00:00:00,20900,False,0.053,0.107,0.131
+CAMP025,MegaMart Christmas Electronics & Appliances Deals,seasonal,Budget Shoppers,Electronics & Appliances,Email,Discount on Category,8.0,XMASELEC8,False,2024-12-22 00:00:00,2024-12-28 00:00:00,16700,True,0.039,0.069,0.133
+CAMP026,MegaMart Christmas Bakery Sale,seasonal,New Customers,Bakery,Email,Discount on Category,7.0,XMASBAKE7,False,2024-12-22 00:00:00,2024-12-28 00:00:00,46900,False,0.119,0.12,0.356
+CAMP027,MegaMart Christmas Bakery Sale,seasonal,Active Customers,Bakery,SMS,Discount on Category,21.0,XMASBAKE21,False,2024-12-22 00:00:00,2024-12-28 00:00:00,16100,True,0.04,0.077,0.126
+CAMP028,MegaMart Christmas Bakery Sale,seasonal,Churn Risk Customers,Bakery,SMS,Discount on Category,23.0,XMASBAKE23,False,2024-12-22 00:00:00,2024-12-28 00:00:00,31500,True,0.057,0.121,0.177
+CAMP029,MegaMart Christmas Bakery Sale,seasonal,High Spenders,Bakery,SMS,Discount on Category,18.0,XMASBAKE18,False,2024-12-22 00:00:00,2024-12-28 00:00:00,23700,True,0.058,0.098,0.184
+CAMP030,MegaMart Christmas Bakery Sale,seasonal,Budget Shoppers,Bakery,Email,Discount on Category,8.0,XMASBAKE8,False,2024-12-22 00:00:00,2024-12-28 00:00:00,4500,True,0.027,0.041,0.078
+CAMP031,"MegaMart Christmas Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,New Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",SMS,Discount on Category,9.0,XMASL&R9,False,2024-12-22 00:00:00,2024-12-28 00:00:00,28100,True,0.049,0.11,0.229
+CAMP032,"MegaMart Christmas Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,Active Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Email,Discount on Category,8.0,XMASL&R8,False,2024-12-22 00:00:00,2024-12-28 00:00:00,3800,True,0.028,0.042,0.058
+CAMP033,"MegaMart Christmas Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,Churn Risk Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,10.0,XMASL&R10,False,2024-12-22 00:00:00,2024-12-28 00:00:00,27100,True,0.068,0.08,0.159
+CAMP034,"MegaMart Christmas Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,High Spenders,"Lifestyle & Recreation (Fitness, Toys, Travel)",SMS,Discount on Category,5.0,XMASL&R5,False,2024-12-22 00:00:00,2024-12-28 00:00:00,26100,True,0.052,0.138,0.162
+CAMP035,"MegaMart Christmas Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,Budget Shoppers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Email,Discount on Category,30.0,XMASL&R30,False,2024-12-22 00:00:00,2024-12-28 00:00:00,36900,True,0.101,0.139,0.159
+CAMP036,MegaMart Christmas Beverages Sale,seasonal,New Customers,Beverages,Email,Discount on Category,28.0,XMASBEV28,False,2024-12-22 00:00:00,2024-12-28 00:00:00,21100,False,0.036,0.1,0.145
+CAMP037,MegaMart Christmas Beverages Sale,seasonal,Active Customers,Beverages,Email,Discount on Category,6.0,XMASBEV6,False,2024-12-22 00:00:00,2024-12-28 00:00:00,33800,True,0.047,0.089,0.218
+CAMP038,MegaMart Christmas Beverages Sale,seasonal,Churn Risk Customers,Beverages,Email,Discount on Category,17.0,XMASBEV17,False,2024-12-22 00:00:00,2024-12-28 00:00:00,8400,True,0.044,0.058,0.091
+CAMP039,MegaMart Christmas Beverages Sale,seasonal,High Spenders,Beverages,SMS,Discount on Category,18.0,XMASBEV18,False,2024-12-22 00:00:00,2024-12-28 00:00:00,43600,True,0.107,0.165,0.341
+CAMP040,MegaMart Christmas Beverages Sale,seasonal,Budget Shoppers,Beverages,Email,Discount on Category,15.0,XMASBEV15,False,2024-12-22 00:00:00,2024-12-28 00:00:00,16100,True,0.04,0.055,0.134
+CAMP041,MegaMart Christmas Dairy & Eggs Sale,seasonal,New Customers,Dairy & Eggs,Push Notifications,Discount on Category,19.0,XMASDAIRY19,False,2024-12-22 00:00:00,2024-12-28 00:00:00,41200,True,0.143,0.235,0.147
+CAMP042,MegaMart Christmas Dairy & Eggs Sale,seasonal,Active Customers,Dairy & Eggs,SMS,Discount on Category,9.0,XMASDAIRY9,False,2024-12-22 00:00:00,2024-12-28 00:00:00,23400,True,0.084,0.136,0.14
+CAMP043,MegaMart Christmas Dairy & Eggs Sale,seasonal,Churn Risk Customers,Dairy & Eggs,SMS,Discount on Category,27.0,XMASDAIRY27,False,2024-12-22 00:00:00,2024-12-28 00:00:00,20300,True,0.062,0.13,0.157
+CAMP044,MegaMart Christmas Dairy & Eggs Sale,seasonal,High Spenders,Dairy & Eggs,SMS,Discount on Category,14.0,XMASDAIRY14,False,2024-12-22 00:00:00,2024-12-28 00:00:00,44000,False,0.057,0.229,0.196
+CAMP045,MegaMart Christmas Dairy & Eggs Sale,seasonal,Budget Shoppers,Dairy & Eggs,SMS,Discount on Category,22.0,XMASDAIRY22,False,2024-12-22 00:00:00,2024-12-28 00:00:00,10700,True,0.033,0.067,0.11
+CAMP046,MegaMart Christmas Offer,seasonal,New Customers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2024-12-22 00:00:00,2024-12-28 00:00:00,33600,True,0.08,0.185,0.259
+CAMP047,MegaMart Christmas Offer,seasonal,Churn Risk Customers,,SMS,Free Shipping,,FREESHIPPING,True,2024-12-22 00:00:00,2024-12-28 00:00:00,3400,True,0.022,0.044,0.068
+CAMP048,MegaMart Christmas Promotions,seasonal,Budget Shoppers,,SMS,Free Shipping,,FREESHIPPING,True,2024-12-22 00:00:00,2024-12-28 00:00:00,36700,False,0.104,0.149,0.144
+CAMP049,MegaMart Christmas Deals,seasonal,Active Customers,,Push Notifications,Discount on Cart,22.0,XMASSAVE22,False,2024-12-22 00:00:00,2024-12-28 00:00:00,2900,True,0.028,0.04,0.058
+CAMP050,MegaMart Christmas Offer,seasonal,High Spenders,,SMS,Discount on Cart,30.0,XMASSAVE30,False,2024-12-22 00:00:00,2024-12-28 00:00:00,3100,True,0.029,0.036,0.06
+CAMP051,"MegaMart Black Friday Lifestyle & Recreation (Fitness, Toys, Travel) Deals",seasonal,New Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,30.0,BFL&R30,False,2024-11-26 00:00:00,2024-12-02 00:00:00,12100,True,0.053,0.043,0.119
+CAMP052,"MegaMart Black Friday Lifestyle & Recreation (Fitness, Toys, Travel) Deals",seasonal,Active Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Email,Discount on Category,30.0,BFL&R30,False,2024-11-26 00:00:00,2024-12-02 00:00:00,44400,True,0.139,0.218,0.198
+CAMP053,"MegaMart Black Friday Lifestyle & Recreation (Fitness, Toys, Travel) Deals",seasonal,Churn Risk Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,17.0,BFL&R17,False,2024-11-26 00:00:00,2024-12-02 00:00:00,3000,True,0.028,0.036,0.068
+CAMP054,"MegaMart Black Friday Lifestyle & Recreation (Fitness, Toys, Travel) Deals",seasonal,High Spenders,"Lifestyle & Recreation (Fitness, Toys, Travel)",Email,Discount on Category,30.0,BFL&R30,False,2024-11-26 00:00:00,2024-12-02 00:00:00,15400,True,0.037,0.086,0.111
+CAMP055,"MegaMart Black Friday Lifestyle & Recreation (Fitness, Toys, Travel) Deals",seasonal,Budget Shoppers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,29.0,BFL&R29,False,2024-11-26 00:00:00,2024-12-02 00:00:00,18800,False,0.047,0.087,0.151
+CAMP056,MegaMart Black Friday Electronics & Appliances Sale,seasonal,New Customers,Electronics & Appliances,Push Notifications,Discount on Category,8.0,BFELEC8,False,2024-11-26 00:00:00,2024-12-02 00:00:00,17600,True,0.038,0.115,0.109
+CAMP057,MegaMart Black Friday Electronics & Appliances Sale,seasonal,Active Customers,Electronics & Appliances,SMS,Discount on Category,16.0,BFELEC16,False,2024-11-26 00:00:00,2024-12-02 00:00:00,48200,True,0.14,0.162,0.384
+CAMP058,MegaMart Black Friday Electronics & Appliances Sale,seasonal,Churn Risk Customers,Electronics & Appliances,SMS,Discount on Category,11.0,BFELEC11,False,2024-11-26 00:00:00,2024-12-02 00:00:00,17200,False,0.032,0.077,0.129
+CAMP059,MegaMart Black Friday Electronics & Appliances Sale,seasonal,High Spenders,Electronics & Appliances,Push Notifications,Discount on Category,28.0,BFELEC28,False,2024-11-26 00:00:00,2024-12-02 00:00:00,49100,False,0.136,0.118,0.254
+CAMP060,MegaMart Black Friday Electronics & Appliances Sale,seasonal,Budget Shoppers,Electronics & Appliances,SMS,Discount on Category,24.0,BFELEC24,False,2024-11-26 00:00:00,2024-12-02 00:00:00,21100,True,0.066,0.062,0.187
+CAMP061,"MegaMart Black Friday Home & Living (Kitchenware, Storage, Bedding) Promotions",seasonal,New Customers,"Home & Living (Kitchenware, Storage, Bedding)",Push Notifications,Discount on Category,15.0,BFH&L15,False,2024-11-26 00:00:00,2024-12-02 00:00:00,26900,True,0.081,0.117,0.13
+CAMP062,"MegaMart Black Friday Home & Living (Kitchenware, Storage, Bedding) Promotions",seasonal,Active Customers,"Home & Living (Kitchenware, Storage, Bedding)",Email,Discount on Category,26.0,BFH&L26,False,2024-11-26 00:00:00,2024-12-02 00:00:00,49500,True,0.157,0.201,0.223
+CAMP063,"MegaMart Black Friday Home & Living (Kitchenware, Storage, Bedding) Promotions",seasonal,Churn Risk Customers,"Home & Living (Kitchenware, Storage, Bedding)",Push Notifications,Discount on Category,14.0,BFH&L14,False,2024-11-26 00:00:00,2024-12-02 00:00:00,19300,True,0.041,0.11,0.147
+CAMP064,"MegaMart Black Friday Home & Living (Kitchenware, Storage, Bedding) Promotions",seasonal,High Spenders,"Home & Living (Kitchenware, Storage, Bedding)",Email,Discount on Category,19.0,BFH&L19,False,2024-11-26 00:00:00,2024-12-02 00:00:00,44800,True,0.07,0.16,0.341
+CAMP065,"MegaMart Black Friday Home & Living (Kitchenware, Storage, Bedding) Promotions",seasonal,Budget Shoppers,"Home & Living (Kitchenware, Storage, Bedding)",Email,Discount on Category,26.0,BFH&L26,False,2024-11-26 00:00:00,2024-12-02 00:00:00,6100,True,0.028,0.052,0.081
+CAMP066,MegaMart Black Friday Offer,seasonal,New Customers,,SMS,Free Shipping,,FREESHIPPING,True,2024-11-26 00:00:00,2024-12-02 00:00:00,15200,False,0.059,0.054,0.084
+CAMP067,MegaMart Black Friday Sale,seasonal,Churn Risk Customers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2024-11-26 00:00:00,2024-12-02 00:00:00,30300,True,0.068,0.137,0.14
+CAMP068,MegaMart Black Friday Promotions,seasonal,Budget Shoppers,,Email,Free Shipping,,FREESHIPPING,True,2024-11-26 00:00:00,2024-12-02 00:00:00,16500,False,0.036,0.092,0.157
+CAMP069,MegaMart Black Friday Promotions,seasonal,Active Customers,,Email,Discount on Cart,12.0,BFSAVE12,False,2024-11-26 00:00:00,2024-12-02 00:00:00,12000,True,0.05,0.075,0.102
+CAMP070,MegaMart Black Friday Promotions,seasonal,High Spenders,,Push Notifications,Discount on Cart,9.0,BFSAVE9,False,2024-11-26 00:00:00,2024-12-02 00:00:00,31000,False,0.088,0.183,0.204
+CAMP071,"MegaMart 1111 Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,New Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,19.0,1111L&R19,False,2024-11-08 00:00:00,2024-11-14 00:00:00,17500,True,0.062,0.106,0.109
+CAMP072,"MegaMart 1111 Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,Active Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,25.0,1111L&R25,False,2024-11-08 00:00:00,2024-11-14 00:00:00,16200,True,0.04,0.051,0.106
+CAMP073,"MegaMart 1111 Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,Churn Risk Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Email,Discount on Category,22.0,1111L&R22,False,2024-11-08 00:00:00,2024-11-14 00:00:00,5800,True,0.025,0.041,0.082
+CAMP074,"MegaMart 1111 Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,High Spenders,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,18.0,1111L&R18,False,2024-11-08 00:00:00,2024-11-14 00:00:00,27200,False,0.058,0.108,0.113
+CAMP075,"MegaMart 1111 Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,Budget Shoppers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,29.0,1111L&R29,False,2024-11-08 00:00:00,2024-11-14 00:00:00,38800,True,0.131,0.072,0.298
+CAMP076,"MegaMart 1111 Home & Living (Kitchenware, Storage, Bedding) Sale",seasonal,New Customers,"Home & Living (Kitchenware, Storage, Bedding)",SMS,Discount on Category,16.0,1111H&L16,False,2024-11-08 00:00:00,2024-11-14 00:00:00,20100,True,0.068,0.119,0.186
+CAMP077,"MegaMart 1111 Home & Living (Kitchenware, Storage, Bedding) Sale",seasonal,Active Customers,"Home & Living (Kitchenware, Storage, Bedding)",Push Notifications,Discount on Category,28.0,1111H&L28,False,2024-11-08 00:00:00,2024-11-14 00:00:00,36300,True,0.111,0.197,0.211
+CAMP078,"MegaMart 1111 Home & Living (Kitchenware, Storage, Bedding) Sale",seasonal,Churn Risk Customers,"Home & Living (Kitchenware, Storage, Bedding)",Push Notifications,Discount on Category,5.0,1111H&L5,False,2024-11-08 00:00:00,2024-11-14 00:00:00,26000,True,0.057,0.127,0.155
+CAMP079,"MegaMart 1111 Home & Living (Kitchenware, Storage, Bedding) Sale",seasonal,High Spenders,"Home & Living (Kitchenware, Storage, Bedding)",Email,Discount on Category,9.0,1111H&L9,False,2024-11-08 00:00:00,2024-11-14 00:00:00,41300,True,0.098,0.221,0.255
+CAMP080,"MegaMart 1111 Home & Living (Kitchenware, Storage, Bedding) Sale",seasonal,Budget Shoppers,"Home & Living (Kitchenware, Storage, Bedding)",Email,Discount on Category,25.0,1111H&L25,False,2024-11-08 00:00:00,2024-11-14 00:00:00,28600,True,0.046,0.111,0.114
+CAMP081,MegaMart 1111 Electronics & Appliances Promotions,seasonal,New Customers,Electronics & Appliances,Push Notifications,Discount on Category,15.0,1111ELEC15,False,2024-11-08 00:00:00,2024-11-14 00:00:00,22600,False,0.075,0.087,0.18
+CAMP082,MegaMart 1111 Electronics & Appliances Promotions,seasonal,Active Customers,Electronics & Appliances,SMS,Discount on Category,7.0,1111ELEC7,False,2024-11-08 00:00:00,2024-11-14 00:00:00,31300,True,0.04,0.129,0.269
+CAMP083,MegaMart 1111 Electronics & Appliances Promotions,seasonal,Churn Risk Customers,Electronics & Appliances,SMS,Discount on Category,7.0,1111ELEC7,False,2024-11-08 00:00:00,2024-11-14 00:00:00,43200,False,0.05,0.079,0.19
+CAMP084,MegaMart 1111 Electronics & Appliances Promotions,seasonal,High Spenders,Electronics & Appliances,SMS,Discount on Category,9.0,1111ELEC9,False,2024-11-08 00:00:00,2024-11-14 00:00:00,16100,True,0.035,0.089,0.128
+CAMP085,MegaMart 1111 Electronics & Appliances Promotions,seasonal,Budget Shoppers,Electronics & Appliances,Email,Discount on Category,13.0,1111ELEC13,False,2024-11-08 00:00:00,2024-11-14 00:00:00,24700,True,0.045,0.115,0.192
+CAMP086,MegaMart 1111 Offer,seasonal,New Customers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2024-11-08 00:00:00,2024-11-14 00:00:00,7600,False,0.035,0.066,0.087
+CAMP087,MegaMart 1111 Promotions,seasonal,Churn Risk Customers,,SMS,Free Shipping,,FREESHIPPING,True,2024-11-08 00:00:00,2024-11-14 00:00:00,47400,True,0.071,0.19,0.342
+CAMP088,MegaMart 1111 Offer,seasonal,Budget Shoppers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2024-11-08 00:00:00,2024-11-14 00:00:00,45300,True,0.112,0.097,0.363
+CAMP089,MegaMart 1111 Promotions,seasonal,Active Customers,,Push Notifications,Discount on Cart,26.0,1111SAVE26,False,2024-11-08 00:00:00,2024-11-14 00:00:00,24800,True,0.039,0.119,0.101
+CAMP090,MegaMart 1111 Sale,seasonal,High Spenders,,SMS,Discount on Cart,18.0,1111SAVE18,False,2024-11-08 00:00:00,2024-11-14 00:00:00,24200,True,0.071,0.134,0.184
+CAMP091,"MegaMart 1212 Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,New Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,28.0,1212L&R28,False,2024-12-09 00:00:00,2024-12-15 00:00:00,39300,True,0.069,0.203,0.292
+CAMP092,"MegaMart 1212 Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,Active Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,12.0,1212L&R12,False,2024-12-09 00:00:00,2024-12-15 00:00:00,49700,True,0.105,0.201,0.244
+CAMP093,"MegaMart 1212 Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,Churn Risk Customers,"Lifestyle & Recreation (Fitness, Toys, Travel)",SMS,Discount on Category,10.0,1212L&R10,False,2024-12-09 00:00:00,2024-12-15 00:00:00,32500,False,0.056,0.166,0.17
+CAMP094,"MegaMart 1212 Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,High Spenders,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,13.0,1212L&R13,False,2024-12-09 00:00:00,2024-12-15 00:00:00,36900,True,0.043,0.207,0.14
+CAMP095,"MegaMart 1212 Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",seasonal,Budget Shoppers,"Lifestyle & Recreation (Fitness, Toys, Travel)",Email,Discount on Category,22.0,1212L&R22,False,2024-12-09 00:00:00,2024-12-15 00:00:00,16200,True,0.057,0.088,0.122
+CAMP096,"MegaMart 1212 Home & Living (Kitchenware, Storage, Bedding) Offer",seasonal,New Customers,"Home & Living (Kitchenware, Storage, Bedding)",SMS,Discount on Category,12.0,1212H&L12,False,2024-12-09 00:00:00,2024-12-15 00:00:00,27000,True,0.081,0.09,0.183
+CAMP097,"MegaMart 1212 Home & Living (Kitchenware, Storage, Bedding) Offer",seasonal,Active Customers,"Home & Living (Kitchenware, Storage, Bedding)",Push Notifications,Discount on Category,16.0,1212H&L16,False,2024-12-09 00:00:00,2024-12-15 00:00:00,28400,True,0.105,0.121,0.157
+CAMP098,"MegaMart 1212 Home & Living (Kitchenware, Storage, Bedding) Offer",seasonal,Churn Risk Customers,"Home & Living (Kitchenware, Storage, Bedding)",SMS,Discount on Category,13.0,1212H&L13,False,2024-12-09 00:00:00,2024-12-15 00:00:00,15600,True,0.034,0.058,0.091
+CAMP099,"MegaMart 1212 Home & Living (Kitchenware, Storage, Bedding) Offer",seasonal,High Spenders,"Home & Living (Kitchenware, Storage, Bedding)",SMS,Discount on Category,10.0,1212H&L10,False,2024-12-09 00:00:00,2024-12-15 00:00:00,13100,False,0.035,0.068,0.124
+CAMP100,"MegaMart 1212 Home & Living (Kitchenware, Storage, Bedding) Offer",seasonal,Budget Shoppers,"Home & Living (Kitchenware, Storage, Bedding)",Push Notifications,Discount on Category,24.0,1212H&L24,False,2024-12-09 00:00:00,2024-12-15 00:00:00,19000,True,0.076,0.112,0.116
+CAMP101,MegaMart 1212 Electronics & Appliances Sale,seasonal,New Customers,Electronics & Appliances,Email,Discount on Category,27.0,1212ELEC27,False,2024-12-09 00:00:00,2024-12-15 00:00:00,35500,True,0.052,0.072,0.131
+CAMP102,MegaMart 1212 Electronics & Appliances Sale,seasonal,Active Customers,Electronics & Appliances,Push Notifications,Discount on Category,25.0,1212ELEC25,False,2024-12-09 00:00:00,2024-12-15 00:00:00,49800,True,0.109,0.254,0.293
+CAMP103,MegaMart 1212 Electronics & Appliances Sale,seasonal,Churn Risk Customers,Electronics & Appliances,Email,Discount on Category,15.0,1212ELEC15,False,2024-12-09 00:00:00,2024-12-15 00:00:00,12600,True,0.057,0.055,0.129
+CAMP104,MegaMart 1212 Electronics & Appliances Sale,seasonal,High Spenders,Electronics & Appliances,SMS,Discount on Category,17.0,1212ELEC17,False,2024-12-09 00:00:00,2024-12-15 00:00:00,32700,True,0.045,0.145,0.124
+CAMP105,MegaMart 1212 Electronics & Appliances Sale,seasonal,Budget Shoppers,Electronics & Appliances,SMS,Discount on Category,14.0,1212ELEC14,False,2024-12-09 00:00:00,2024-12-15 00:00:00,6100,True,0.038,0.039,0.086
+CAMP106,MegaMart 1212 Deals,seasonal,New Customers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2024-12-09 00:00:00,2024-12-15 00:00:00,34700,True,0.072,0.191,0.171
+CAMP107,MegaMart 1212 Offer,seasonal,Churn Risk Customers,,Email,Free Shipping,,FREESHIPPING,True,2024-12-09 00:00:00,2024-12-15 00:00:00,37800,False,0.099,0.16,0.265
+CAMP108,MegaMart 1212 Deals,seasonal,Budget Shoppers,,Email,Free Shipping,,FREESHIPPING,True,2024-12-09 00:00:00,2024-12-15 00:00:00,17800,True,0.059,0.059,0.101
+CAMP109,MegaMart 1212 Promotions,seasonal,Active Customers,,SMS,Discount on Cart,19.0,1212SAVE19,False,2024-12-09 00:00:00,2024-12-15 00:00:00,45700,True,0.113,0.129,0.194
+CAMP110,MegaMart 1212 Promotions,seasonal,High Spenders,,Email,Discount on Cart,7.0,1212SAVE7,False,2024-12-09 00:00:00,2024-12-15 00:00:00,45500,True,0.073,0.124,0.321
+CAMP111,MegaMart Canned Goods Deals,category,Budget Shoppers,Canned Goods,Push Notifications,Discount on Category,9.0,ALL9,False,2025-08-15,2025-08-22,5200,True,0.033,0.048,0.082
+CAMP112,MegaMart Health & Beauty Offer,category,Budget Shoppers,Health & Beauty,SMS,Discount on Category,13.0,ALL13,False,2025-01-21,2025-01-28,33300,True,0.075,0.143,0.265
+CAMP113,MegaMart Exclusive Sale,generic,New Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-04-15,2025-04-22,44700,False,0.109,0.245,0.363
+CAMP114,MegaMart Personal Care Deals,category,High Spenders,Personal Care,Push Notifications,Discount on Category,25.0,ALL25,False,2025-03-28,2025-04-04,29500,False,0.051,0.129,0.203
+CAMP115,MegaMart Health & Beauty Promotions,category,New Customers,Health & Beauty,Push Notifications,Discount on Category,26.0,ALL26,False,2025-09-16,2025-09-23,7400,False,0.03,0.058,0.075
+CAMP116,MegaMart Canned Goods Promotions,category,Budget Shoppers,Canned Goods,Email,Discount on Category,15.0,ALL15,False,2025-08-27,2025-09-03,17000,True,0.07,0.074,0.128
+CAMP117,MegaMart Canned Goods Promotions,category,Budget Shoppers,Canned Goods,Email,Discount on Category,11.0,ALL11,False,2025-11-07,2025-11-14,34500,True,0.103,0.151,0.25
+CAMP118,MegaMart Hot Offer,generic,Active Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-02-11,2025-02-18,46300,True,0.051,0.193,0.328
+CAMP119,MegaMart Weekly Sale,generic,Active Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-06-03,2025-06-10,6600,True,0.037,0.04,0.094
+CAMP120,MegaMart Health & Beauty Offer,category,High Spenders,Health & Beauty,Push Notifications,Discount on Category,13.0,ALL13,False,2025-01-22,2025-01-29,27700,False,0.102,0.085,0.182
+CAMP121,MegaMart Weekly Deals,generic,High Spenders,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-03-27,2025-04-03,18600,True,0.069,0.074,0.16
+CAMP122,MegaMart Beverages Offer,category,New Customers,Beverages,Push Notifications,Discount on Category,9.0,ALL9,False,2025-07-01,2025-07-08,29800,True,0.063,0.126,0.191
+CAMP123,"MegaMart Home & Living (Kitchenware, Storage, Bedding) Deals",category,High Spenders,"Home & Living (Kitchenware, Storage, Bedding)",Push Notifications,Discount on Category,12.0,ALL12,False,2025-01-21,2025-01-28,27400,True,0.085,0.135,0.216
+CAMP124,MegaMart Electronics & Appliances Deals,category,High Spenders,Electronics & Appliances,Push Notifications,Discount on Category,6.0,ALL6,False,2025-03-20,2025-03-27,8800,True,0.038,0.069,0.106
+CAMP125,MegaMart Limited-Time Sale,generic,Churn Risk Customers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-08-18,2025-08-25,27400,False,0.1,0.066,0.212
+CAMP126,MegaMart Flash Promotions,generic,Active Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-07-14,2025-07-21,22000,False,0.079,0.085,0.129
+CAMP127,MegaMart Health & Beauty Sale,category,High Spenders,Health & Beauty,Email,Discount on Category,12.0,ALL12,False,2025-03-27,2025-04-03,41900,True,0.074,0.11,0.153
+CAMP128,MegaMart Rice & Noodles Sale,category,Budget Shoppers,Rice & Noodles,Push Notifications,Discount on Category,10.0,ALL10,False,2025-07-29,2025-08-05,46000,True,0.051,0.136,0.155
+CAMP129,MegaMart Hot Deals,generic,Active Customers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-10-11,2025-10-18,37600,True,0.059,0.094,0.24
+CAMP130,MegaMart Beverages Deals,category,New Customers,Beverages,Push Notifications,Discount on Category,19.0,ALL19,False,2025-01-15,2025-01-22,42300,True,0.071,0.074,0.305
+CAMP131,MegaMart Snacks Promotions,category,New Customers,Snacks,Email,Discount on Category,23.0,ALL23,False,2025-10-09,2025-10-16,20100,True,0.053,0.07,0.175
+CAMP132,MegaMart Electronics & Appliances Sale,category,High Spenders,Electronics & Appliances,SMS,Discount on Category,17.0,ALL17,False,2025-09-03,2025-09-10,38000,True,0.07,0.174,0.13
+CAMP133,MegaMart Mega Sale,generic,Budget Shoppers,,SMS,Free Shipping,,FREESHIPPING,True,2025-05-06,2025-05-13,49300,True,0.157,0.136,0.346
+CAMP134,MegaMart Beverages Deals,category,New Customers,Beverages,SMS,Discount on Category,26.0,ALL26,False,2025-03-06,2025-03-13,47700,True,0.127,0.104,0.169
+CAMP135,MegaMart Dairy & Eggs Promotions,category,Budget Shoppers,Dairy & Eggs,Email,Discount on Category,23.0,ALL23,False,2025-11-29,2025-12-06,24400,True,0.04,0.083,0.19
+CAMP136,MegaMart VIP Offer,generic,Active Customers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-05-05,2025-05-12,18400,False,0.042,0.109,0.131
+CAMP137,MegaMart Dairy & Eggs Sale,category,Budget Shoppers,Dairy & Eggs,Push Notifications,Discount on Category,7.0,ALL7,False,2025-02-13,2025-02-20,9700,True,0.031,0.066,0.102
+CAMP138,MegaMart Electronics & Appliances Offer,category,High Spenders,Electronics & Appliances,SMS,Discount on Category,30.0,ALL30,False,2025-02-14,2025-02-21,26400,True,0.07,0.104,0.192
+CAMP139,MegaMart Limited-Time Offer,generic,New Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-10-23,2025-10-30,15800,True,0.053,0.105,0.108
+CAMP140,MegaMart Mega Promotions,generic,Budget Shoppers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-08-03,2025-08-10,20300,True,0.038,0.054,0.094
+CAMP141,MegaMart Hot Deals,generic,Active Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-10-10,2025-10-17,24800,True,0.079,0.149,0.152
+CAMP142,"MegaMart Home & Living (Kitchenware, Storage, Bedding) Sale",category,High Spenders,"Home & Living (Kitchenware, Storage, Bedding)",Push Notifications,Discount on Category,24.0,ALL24,False,2025-09-14,2025-09-21,27200,False,0.055,0.132,0.134
+CAMP143,MegaMart Electronics & Appliances Sale,category,High Spenders,Electronics & Appliances,Push Notifications,Discount on Category,22.0,ALL22,False,2025-07-11,2025-07-18,42800,True,0.087,0.105,0.162
+CAMP144,MegaMart Hot Sale,generic,New Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-12-04,2025-12-11,22400,True,0.04,0.103,0.102
+CAMP145,MegaMart Hot Deals,generic,Active Customers,,Email,Free Shipping,,FREESHIPPING,True,2025-05-19,2025-05-26,10200,True,0.041,0.052,0.121
+CAMP146,MegaMart Electronics & Appliances Sale,category,High Spenders,Electronics & Appliances,Push Notifications,Discount on Category,9.0,ALL9,False,2025-07-16,2025-07-23,1500,True,0.024,0.035,0.053
+CAMP147,MegaMart Flash Promotions,generic,Active Customers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-10-17,2025-10-24,49400,True,0.103,0.151,0.295
+CAMP148,"MegaMart Lifestyle & Recreation (Fitness, Toys, Travel) Sale",category,High Spenders,"Lifestyle & Recreation (Fitness, Toys, Travel)",SMS,Discount on Category,19.0,ALL19,False,2025-08-08,2025-08-15,42700,False,0.052,0.155,0.221
+CAMP149,MegaMart Flash Promotions,generic,New Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-10-28,2025-11-04,5800,True,0.026,0.039,0.08
+CAMP150,MegaMart Dairy & Eggs Offer,category,Budget Shoppers,Dairy & Eggs,SMS,Discount on Category,21.0,ALL21,False,2025-07-25,2025-08-01,40200,True,0.121,0.089,0.262
+CAMP151,MegaMart Beverages Promotions,category,New Customers,Beverages,Push Notifications,Discount on Category,18.0,ALL18,False,2025-09-06,2025-09-13,22700,False,0.055,0.119,0.131
+CAMP152,MegaMart Frozen Food Deals,category,Budget Shoppers,Frozen Food,Email,Discount on Category,7.0,ALL7,False,2025-01-28,2025-02-04,6500,False,0.025,0.039,0.087
+CAMP153,MegaMart Personal Care Offer,category,Budget Shoppers,Personal Care,Email,Discount on Category,18.0,ALL18,False,2025-03-30,2025-04-06,23700,False,0.088,0.094,0.206
+CAMP154,MegaMart Personal Care Offer,category,New Customers,Personal Care,SMS,Discount on Category,21.0,ALL21,False,2025-04-19,2025-04-26,14400,True,0.045,0.093,0.104
+CAMP155,MegaMart VIP Offer,generic,Active Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-02-08,2025-02-15,28600,False,0.104,0.152,0.195
+CAMP156,MegaMart Personal Care Offer,category,New Customers,Personal Care,Email,Discount on Category,13.0,ALL13,False,2025-03-31,2025-04-07,46600,True,0.151,0.142,0.185
+CAMP157,MegaMart Fresh Produce Deals,category,Budget Shoppers,Fresh Produce,Push Notifications,Discount on Category,5.0,ALL5,False,2025-02-15,2025-02-22,6500,True,0.027,0.047,0.074
+CAMP158,MegaMart Exclusive Sale,generic,High Spenders,,SMS,Free Shipping,,FREESHIPPING,True,2025-04-16,2025-04-23,10700,True,0.042,0.07,0.086
+CAMP159,MegaMart Personal Care Promotions,category,New Customers,Personal Care,Push Notifications,Discount on Category,29.0,ALL29,False,2025-08-13,2025-08-20,34100,True,0.076,0.103,0.234
+CAMP160,MegaMart Dairy & Eggs Deals,category,Budget Shoppers,Dairy & Eggs,Push Notifications,Discount on Category,24.0,ALL24,False,2025-05-15,2025-05-22,4100,True,0.025,0.038,0.061
+CAMP161,MegaMart Mega Sale,generic,Active Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-05-17,2025-05-24,28700,True,0.063,0.139,0.179
+CAMP162,MegaMart Snacks Sale,category,New Customers,Snacks,SMS,Discount on Category,5.0,ALL5,False,2025-03-24,2025-03-31,30600,False,0.102,0.131,0.199
+CAMP163,MegaMart Beverages Promotions,category,New Customers,Beverages,Email,Discount on Category,15.0,ALL15,False,2025-04-12,2025-04-19,11800,False,0.045,0.081,0.128
+CAMP164,MegaMart Snacks Promotions,category,New Customers,Snacks,Email,Discount on Category,21.0,ALL21,False,2025-11-22,2025-11-29,5700,True,0.028,0.043,0.071
+CAMP165,MegaMart Flash Sale,generic,Active Customers,,Email,Free Shipping,,FREESHIPPING,True,2025-08-18,2025-08-25,13200,False,0.039,0.082,0.13
+CAMP166,MegaMart Hot Offer,generic,New Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-08-05,2025-08-12,40000,True,0.117,0.082,0.32
+CAMP167,MegaMart Electronics & Appliances Promotions,category,High Spenders,Electronics & Appliances,Push Notifications,Discount on Category,25.0,ALL25,False,2025-03-11,2025-03-18,21200,True,0.036,0.089,0.124
+CAMP168,MegaMart Dairy & Eggs Sale,category,Budget Shoppers,Dairy & Eggs,Email,Discount on Category,19.0,ALL19,False,2025-09-14,2025-09-21,30100,True,0.065,0.095,0.207
+CAMP169,MegaMart Baby Products Promotions,category,High Spenders,Baby Products,Push Notifications,Discount on Category,30.0,ALL30,False,2025-03-08,2025-03-15,48900,False,0.102,0.237,0.307
+CAMP170,MegaMart Baby Products Sale,category,High Spenders,Baby Products,SMS,Discount on Category,30.0,ALL30,False,2025-05-20,2025-05-27,23000,False,0.038,0.112,0.101
+CAMP171,MegaMart Household Essentials Deals,category,Budget Shoppers,Household Essentials,SMS,Discount on Category,16.0,ALL16,False,2025-12-10,2025-12-17,19000,True,0.067,0.101,0.093
+CAMP172,MegaMart Snacks Sale,category,New Customers,Snacks,Push Notifications,Discount on Category,14.0,ALL14,False,2025-08-15,2025-08-22,17000,True,0.057,0.109,0.158
+CAMP173,MegaMart Flash Deals,generic,Budget Shoppers,,Email,Free Shipping,,FREESHIPPING,True,2025-07-18,2025-07-25,20800,False,0.067,0.083,0.153
+CAMP174,MegaMart Limited-Time Offer,generic,High Spenders,,Email,Free Shipping,,FREESHIPPING,True,2025-08-30,2025-09-06,44400,True,0.148,0.251,0.341
+CAMP175,MegaMart Pantry Staples Offer,category,Budget Shoppers,Pantry Staples,Email,Discount on Category,16.0,ALL16,False,2025-10-22,2025-10-29,20700,True,0.043,0.129,0.142
+CAMP176,MegaMart Snacks Offer,category,New Customers,Snacks,SMS,Discount on Category,21.0,ALL21,False,2025-09-29,2025-10-06,35900,False,0.118,0.071,0.182
+CAMP177,MegaMart Limited-Time Deals,generic,New Customers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-03-30,2025-04-06,45900,True,0.137,0.106,0.242
+CAMP178,MegaMart Flash Deals,generic,Budget Shoppers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-01-23,2025-01-30,40500,True,0.117,0.143,0.239
+CAMP179,MegaMart Electronics & Appliances Deals,category,High Spenders,Electronics & Appliances,SMS,Discount on Category,26.0,ALL26,False,2025-04-28,2025-05-05,37900,False,0.085,0.111,0.198
+CAMP180,MegaMart Snacks Deals,category,New Customers,Snacks,SMS,Discount on Category,13.0,ALL13,False,2025-04-12,2025-04-19,3900,True,0.031,0.043,0.06
+CAMP181,MegaMart Beverages Deals,category,New Customers,Beverages,Push Notifications,Discount on Category,19.0,ALL19,False,2025-03-24,2025-03-31,34100,True,0.076,0.193,0.156
+CAMP182,"MegaMart Lifestyle & Recreation (Fitness, Toys, Travel) Promotions",category,High Spenders,"Lifestyle & Recreation (Fitness, Toys, Travel)",Push Notifications,Discount on Category,17.0,ALL17,False,2025-11-24,2025-12-01,33400,True,0.071,0.074,0.154
+CAMP183,MegaMart Electronics & Appliances Offer,category,High Spenders,Electronics & Appliances,SMS,Discount on Category,9.0,ALL9,False,2025-11-02,2025-11-09,3000,True,0.028,0.041,0.058
+CAMP184,MegaMart Meat & Seafood Sale,category,New Customers,Meat & Seafood,Push Notifications,Discount on Category,11.0,ALL11,False,2025-04-28,2025-05-05,10300,True,0.044,0.062,0.076
+CAMP185,MegaMart Mega Sale,generic,Active Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-08-20,2025-08-27,42400,True,0.092,0.091,0.327
+CAMP186,MegaMart Meat & Seafood Deals,category,Budget Shoppers,Meat & Seafood,SMS,Discount on Category,14.0,ALL14,False,2025-05-25,2025-06-01,28600,True,0.061,0.124,0.134
+CAMP187,MegaMart Exclusive Sale,generic,Budget Shoppers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-11-15,2025-11-22,36200,True,0.128,0.146,0.193
+CAMP188,MegaMart Limited-Time Offer,generic,Active Customers,,Email,Free Shipping,,FREESHIPPING,True,2025-06-15,2025-06-22,1600,True,0.021,0.033,0.058
+CAMP189,MegaMart Breakfast Foods Offer,category,New Customers,Breakfast Foods,SMS,Discount on Category,16.0,ALL16,False,2025-04-11,2025-04-18,36300,True,0.098,0.187,0.247
+CAMP190,MegaMart Beverages Deals,category,New Customers,Beverages,Push Notifications,Discount on Category,27.0,ALL27,False,2025-04-05,2025-04-12,30500,True,0.053,0.157,0.246
+CAMP191,MegaMart Baby Products Promotions,category,New Customers,Baby Products,Push Notifications,Discount on Category,29.0,ALL29,False,2025-07-20,2025-07-27,42900,True,0.082,0.207,0.322
+CAMP192,MegaMart VIP Offer,generic,Active Customers,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-04-11,2025-04-18,26700,True,0.093,0.098,0.233
+CAMP193,MegaMart Frozen Food Offer,category,Budget Shoppers,Frozen Food,Push Notifications,Discount on Category,28.0,ALL28,False,2025-07-27,2025-08-03,28300,True,0.078,0.151,0.184
+CAMP194,MegaMart Exclusive Offer,generic,Active Customers,,SMS,Free Shipping,,FREESHIPPING,True,2025-11-09,2025-11-16,40000,True,0.06,0.141,0.219
+CAMP195,MegaMart Dairy & Eggs Promotions,category,Budget Shoppers,Dairy & Eggs,SMS,Discount on Category,25.0,ALL25,False,2025-05-26,2025-06-02,4300,True,0.029,0.041,0.076
+CAMP196,MegaMart Mega Deals,generic,High Spenders,,Push Notifications,Free Shipping,,FREESHIPPING,True,2025-03-27,2025-04-03,44900,True,0.051,0.087,0.315
+CAMP197,MegaMart Weekly Sale,generic,Active Customers,,Email,Free Shipping,,FREESHIPPING,True,2025-12-13,2025-12-20,45000,True,0.087,0.155,0.157
+CAMP198,MegaMart Frozen Food Offer,category,Budget Shoppers,Frozen Food,Push Notifications,Discount on Category,8.0,ALL8,False,2025-07-02,2025-07-09,2200,True,0.024,0.036,0.061
+CAMP199,MegaMart Rice & Noodles Deals,category,Budget Shoppers,Rice & Noodles,SMS,Discount on Category,27.0,ALL27,False,2025-02-12,2025-02-19,32700,True,0.05,0.072,0.144
+CAMP200,MegaMart Snacks Offer,category,New Customers,Snacks,SMS,Discount on Category,27.0,ALL27,False,2025-01-28,2025-02-04,4800,True,0.026,0.041,0.063
