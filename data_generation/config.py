@@ -2,6 +2,9 @@ NUM_CUSTOMERS = 100
 NUM_PHYSICAL_STORES = 5
 NUM_PRODUCTS = 50
 NUM_REVIEWS = 100
+NUM_CAMPAIGNS = 200
+CONTROL_GROUP_PERCENTAGE = 0.5
+AUDIENCE_PERCENTAGE = 1
 
 MONTH_WEIGHTS_2024 = {
     1: 0.5,
@@ -822,3 +825,131 @@ NEGATIVE_VERBS = [
 
 
 NEUTRAL_VERBS = ["found", "tried", "tested", "used", "experienced"]
+
+
+CATEGORY_CAMPAIGN_PROBABILITY = {
+    "Snacks": 0.15,
+    "Beverages": 0.12,
+    "Dairy & Eggs": 0.05,
+    "Frozen Food": 0.04,
+    "Fresh Produce": 0.02,
+    "Pantry Staples": 0.01,
+    "Household Essentials": 0.01,
+    "Health & Beauty": 0.05,
+    "Baby Products": 0.03,
+    "Canned Goods": 0.02,
+    "Personal Care": 0.05,
+    "Meat & Seafood": 0.03,
+    "Bakery": 0.04,
+    "Cleaning Supplies": 0.01,
+    "Rice & Noodles": 0.01,
+    "Breakfast Foods": 0.03,
+    "Electronics & Appliances": 0.10,
+    "Home & Living (Kitchenware, Storage, Bedding)": 0.05,
+    "Lifestyle & Recreation (Fitness, Toys, Travel)": 0.08,
+}
+
+
+CATEGORY_CODE_MAP = {
+    "Snacks": "SNACK",
+    "Beverages": "BEV",
+    "Dairy & Eggs": "DAIRY",
+    "Frozen Food": "FROZEN",
+    "Fresh Produce": "FRESH",
+    "Pantry Staples": "PANTRY",
+    "Household Essentials": "ESSEN",
+    "Health & Beauty": "HEALTH",
+    "Baby Products": "BABY",
+    "Canned Goods": "CANNED",
+    "Personal Care": "CARE",
+    "Meat & Seafood": "MEAT",
+    "Bakery": "BAKE",
+    "Cleaning Supplies": "CLEAN",
+    "Rice & Noodles": "RICE",
+    "Breakfast Foods": "BFAST",
+    "Electronics & Appliances": "ELEC",
+    "Home & Living (Kitchenware, Storage, Bedding)": "H&L",
+    "Lifestyle & Recreation (Fitness, Toys, Travel)": "L&R",
+}
+
+
+from datetime import datetime
+SEASONAL_DATES = {
+    "CNY": (datetime(2024, 2, 10), datetime(2024, 2, 17)),
+    "Christmas": (datetime(2024, 12, 22), datetime(2024, 12, 28)),
+    "Black Friday": (datetime(2024, 11, 26), datetime(2024, 12, 2)),
+    "1111": (datetime(2024, 11, 8), datetime(2024, 11, 14)),
+    "1212": (datetime(2024, 12, 9), datetime(2024, 12, 15)),
+}
+
+
+SEASON_PEAK_CATEGORIES = {
+    "CNY": [
+        "Beverages",
+        "Frozen Food",
+        "Lifestyle & Recreation",
+        "Meat & Seafood",
+        "Rice & Noodles",
+        "Snacks",
+    ],
+    "Christmas": [
+        "Bakery",
+        "Beverages",
+        "Dairy & Eggs",
+        "Electronics & Appliances",
+        "Lifestyle & Recreation (Fitness, Toys, Travel)",
+        "Meat & Seafood",
+    ],
+    "Black Friday": [
+        "Electronics & Appliances",
+        "Home & Living (Kitchenware, Storage, Bedding)",
+        "Lifestyle & Recreation (Fitness, Toys, Travel)",
+    ],
+    "1111": [
+        "Electronics & Appliances",
+        "Home & Living (Kitchenware, Storage, Bedding)",
+        "Lifestyle & Recreation (Fitness, Toys, Travel)",
+    ],
+    "1212": [
+        "Electronics & Appliances",
+        "Home & Living (Kitchenware, Storage, Bedding)",
+        "Lifestyle & Recreation (Fitness, Toys, Travel)",
+    ],
+}
+
+
+SEASON_CODE_MAP = {
+    "CNY": "CNY",
+    "Christmas": "XMAS",
+    "Black Friday": "BF",
+    "1111": "1111",
+    "1212": "1212",
+}
+
+
+SEGMENT_CATEGORY_BIAS = {
+    "New Customers": {
+        "Snacks": 1.4,
+        "Beverages": 1.3,
+    },
+    "High Spenders": {
+        "Electronics & Appliances": 1.8,
+        "Home & Living (Kitchenware, Storage, Bedding)": 1.5,
+        "Lifestyle & Recreation (Fitness, Toys, Travel)": 1.4,
+    },
+    "Budget Shoppers": {
+        "Canned Goods": 1.5,
+        "Dairy & Eggs": 1.4,
+        "Frozen Food": 1.3,
+        "Household Essentials": 1.4,
+        "Pantry Staples": 1.3,
+        "Rice & Noodles": 1.3,
+    },
+}
+
+
+CHANNEL_CONSENT_MAP = {
+    "Email": "email_marketing_opt_in",
+    "SMS": "sms_marketing_opt_in",
+    "Push Notifications": "push_notifications_opt_in",
+}
