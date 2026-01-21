@@ -5,6 +5,15 @@ NUM_REVIEWS = 100
 NUM_CAMPAIGNS = 200
 CONTROL_GROUP_PERCENTAGE = 0.5
 AUDIENCE_PERCENTAGE = 1
+NUM_CLICKSTREAMS = 100
+PAYDAY_BOOST = 2.5
+PARETO_ALPHA = 1.8
+MAX_SESSIONS = 3
+MAX_EVENTS_PER_SESSION = 10
+MAX_CLICKSTREAM = 200
+# MAX_SESSIONS = 50
+# MAX_EVENTS_PER_SESSION = 60
+
 
 MONTH_WEIGHTS_2024 = {
     1: 0.5,
@@ -952,4 +961,279 @@ CHANNEL_CONSENT_MAP = {
     "Email": "email_marketing_opt_in",
     "SMS": "sms_marketing_opt_in",
     "Push Notifications": "push_notifications_opt_in",
+}
+
+
+CAMPAIGN_SESSION_FREQUENCY = {
+    "treatment": 1.3,
+    "control": 1,
+    "non-campaign": 1,
+}
+
+
+CART_SIZE_BY_SEGMENT = {
+    "New Customers": 0.5,
+    "Active Customers": 1.5,
+    "High Spenders": 3.0,
+    "Budget Shoppers": 2.0,
+    "Churn Risk Customers": 0.7,
+}
+
+
+CATEGORY_FREQUENCY = {
+    "Snacks": 0.09,
+    "Beverages": 0.07,
+    "Dairy & Eggs": 0.11,
+    "Frozen Food": 0.05,
+    "Fresh Produce": 0.14,
+    "Pantry Staples": 0.10,
+    "Household Essentials": 0.04,
+    "Health & Beauty": 0.04,
+    "Baby Products": 0.02,
+    "Canned Goods": 0.03,
+    "Personal Care": 0.04,
+    "Meat & Seafood": 0.05,
+    "Bakery": 0.03,
+    "Cleaning Supplies": 0.04,
+    "Rice & Noodles": 0.05,
+    "Breakfast Foods": 0.05,
+    "Electronics & Appliances": 0.02,
+    "Home & Living (Kitchenware, Storage, Bedding)": 0.04,
+    "Lifestyle & Recreation (Fitness, Toys, Travel)": 0.04,
+}
+
+
+
+DAY_WEIGHTS = {
+    "Weekday": 0.65,
+    "Weekend": 0.35
+}
+
+
+HOUR_WEIGHTS = {
+    "Midnight": (0, 6, 0.05),  # 12am–6am
+    "Daytime": (6, 18, 0.25),  # 6am–6pm
+    "Evening": (18, 22, 0.6),  # 6pm–10pm
+    "Late": (22, 24, 0.1),  # 10pm-12am
+}
+
+
+
+LANDING_PAGE_BEHAVIOUR = {
+    "direct": {
+        "Home View": 0.70,
+        "Search View": 0.30,
+    },
+    "email_campaign": {
+        "Home View": 0.85,
+        "Category View": 0.15,
+    },
+    "google.com": {
+        "Search View": 0.60,
+        "Home View": 0.20,
+        "Product View": 0.20,
+    },
+    "facebook.com": {
+        "Product View": 0.80,
+        "Home View": 0.20,
+    },
+    "instagram.com": {
+        "Product View": 0.80,
+        "Home View": 0.20,
+    },
+    "tiktok.com": {
+        "Product View": 0.80,
+        "Home View": 0.20,
+    },
+    "youtube.com": {
+        "Product View": 0.80,
+        "Home View": 0.20,
+    },
+    "shopee.sg": {
+        "Product View": 0.80,
+        "Home View": 0.20,
+    },
+    "lazada.sg": {
+        "Product View": 0.80,
+        "Home View": 0.20,
+    },
+    "telegram.org": {
+        "Product View": 0.80,
+        "Home View": 0.20,
+    },
+}
+
+
+
+REFERRER_DISTRIBUTION = {
+    "google.com": 0.55,
+    "facebook.com": 0.2,
+    "instagram.com": 0.06,
+    "tiktok.com": 0.05,
+    "youtube.com": 0.04,
+    "direct": 0.04,
+    "email_campaign": 0.03,
+    "telegram.org": 0.01,
+    "shopee.sg": 0.01,
+    "lazada.sg": 0.01,
+}
+
+
+
+SEASONAL_UPLIFT = {
+    "Daytime": {
+        "extra_events": (0, 1),
+        "session_mult": (0.95, 1.05),
+        "atc_mult": (0.98, 1.02),
+        "checkout_mult": (0.98, 1.02),
+        "conversion_mult": (0.98, 1.02),
+    },
+    "Evening": {
+        "extra_events": (1, 3),
+        "session_mult": (1.15, 1.35),
+        "atc_mult": (1.05, 1.12),
+        "checkout_mult": (1.05, 1.1),
+        "conversion_mult": (1.05, 1.12),
+    },
+    "Weekday": {
+        "extra_events": (0, 1),
+        "session_mult": (0.95, 1.05),
+        "atc_mult": (1.08, 1.02),
+        "checkout_mult": (1.08, 1.12),
+        "conversion_mult": (1.08, 1.02),
+    },
+    "Weekend": {
+        "extra_events": (1, 3),
+        "session_mult": (1.2, 1.45),
+        "atc_mult": (1.1, 1.2),
+        "checkout_mult": (1.08, 1.15),
+        "conversion_mult": (1.1, 1.18),
+    },
+    "Payday": {
+        "extra_events": (2, 4),
+        "session_mult": (1.15, 1.3),
+        "atc_mult": (1.15, 1.25),
+        "checkout_mult": (1.12, 1.2),
+        "conversion_mult": (1.15, 1.3),
+    },
+    "Payday spillover": {
+        "extra_events": (1, 3),
+        "session_mult": (1.1, 1.2),
+        "atc_mult": (1.1, 1.2),
+        "checkout_mult": (1.08, 1.15),
+        "conversion_mult": (1.1, 1.18),
+    },
+    "CNY": {
+        "extra_events": (3, 6),
+        "session_mult": (1.25, 1.5),
+        "atc_mult": (1.2, 1.4),
+        "checkout_mult": (1.3, 1.6),
+        "conversion_mult": (1.5, 2.2),
+    },
+    "Christmas": {
+        "extra_events": (3, 6),
+        "session_mult": (1.3, 1.55),
+        "atc_mult": (1.25, 1.5),
+        "checkout_mult": (1.4, 1.8),
+        "conversion_mult": (1.6, 2.5),
+    },
+    "1111": {
+        "extra_events": (5, 10),
+        "session_mult": (1.6, 2),
+        "atc_mult": (1.5, 2),
+        "checkout_mult": (1.8, 2.5),
+        "conversion_mult": (2, 3.5),
+    },
+    "1212": {
+        "extra_events": (5, 10),
+        "session_mult": (1.6, 2),
+        "atc_mult": (1.5, 2),
+        "checkout_mult": (1.8, 2.5),
+        "conversion_mult": (2, 3.5),
+    },
+}
+
+
+SEGMENT_SESSION_FREQUENCY = {
+    "New Customers": 1.2,
+    "Active Customers": 1.4,
+    "Churn Risk Customers": 0.3,
+    "High Spenders": 1,
+    "Budget Shoppers": 1.1,
+}
+
+
+TIME_ON_PAGE = {
+    "Home View": (3, 8, 25),
+    "Category View": (5, 12, 40),
+    "Search View": (5, 15, 35),
+    "Product View": (10, 25, 80),
+    "Add to Cart": (3, 10, 30),
+    "Cart View": (5, 20, 60),
+    "Remove from Cart": (2, 6, 20),
+    "Checkout Start": (10, 30, 120),
+    "Payment Attempt": (5, 40, 180),
+    "Payment Successful": (2, 4, 10),
+    "Payment Failed": (2, 6, 30),
+}
+
+
+VALID_EVENT_TRANSITIONS = {
+    "Home View": {
+        "Product View": 0.4,
+        "Category View": 0.3,
+        "Search View": 0.25,
+        "Cart View": 0.05,
+    },
+    "Category View": {
+        "Product View": 0.45,
+        "Search View": 0.3,
+        "Home View": 0.2,
+        "Cart View": 0.05,
+    },
+    "Search View": {
+        "Product View": 0.5,
+        "Category View": 0.3,
+        "Home View": 0.2,
+    },
+    "Product View": {
+        "Category View": 0.35,
+        "Home View": 0.3,
+        "Search View": 0.15,
+        "Add to Cart": 0.15,
+        "Cart View": 0.05,
+    },
+    "Add to Cart": {
+        "Cart View": 0.4,
+        "Product View": 0.3,
+        "Category View": 0.2,
+        "Remove from Cart": 0.1,
+    },
+    "Cart View": {
+        "Checkout Start": 0.6,
+        "Remove from Cart": 0.2,
+        "Product View": 0.1,
+        "Category View": 0.1,
+    },
+    "Remove from Cart": {
+        "Cart View": 0.5,
+        "Product View": 0.2,
+        "Category View": 0.2,
+        "Home View": 0.1,
+    },
+    "Checkout Start": {
+        "Payment Attempt": 0.9,
+        "Remove from Cart": 0.1,
+    },
+    "Payment Attempt": {
+        "Payment Successful": 0.8,
+        "Payment Failed": 0.2,
+    },
+    "Payment Successful": {
+        "Home View": 0.2,
+    },
+    "Payment Failed": {
+        "Home View": 0.7,
+        "Payment Attempt": 0.3,
+    },
 }
