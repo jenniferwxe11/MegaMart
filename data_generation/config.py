@@ -1,3 +1,5 @@
+from datetime import datetime
+
 NUM_CUSTOMERS = 100
 NUM_PHYSICAL_STORES = 5
 NUM_PRODUCTS = 50
@@ -883,7 +885,6 @@ CATEGORY_CODE_MAP = {
 }
 
 
-from datetime import datetime
 SEASONAL_DATES = {
     "CNY": (datetime(2024, 2, 10), datetime(2024, 2, 17)),
     "Christmas": (datetime(2024, 12, 22), datetime(2024, 12, 28)),
@@ -1004,11 +1005,7 @@ CATEGORY_FREQUENCY = {
 }
 
 
-
-DAY_WEIGHTS = {
-    "Weekday": 0.65,
-    "Weekend": 0.35
-}
+DAY_WEIGHTS = {"Weekday": 0.65, "Weekend": 0.35}
 
 
 HOUR_WEIGHTS = {
@@ -1017,7 +1014,6 @@ HOUR_WEIGHTS = {
     "Evening": (18, 22, 0.6),  # 6pm–10pm
     "Late": (22, 24, 0.1),  # 10pm-12am
 }
-
 
 
 LANDING_PAGE_BEHAVIOUR = {
@@ -1065,7 +1061,6 @@ LANDING_PAGE_BEHAVIOUR = {
 }
 
 
-
 REFERRER_DISTRIBUTION = {
     "google.com": 0.55,
     "facebook.com": 0.2,
@@ -1078,7 +1073,6 @@ REFERRER_DISTRIBUTION = {
     "shopee.sg": 0.01,
     "lazada.sg": 0.01,
 }
-
 
 
 SEASONAL_UPLIFT = {

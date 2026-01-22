@@ -1,8 +1,8 @@
+import copy
 import random
+import re
 import uuid
 from datetime import datetime, timedelta
-import re
-import copy
 
 import numpy as np
 import pandas as pd
@@ -50,7 +50,9 @@ customer_ids = (
 
 products_df = pd.read_csv("data_generation/raw_data/products_raw.csv")
 product_ids = products_df["product_id"].dropna().tolist()
-products_df.loc[:,"stock_quantity"] = pd.to_numeric(products_df["stock_quantity"], errors="coerce")
+products_df.loc[:, "stock_quantity"] = pd.to_numeric(
+    products_df["stock_quantity"], errors="coerce"
+)
 
 # ensure columns exist and are datetime type
 products_df.loc[:, "promotion_start_date"] = pd.to_datetime(
@@ -79,9 +81,10 @@ for brand_list in BRANDS.values():
 for item_list in CATEGORY_ITEMS.values():
     SEARCH_TERMS.extend(item_list)
 
+
 def pareto_capped(alpha, cap):
     value = np.random.pareto(alpha) + 1
-    value = int(np.clip(value,1,cap))
+    value = int(np.clip(value, 1, cap))
     return value
 
 
@@ -169,7 +172,7 @@ def get_category(customer_segment):
 
 def get_random_product_from_search_term(search_term):
     term = search_term.replace("+", " ").strip()
-    term = re.escape(term) 
+    term = re.escape(term)
     product_ids = products_df[
         products_df["product_name"].str.contains(
             term,
@@ -193,10 +196,13 @@ def get_random_product_from_category(category):
 
 
 def get_category_from_product(product_id):
-    return products_df.loc[products_df["product_id"]==product_id, "category"].iloc[0]
+    return products_df.loc[products_df["product_id"] == product_id, "category"].iloc[0]
+
 
 def get_product_name(product_id):
-    return products_df.loc[products_df["product_id"]==product_id, "product_name"].iloc[0]
+    return products_df.loc[
+        products_df["product_id"] == product_id, "product_name"
+    ].iloc[0]
 
 
 def is_in_stock(product_id):
@@ -345,7 +351,9 @@ def get_next_event_type(previous_event_type, transition_probability, cart_conten
     while next_event_type is None:
         next_event_type = random.choices(
             list(transition_probability.get(previous_event_type, None).keys()),
-            weights=list(transition_probability.get(previous_event_type, None).values()),
+            weights=list(
+                transition_probability.get(previous_event_type, None).values()
+            ),
             k=1,
         )[0]
         # ensure cart related events only occur when cart is not empty
@@ -399,39 +407,43 @@ for customer_id in customer_ids:
     customer_segment = customer_row["customer_segment"].iloc[0]
     signup_date = pd.to_datetime(customer_row["signup_date"].iloc[0])
 
-    campaign_group = None
-    session_start_time = None
-
     customer_campaigns = campaign_assignments_df[
         campaign_assignments_df["customer_id"] == customer_id
     ]
-    
-    # determine number of sessions this customer will have
-    num_sessions = pareto_capped(PARETO_ALPHA, MAX_SESSIONS) * SEGMENT_SESSION_FREQUENCY.get(customer_segment, 1.0) * CAMPAIGN_SESSION_FREQUENCY.get(campaign_group, 1.0)
-    num_sessions = int(np.clip(num_sessions,1,MAX_SESSIONS))
+    if not customer_campaigns.empty:
+        campaign_row = customer_campaigns.sample(1).iloc[0]
+        campaign_id = campaign_row["campaign_id"]
+        campaign_assignments_row = campaign_assignments_df[
+            campaign_assignments_df["campaign_id"] == campaign_id
+        ]
+        campaign_group = campaign_assignments_row["group"].iloc[0]
+    else:
+        campaign_id = None
+        campaign_group = "non-campaign"
 
-    for session_index in range(num_sessions):
+    # determine number of sessions this customer will have
+    num_sessions = (
+        pareto_capped(PARETO_ALPHA, MAX_SESSIONS)
+        * SEGMENT_SESSION_FREQUENCY.get(customer_segment, 1.0)
+        * CAMPAIGN_SESSION_FREQUENCY.get(campaign_group, 1.0)
+    )
+    num_sessions = int(np.clip(num_sessions, 1, MAX_SESSIONS))
+
+    for _ in range(num_sessions):
         if total_events >= NUM_CLICKSTREAMS:
             break
 
         session_id = str(uuid.uuid4())
 
-        if not customer_campaigns.empty:
-            campaign_row = customer_campaigns.sample(1).iloc[0]
-            campaign_id = campaign_row["campaign_id"]
-            campaign_assignments_row = campaign_assignments_df[
-                campaign_assignments_df["campaign_id"] == campaign_id
-            ]
-            campaign_group = campaign_assignments_row["group"].iloc[0]
-
+        if campaign_id:
             campaign_row = campaigns_df[campaigns_df["campaign_id"] == campaign_id]
             campaign_start_date = pd.to_datetime(campaign_row["start_date"].iloc[0])
             campaign_end_date = pd.to_datetime(campaign_row["end_date"].iloc[0])
-            session_start_time = generate_timestamp(campaign_start_date, campaign_end_date)
+            session_start_time = generate_timestamp(
+                campaign_start_date, campaign_end_date
+            )
             session_start_time = session_start_time.replace(microsecond=0)
         else:
-            campaign_id = None
-            campaign_group = "non-campaign"
             session_start_time = generate_timestamp(signup_date, datetime(2024, 12, 31))
             session_start_time = session_start_time.replace(microsecond=0)
 
@@ -474,7 +486,7 @@ for customer_id in customer_ids:
         transition_probability = normalise_probability(transition_probability)
 
         # determine number of events in this session
-        event_count = random.randint(3,15)
+        event_count = random.randint(3, 15)
         event_count += extra_events
 
         bounce_flag = 1 if event_count == 1 else 0
@@ -503,7 +515,7 @@ for customer_id in customer_ids:
             previous_event_type = previous_event.get("event_type", None)
             previous_category = previous_event.get("category", None)
             previous_product_id = previous_event.get("product_id", None)
-            previous_search_term = previous_event.get("search_term","")
+            previous_search_term = previous_event.get("search_term", "")
             previous_timestamp = previous_event.get("timestamp", None)
             previous_time_on_page = previous_event.get("time_on_page", None)
 
@@ -523,7 +535,9 @@ for customer_id in customer_ids:
             if event_order == 1:
                 event_type = landing_page_type
                 # introduce delay after session start time
-                timestamp = session_start_time + timedelta(seconds=random.randint(1, 300))
+                timestamp = session_start_time + timedelta(
+                    seconds=random.randint(1, 300)
+                )
                 timestamp = timestamp.replace(microsecond=0)
 
             else:
@@ -531,7 +545,11 @@ for customer_id in customer_ids:
                 assert previous_time_on_page is not None
 
                 # event timestamp based on previous event time on page with idle time
-                timestamp = previous_timestamp + previous_time_on_page + timedelta(seconds=random.randint(5, 180))
+                timestamp = (
+                    previous_timestamp
+                    + previous_time_on_page
+                    + timedelta(seconds=random.randint(5, 180))
+                )
                 timestamp = timestamp.replace(microsecond=0)
 
                 # seasonal peak category uplift
@@ -539,8 +557,12 @@ for customer_id in customer_ids:
                 if season:
                     peak_categories = SEASON_PEAK_CATEGORIES[season]
                     if category in peak_categories:
-                        event_transition_probability["Product View"]["Add to Cart"] *= 1.2
-                        event_transition_probability["Cart View"]["Checkout Start"] *= 1.1
+                        event_transition_probability["Product View"][
+                            "Add to Cart"
+                        ] *= 1.2
+                        event_transition_probability["Cart View"][
+                            "Checkout Start"
+                        ] *= 1.1
 
                 # normalise probabilities
                 event_transition_probability = normalise_probability(
@@ -554,7 +576,12 @@ for customer_id in customer_ids:
                     cart_content,
                 )
 
-            if event_type in ("Home View", "Search View", "Category View", "Product View"):
+            if event_type in (
+                "Home View",
+                "Search View",
+                "Category View",
+                "Product View",
+            ):
                 # scroll_depth skewed to shallow
                 scroll_depth = generate_scroll_depth()
                 # time on page affected by scroll depth
@@ -641,7 +668,9 @@ for customer_id in customer_ids:
                     product_id = get_random_product_from_category(category)
                     product_name = get_product_name(product_id)
                 elif previous_event_type == "Search View" and previous_search_term:
-                    product_id = get_random_product_from_search_term(previous_search_term)
+                    product_id = get_random_product_from_search_term(
+                        previous_search_term
+                    )
                     if product_id:
                         category = get_category_from_product(product_id)
                     else:
@@ -668,7 +697,7 @@ for customer_id in customer_ids:
             ##################################################
             # record event flow
             events.append(event_type)
-            
+
             # allow partial checkouts
             if event_type == "Payment Successful":
                 purchase_count = random.randint(1, len(cart_content))
@@ -696,7 +725,9 @@ for customer_id in customer_ids:
                 if "{product_id}" in page_template and product_id is not None:
                     page = page_template.format(product_id=product_id)
                 elif "{category}" in page_template and category is not None:
-                    page = page_template.format(category=category.replace(" ", "-").lower())
+                    page = page_template.format(
+                        category=category.replace(" ", "-").lower()
+                    )
                 elif "{search_term}" in page_template and search_term is not None:
                     page = page_template.format(search_term=search_term)
                 else:

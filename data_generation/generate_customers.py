@@ -112,11 +112,17 @@ for i in range(1, NUM_CUSTOMERS - dirty_rows + 1):
             signup_date = sample_signup_date_2024() if random.random() < 0.97 else None
             loyalty_points = 0
 
-            email_marketing_opt_in = random.choices([True, False], weights=[0.28, 0.72], k=1)[0]
+            email_marketing_opt_in = random.choices(
+                [True, False], weights=[0.28, 0.72], k=1
+            )[0]
 
-            sms_marketing_opt_in = random.choices([True, False], weights=[0.13, 0.87], k=1)[0]
+            sms_marketing_opt_in = random.choices(
+                [True, False], weights=[0.13, 0.87], k=1
+            )[0]
 
-            push_notifications_opt_in = random.choices([True, False], weights=[0.61, 0.39], k=1)[0]
+            push_notifications_opt_in = random.choices(
+                [True, False], weights=[0.61, 0.39], k=1
+            )[0]
 
     customers.append(
         {
