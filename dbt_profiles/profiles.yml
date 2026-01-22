@@ -1,0 +1,11 @@
+megamart:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: mega-mart-storage
+      dataset: mega_mart_dataset
+      threads: 1
+      timeout_seconds: 300
+      location: asia-southeast1
