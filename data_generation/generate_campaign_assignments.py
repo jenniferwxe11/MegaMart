@@ -23,7 +23,7 @@ for _, campaign in campaigns_df.iterrows():
     eligible_customers = customers_df[
         (customers_df["signup_date"] <= campaign["start_date"])
         & (customers_df["customer_segment"] == campaign["target_segment"])
-        & (customers_df[consent_column] == True)
+        & (customers_df[consent_column])
     ]
 
     target_audience_size = AUDIENCE_PERCENTAGE * len(eligible_customers)

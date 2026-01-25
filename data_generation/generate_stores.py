@@ -55,7 +55,7 @@ for i in range(1, NUM_PHYSICAL_STORES + 1):
 
 stores.append(
     {
-        "store_id": f"STOR{NUM_PHYSICAL_STORES+1:03d}",
+        "store_id": f"STOR{NUM_PHYSICAL_STORES + 1:03d}",
         "store_name": "MegaMart Online",
         "area": "Nationwide",
         "region": "Nationwide",
