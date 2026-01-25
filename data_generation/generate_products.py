@@ -1,5 +1,5 @@
 import random
-from datetime import timedelta, date
+from datetime import date, timedelta
 
 import pandas as pd
 from config import (
@@ -27,7 +27,9 @@ for i in range(1, NUM_PRODUCTS + 1):
     brand = random.choice(BRANDS.get(category, ["Generic"]))
     item = random.choice(CATEGORY_ITEMS.get(category, ["Item"]))
 
-    product_name = f"{random.choice(['Premium', 'Classic', 'Deluxe', 'Extra'])} {brand} {item}"
+    product_name = (
+        f"{random.choice(['Premium', 'Classic', 'Deluxe', 'Extra'])} {brand} {item}"
+    )
 
     # Prices
     min_price, max_price = CATEGORY_PRICE_RANGES.get(category, (1.5, 100))
@@ -35,9 +37,7 @@ for i in range(1, NUM_PRODUCTS + 1):
     min_margin, max_margin = CATEGORY_COST_MARGIN.get(category, (0.5, 0.95))
     cost_price = round(selling_price * random.uniform(min_margin, max_margin), 2)
 
-    status = random.choices(
-        ["Active", "Discontinued"], weights=[0.95, 0.05]
-    )[0]
+    status = random.choices(["Active", "Discontinued"], weights=[0.95, 0.05])[0]
 
     promotion_type = random.choices(
         [None, "Buy One Get One", "Discounted"], weights=[0.85, 0.05, 0.10]
@@ -54,18 +54,26 @@ for i in range(1, NUM_PRODUCTS + 1):
         bogo_flag = True
 
     if promotion_type:
-        promotion_start_date = fake.date_between(start_date=date(2024,1,1), end_date=date(2024,12,31))
-        promotion_end_date = promotion_start_date + timedelta(days=random.randint(3, 14))  # 3-14 days promotion
+        promotion_start_date = fake.date_between(
+            start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
+        )
+        promotion_end_date = promotion_start_date + timedelta(
+            days=random.randint(3, 14)
+        )  # 3-14 days promotion
 
     discontinuation_date = None
 
     if status == "Discontinued":
         if promotion_end_date:
-            discontinuation_date = fake.date_between(start_date=promotion_end_date, end_date=date(2024,12,31))
+            discontinuation_date = fake.date_between(
+                start_date=promotion_end_date, end_date=date(2024, 12, 31)
+            )
         else:
-            discontinuation_date = fake.date_between(start_date=date(2024,1,1), end_date=date(2024,12,31))
+            discontinuation_date = fake.date_between(
+                start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
+            )
 
-    stock_quantity = random.randint(0,300)
+    stock_quantity = random.randint(0, 300)
 
     products.append(
         {

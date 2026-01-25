@@ -1,5 +1,5 @@
-import random
 import json
+import random
 from datetime import datetime
 
 import pandas as pd
@@ -13,7 +13,9 @@ random.seed(42)
 transactions = []
 transaction_ids = []
 
-customers_df = pd.read_csv("data_generation/raw_data/customers_raw.csv", parse_dates=["signup_date"])
+customers_df = pd.read_csv(
+    "data_generation/raw_data/customers_raw.csv", parse_dates=["signup_date"]
+)
 customers_df.loc[:, "signup_date"] = pd.to_datetime(
     customers_df["signup_date"], errors="coerce"
 )
@@ -34,9 +36,13 @@ campaigns_df.loc[:, "end_date"] = pd.to_datetime(
 )
 campaigns_df.loc[:, "is_ab_test"] = campaigns_df["is_ab_test"].astype(bool)
 
-campaign_assignment_df = pd.read_csv("data_generation/raw_data/campaign_assignments_raw.csv")
+campaign_assignment_df = pd.read_csv(
+    "data_generation/raw_data/campaign_assignments_raw.csv"
+)
 
-clickstreams_df = pd.read_csv("data_generation/raw_data/clickstreams_raw.csv", parse_dates=["timestamp"])
+clickstreams_df = pd.read_csv(
+    "data_generation/raw_data/clickstreams_raw.csv", parse_dates=["timestamp"]
+)
 clickstreams_df.loc[:, "timestamp"] = pd.to_datetime(
     clickstreams_df["timestamp"], errors="coerce"
 )
@@ -44,14 +50,19 @@ region_area_df = pd.read_csv("data_generation/raw_data/region_areas.csv")
 
 LOCATIONS = region_area_df["area"].tolist()
 
+
 def get_payment_status(session_events, timestamp):
-    after_payment_events = session_events[session_events["timestamp"] >= timestamp].sort_values("timestamp")
+    after_payment_events = session_events[
+        session_events["timestamp"] >= timestamp
+    ].sort_values("timestamp")
     if "Payment Successful" in after_payment_events["event_type"].values:
         return True
     return False
 
+
 def get_store_id():
     return "STOR006"
+
 
 def get_shipping_cost():
     return 15
@@ -81,7 +92,9 @@ def get_product_details(product_id, timestamp):
 
 def get_existing_campaign(customer_id, timestamp):
     existing_campaigns = []
-    campaign_ids = campaign_assignment_df[campaign_assignment_df["customer_id"] == customer_id]["campaign_id"]
+    campaign_ids = campaign_assignment_df[
+        campaign_assignment_df["customer_id"] == customer_id
+    ]["campaign_id"]
 
     for campaign_id in campaign_ids:
         row = campaigns_df[campaigns_df["campaign_id"] == campaign_id]
@@ -91,7 +104,11 @@ def get_existing_campaign(customer_id, timestamp):
         start_date = row["start_date"].iloc[0]
         end_date = row["end_date"].iloc[0]
 
-        if pd.notna(start_date) and pd.notna(end_date) and start_date <= timestamp <= end_date:
+        if (
+            pd.notna(start_date)
+            and pd.notna(end_date)
+            and start_date <= timestamp <= end_date
+        ):
             existing_campaigns.append(campaign_id)
 
     return existing_campaigns
@@ -130,8 +147,8 @@ for _, pay_row in payment_attempts.iterrows():
     cart_content = pay_row["cart_content"]
     if isinstance(cart_content, str):
         try:
-            cart_content = json.loads(cart_content.replace("'", "\""))
-        except:
+            cart_content = json.loads(cart_content.replace("'", '"'))
+        except (json.JSONDecodeError, TypeError):
             cart_content = []
 
     if payment_status:
@@ -146,7 +163,9 @@ for _, pay_row in payment_attempts.iterrows():
 
         # create a transaction row per product in cart
         for product_id in cart_content:
-            product_name, product_price, discount_applied, stock = get_product_details(product_id, timestamp)
+            product_name, product_price, discount_applied, stock = get_product_details(
+                product_id, timestamp
+            )
 
             quantity = 1
             subtotal = product_price * quantity
@@ -159,21 +178,23 @@ for _, pay_row in payment_attempts.iterrows():
 
             total_amount = subtotal - discount_amount
 
-            transactions.append({
-                "transaction_id": transaction_id,
-                "customer_id": customer_id,
-                "store_id": store_id,
-                "product_id": product_id,
-                "transaction_time": timestamp,
-                "product_name": product_name,
-                "quantity": quantity,
-                "price": product_price,
-                "discount_applied": discount_amount,
-                "total_amount": total_amount,
-                "payment_method": "Online",
-                "order_status": "Completed",
-                "campaign_id": campaign_id,
-            })
+            transactions.append(
+                {
+                    "transaction_id": transaction_id,
+                    "customer_id": customer_id,
+                    "store_id": store_id,
+                    "product_id": product_id,
+                    "transaction_time": timestamp,
+                    "product_name": product_name,
+                    "quantity": quantity,
+                    "price": product_price,
+                    "discount_applied": discount_amount,
+                    "total_amount": total_amount,
+                    "payment_method": "Online",
+                    "order_status": "Completed",
+                    "campaign_id": campaign_id,
+                }
+            )
     i += 1
 
 # for in-store customers
@@ -182,19 +203,19 @@ for _ in range(1, NUM_TRANSACTIONS + 1):
     transaction_ids.append(transaction_id)
 
     customer_id = random.choice(customer_ids)
-    signup_date = customers_df.loc[customers_df["customer_id"] == customer_id, "signup_date"].iloc[0]
+    signup_date = customers_df.loc[
+        customers_df["customer_id"] == customer_id, "signup_date"
+    ].iloc[0]
     if pd.isna(signup_date):
         signup_date = datetime(2024, 1, 1)
 
     campaign_id = None
-    transaction_time = fake.date_time_between(start_date=signup_date, end_date=datetime(2024, 12, 31))
+    transaction_time = fake.date_time_between(
+        start_date=signup_date, end_date=datetime(2024, 12, 31)
+    )
     transaction_time = transaction_time.replace(microsecond=0)
     store_id = random.choice(store_ids + [None, ""])
-    payment_method = random.choices(
-        ["Credit Card", "Cash"],
-        weights=[0.6, 0.4],
-        k=1
-    )[0]
+    payment_method = random.choices(["Credit Card", "Cash"], weights=[0.6, 0.4], k=1)[0]
 
     no_of_products = random.randint(1, 25)
     product_ids_copy = product_ids.copy()
@@ -208,7 +229,9 @@ for _ in range(1, NUM_TRANSACTIONS + 1):
             product_name = None
             product_price = None
         else:
-            product_name, product_price, discount_applied, stock = get_product_details(product_id, transaction_time)
+            product_name, product_price, discount_applied, stock = get_product_details(
+                product_id, transaction_time
+            )
 
         base_quantity = random.randint(1, 5)
 
@@ -222,7 +245,7 @@ for _ in range(1, NUM_TRANSACTIONS + 1):
             else:
                 total_amount = subtotal
                 discount_amount = 0
-        except:
+        except (ValueError, TypeError):
             subtotal = None
             discount_amount = None
             total_amount = None
@@ -231,26 +254,26 @@ for _ in range(1, NUM_TRANSACTIONS + 1):
             total_amount = round(total_amount, 2)
 
         order_status = random.choices(
-            ["Completed", "Refunded"],
-            weights=[0.93, 0.07],
-            k=1
+            ["Completed", "Refunded"], weights=[0.93, 0.07], k=1
         )[0]
 
-        transactions.append({
-            "transaction_id": transaction_id,
-            "customer_id": customer_id,
-            "store_id": store_id,
-            "product_id": product_id,
-            "transaction_time": transaction_time,
-            "product_name": product_name,
-            "quantity": base_quantity,
-            "price": product_price,
-            "discount_applied": discount_amount,
-            "total_amount": total_amount,
-            "payment_method": payment_method,
-            "order_status": order_status,
-            "campaign_id": campaign_id,
-        })
+        transactions.append(
+            {
+                "transaction_id": transaction_id,
+                "customer_id": customer_id,
+                "store_id": store_id,
+                "product_id": product_id,
+                "transaction_time": transaction_time,
+                "product_name": product_name,
+                "quantity": base_quantity,
+                "price": product_price,
+                "discount_applied": discount_amount,
+                "total_amount": total_amount,
+                "payment_method": payment_method,
+                "order_status": order_status,
+                "campaign_id": campaign_id,
+            }
+        )
 
     i += 1
 

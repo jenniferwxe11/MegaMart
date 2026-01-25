@@ -26,6 +26,7 @@ random.seed(42)
 reviews = []
 review_ids = []
 
+
 def generate_mention_text(mention_type, product_name, value, sentiment, price=None):
     if sentiment == "positive" or sentiment == "neutral":
         if mention_type in POSITIVE_DESCRIPTOR_TEMPLATES and value is not None:
@@ -40,6 +41,7 @@ def generate_mention_text(mention_type, product_name, value, sentiment, price=No
                 "${product}", product_name
             )
     return ""
+
 
 products_df = pd.read_csv("data_generation/raw_data/products_raw.csv")
 product_ids = products_df["product_id"].dropna().tolist()
@@ -57,7 +59,9 @@ for i in range(1, NUM_REVIEWS + 1):
     product_name = product_row["product_name"].iloc[0]
     category = product_row["category"].iloc[0]
     selling_price = product_row["selling_price"].iloc[0]
-    sentiment = random.choices(["positive", "neutral", "negative"], weights=[0.6, 0.2, 0.2])[0]
+    sentiment = random.choices(
+        ["positive", "neutral", "negative"], weights=[0.6, 0.2, 0.2]
+    )[0]
 
     if sentiment == "negative":
         descriptors_pool = NEGATIVE_CATEGORY_DESCRIPTORS.get(category, {}).copy()
@@ -178,7 +182,9 @@ for i in range(1, NUM_REVIEWS + 1):
         "customer_id": customer_id,
         "rating": rating,
         "review_text": review_text,
-        "review_date": fake.date_between(start_date=date(2024,1,1), end_date=date(2024,12,31))
+        "review_date": fake.date_between(
+            start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
+        ),
     }
 
     reviews.append(review)
