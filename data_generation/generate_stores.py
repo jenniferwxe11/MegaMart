@@ -2,10 +2,7 @@ import random
 
 import pandas as pd
 from config import MALL_TO_AREA, NUM_PHYSICAL_STORES
-from faker import Faker
 
-fake = Faker()
-Faker.seed(42)
 random.seed(42)
 
 stores = []
@@ -28,8 +25,8 @@ def get_region_from_area(area):
 
 
 for i in range(1, NUM_PHYSICAL_STORES + 1):
-    sid = f"STOR{i:03d}"
-    store_ids.append(sid)
+    store_id = f"STOR{i:03d}"
+    store_ids.append(store_id)
 
     if random.random() < 0.8:
         mall = random.choice(list(MALL_TO_AREA.keys()))
@@ -37,19 +34,21 @@ for i in range(1, NUM_PHYSICAL_STORES + 1):
         region = get_region_from_area(area)
         store_name = f"MegaMart {mall}"
         MALL_TO_AREA.pop(mall)
+        store_type = "Mall"
 
     else:
         block_no = random.randint(100, 999)
         region, area = get_random_region_area()
         store_name = f"MegaMart Blk {block_no} {area} Street"
+        store_type = "Neighborhood"
 
     stores.append(
         {
-            "store_id": sid,
+            "store_id": store_id,
             "store_name": store_name,
             "area": area,
             "region": region,
-            "store_type": "Physical Store",
+            "store_type": store_type,
         }
     )
 
@@ -59,7 +58,7 @@ stores.append(
         "store_name": "MegaMart Online",
         "area": "Nationwide",
         "region": "Nationwide",
-        "store_type": "Online Website",
+        "store_type": "Online",
     }
 )
 
