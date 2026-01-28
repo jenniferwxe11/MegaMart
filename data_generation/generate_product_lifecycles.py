@@ -1,10 +1,11 @@
 import random
-from datetime import date, timedelta
+from datetime import timedelta
+
 import pandas as pd
 from config import (
-    DATA_END_DATE, 
-    PRODUCT_LIFECYCLE,
+    DATA_END_DATE,
     DATA_START_DATE,
+    PRODUCT_LIFECYCLE,
     SIMULATION_DATE,
 )
 
@@ -16,8 +17,10 @@ product_ids = products_df["product_id"].dropna().tolist()
 product_lifecycles = []
 
 for product_id in product_ids:
-    launch_date = DATA_START_DATE + (DATA_END_DATE - DATA_START_DATE) * (random.random() ** 2)
-    
+    launch_date = DATA_START_DATE + (DATA_END_DATE - DATA_START_DATE) * (
+        random.random() ** 2
+    )
+
     if launch_date >= SIMULATION_DATE - timedelta(days=30):
         status = "New"
     else:
@@ -26,21 +29,22 @@ for product_id in product_ids:
             weights=list(PRODUCT_LIFECYCLE.values()),
             k=1,
         )[0]
+
+    discontinuation_date = None
     if status == "Discontinued":
-        discontinuation_date = launch_date + timedelta(days=random.randint(90,365))
-    else:
-        discontinuation_date = None
-    
-    
+        discontinuation_date = launch_date + timedelta(days=random.randint(90, 365))
+
     product_lifecycles.append(
-	    {
-		    "product_id": product_id,
-		    "status": status,
-		    "launch_date": launch_date,
-		    "discontinuation_date": discontinuation_date,
-	    }
-   )
+        {
+            "product_id": product_id,
+            "status": status,
+            "launch_date": launch_date,
+            "discontinuation_date": discontinuation_date,
+        }
+    )
 
 df_product_lifecycles = pd.DataFrame(product_lifecycles)
-df_product_lifecycles.to_csv("data_generation/raw_data/product_lifecycles_raw.csv", index=False)
+df_product_lifecycles.to_csv(
+    "data_generation/raw_data/product_lifecycles_raw.csv", index=False
+)
 print("product_lifecycles_raw.csv file generated")

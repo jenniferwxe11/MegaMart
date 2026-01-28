@@ -1,37 +1,37 @@
 store_id,product_id,store_product_name,store_brand,store_category,store_selling_price
-STOR001,PROD017,Cowhead Value Cheese 4-pack,Cowhead,Dairy & Eggs,11.48
-STOR001,PROD014,Royal Umbrella Instant Vermicelli 100g 5-pack,Royal Umbrella,Rice & Noodles,5.52
-STOR001,PROD042,Meiji Organic Butter 4-pack,Meiji,Dairy & Eggs,19.58
-STOR001,PROD012,Coca-Cola Original Juice 1.5L,Coca-Cola,Beverages,8.25
-STOR001,PROD008,COWHEAD VALUE EGGS,Cowhead,Dairy & Eggs,3.52
-STOR001,PROD036,Zenxin Organic Food Pre-cut Carrots 250g,Zenxin Organic Food,Fresh Produce,2.4
-STOR001,PROD037,Little Farms Local Apples 500g,Little Farms,Fresh Produce,4.9
-STOR001,PROD049,Gillette Travel Size Shaving Foam 50ml,Gillette,Personal Care & Hygiene,0.56
-STOR001,PROD041,Maggi Wholegrain Vermicelli 100g,Maggi,Rice & Noodles,0.96
-STOR001,PROD047,Sunshine Butter Muffin 6-pack,Sunshine,Bakery,8.55
-STOR001,PROD004,Ajax Dish Soap 500ml 2-pack,Ajax,Cleaning Supplies,10.45
-STOR001,PROD006,Farmhouse Beef 500g,Farmhouse,Meat & Seafood,26.55
-STOR001,PROD005,Pasar Fresh Organic Chicken 300g,Pasar Fresh,Meat & Seafood,11.55
-STOR001,PROD043,Huggies Toddler Formula,Huggies,Baby Products,19.06
-STOR001,PROD039,Dove Herbal Lotion 100ml,Dove,Health & Beauty,4.91
-STOR001,PROD001,CP Family Pack Dumplings 400g,CP,Frozen Food,7.56
-STOR001,PROD029,L'Oreal Cooling Toothpaste 100ml,L'Oreal,Health & Beauty,3.1
-STOR001,PROD028,Xiaomi Energy Saving Blender,Xiaomi,Electronics & Appliances,305.62
-STOR001,PROD034,Tefal Eco-Friendly Water Bottles,Tefal,Home & Living,85.62
-STOR001,PROD024,Colgate Cooling Conditioner 100ml,Colgate,Health & Beauty,5.84
-STOR001,PROD011,HomeBasics Durable Shelving Units,HomeBasics,Home & Living,66.05
-STOR001,PROD019,McCain Fries 800g,McCain,Frozen Food,13.76
-STOR001,PROD030,Samsung Mini Refrigerator Grey,Samsung,Electronics & Appliances,209.98
-STOR001,PROD010,Hasbro Adjustable Puzzle Sets,Hasbro,"Sports, Travel & Leisure",40.83
-STOR001,PROD031,Heinz Beans 200g,Heinz,Canned Goods,0.68
-STOR001,PROD022,Kee Song Organic Turkey 300g,Kee Song,Meat & Seafood,9.39
-STOR001,PROD003,Zojirushi Cutleries,Zojirushi,Home & Living,93.47
-STOR001,PROD035,Panasonic Refrigerator Grey,Panasonic,Electronics,41.16
-STOR001,PROD045,tempur durable curtains,Tempur,Home & Living,82.97
-STOR001,PROD046,Del Monte Reduced Salt Mushroom 400g,Del Monte,Canned Goods,3.76
-STOR001,PROD016,Farmpride Family Pack Dumplings 400g,Farmpride,Frozen Food,3.04
-STOR001,PROD015,Dyson Mini Microwave,Dyson,Electronics & Appliances,307.49
-STOR001,PROD009,Zojirushi Water Bottles,Zojirushi,Home & Living,54.13
-STOR001,PROD032,Huggies Powder,Huggies,Baby Products,13.05
-STOR001,PROD007,Mission Chocolate Croissant 2-pack,Mission,Bakery,3.67
-STOR001,PROD021,Zojirushi Cutleries,Zojirushi,Home & Living,20.38
+STOR001,PROD001,Family Pack Dumplings 400g,CP,Frozen,7.31
+STOR001,PROD003,Zojirushi Cutleries,Zojirushi,"Home & Living (Kitchenware, Storage, Bedding)",105.2
+STOR001,PROD004,Ajax Eco-Friendly Dish Soap 500ml 2-pack,Ajax,Soft Drinks,10.6
+STOR001,PROD005,Pasar Fresh Organic Chicken 300g,Pasar Fresh,,10.86
+STOR001,PROD008,Cowhead Value Eggs,Cowhead,Dairy,3.83
+STOR001,PROD009,Zojirushi Water Bottles,Zojirushi,"Home & Living (Kitchenware, Storage, Bedding)",54.79
+STOR001,PROD010,Hasbro Adjustable Puzzle Sets,Hasbro,"Lifestyle & Recreation (Fitness, Toys, Travel)",37.28
+STOR001,PROD011,HomeBasics Durable Shelving Units,HomeBasics,"Home & Living (Kitchenware, Storage, Bedding)",68.45
+STOR001,PROD012,Coca-Cola Regular Juice 1.5L,Coca-Cola,Soft Drinks,7.62
+STOR001,PROD013,Hair Dryer Grey,Samsung,Electronics,64.99
+STOR001,PROD014,ROYAL UMBRELLA INSTANT VERMICELLI 100G 5-PACK,Royal Umbrella,Food Cupboard,5.28
+STOR001,PROD015,Dyson Mini Microwave,Dyson,Electronics,315.26
+STOR001,PROD016,Farmpride Family Pack Dumplings 400g,Farmpride,Frozen,3.39
+STOR001,PROD017,Cowhead Value Cheese 4-Pack,Cowhead,"Dairy, Chilled & Eggs",10.77
+STOR001,PROD019,McCain Fries 800g,McCain,Frozen,15.35
+STOR001,PROD021,Zojirushi Cutleries,Zojirushi,Home Living,21.19
+STOR001,PROD022,Kee Song Organic Turkey 300g,Kee Song,,10.19
+STOR001,PROD023,McCain Family Pack Fries 1kg 2pk,McCain,Frozen,22.81
+STOR001,PROD025,Dove Herbal Conditioner 200ml,Dove,Personal Care,12.22
+STOR001,PROD031,Heinz Beans 200g,Heinz,Canned Food,0.62
+STOR001,PROD032,Huggies Powder,Huggies,Baby & Child,12.13
+STOR001,PROD033,Ayam Brand Reduced Salt Mushroom 800g,Ayam Brand,Canned Food,4.93
+STOR001,PROD034,Tefal Eco-Friendly Water Bottles,Tefal,Home Living,91.65
+STOR001,PROD036,Zenxin Organic Food Pre-cut Carrots 250g,zenxin organic food,Fruits & Vegetables,2.28
+STOR001,PROD037,Little Farms Whole Apples 250g,Little-Farms,Vegetables & Fruits,2.64
+STOR001,PROD039,Dove Herbal Lotion 100ml,Dove,Beauty,4.51
+STOR001,PROD040,Lotion 200ml,Nivea,Beauty & Personal Care,4.79
+STOR001,PROD041,Maggi Wholegrain Vermicelli 100g,Maggi,Food Cupboard,1.08
+STOR001,PROD042,MEIJI PASTEURISED BUTTER 4-PACK,Meiji,Dairy,21.59
+STOR001,PROD043,Huggies Toddler Formula,Huggies,Baby & Child,16.49
+STOR001,PROD044,Mr_Muscle Green Glass Cleaner 1000ml,Mr Muscle,Soft Drinks,7.9
+STOR001,PROD045,Tempur Durable Curtains,Tempur,Home Living,73.4
+STOR001,PROD046,Del-Monte Reduced Salt Mushroom 400g,Del Monte,Canned Food,3.82
+STOR001,PROD047,Sunshine Butter Muffin 6-pack,Sunshine,Bread,7.87
+STOR001,PROD048,Mattel Adjustable Puzzle Sets,Mattel,"Lifestyle & Recreation (Fitness, Toys, Travel)",138.29
+STOR001,PROD049,Gillette Travel Size Shaving Foam 50Ml,Gillette,Personal Care & Hygiene,0.64

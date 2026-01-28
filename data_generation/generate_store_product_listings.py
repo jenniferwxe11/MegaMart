@@ -1,15 +1,16 @@
 import random
 import re
+
 import pandas as pd
 from config import (
     BRAND_ERROR_RATE,
-    CATEGORY_TO_STORE,
     CATEGORY_ERROR_RATE,
+    CATEGORY_TO_STORE,
     DESCRIPTOR_MAP,
+    ESSENTIAL_CATEGORIES,
     NAME_ERROR_RATE,
     PRICE_ERROR_RATE,
     STORE_TYPE_CONFIG,
-    ESSENTIAL_CATEGORIES,
 )
 
 random.seed(42)
@@ -20,8 +21,11 @@ store_ids = stores_df["store_id"].dropna().tolist()
 products_df = pd.read_csv("data_generation/raw_data/products_raw.csv")
 product_ids = products_df["product_id"].dropna().tolist()
 
-essential_product_ids = products_df[products_df["category"].isin(ESSENTIAL_CATEGORIES)]["product_id"].tolist()
+essential_product_ids = products_df[products_df["category"].isin(ESSENTIAL_CATEGORIES)][
+    "product_id"
+].tolist()
 non_essentials_product_ids = list(set(product_ids) - set(essential_product_ids))
+
 
 def distort_pack_and_size(product_name):
     if random.random() < 0.25:
@@ -33,9 +37,12 @@ def distort_pack_and_size(product_name):
         ]
         for pattern, replacement in patterns:
             if re.search(pattern, product_name, flags=re.I):
-                product_name = re.sub(pattern, replacement, product_name, flags=re.I, count=1)
+                product_name = re.sub(
+                    pattern, replacement, product_name, flags=re.I, count=1
+                )
                 return product_name
     return product_name
+
 
 def unit_normalisation(product_name):
     if random.random() < 0.2:
@@ -47,9 +54,12 @@ def unit_normalisation(product_name):
         ]
         for pattern, replacement in conversions:
             if re.search(pattern, product_name, flags=re.I):
-                product_name = re.sub(pattern, replacement, product_name, flags=re.I, count=1)
+                product_name = re.sub(
+                    pattern, replacement, product_name, flags=re.I, count=1
+                )
                 return product_name
     return product_name
+
 
 def case_and_typography(product_name):
     if random.random() < 0.2:
@@ -65,6 +75,7 @@ def case_and_typography(product_name):
         return product_name
     return product_name
 
+
 def separator_symbol_drift(product_name):
     if random.random() < 0.2:
         replacements = [
@@ -79,13 +90,21 @@ def separator_symbol_drift(product_name):
         return product_name
     return product_name
 
+
 def descriptor_substitution(product_name):
     if random.random() < 0.25:
         for original, substitutes in DESCRIPTOR_MAP.items():
             if re.search(original, product_name, flags=re.I):
-                product_name = re.sub(original, random.choice(substitutes), product_name, flags=re.I, count=1)
+                product_name = re.sub(
+                    original,
+                    random.choice(substitutes),
+                    product_name,
+                    flags=re.I,
+                    count=1,
+                )
                 return product_name
     return product_name
+
 
 def inject_name_error(product_name):
     if random.random() < NAME_ERROR_RATE:
@@ -97,6 +116,7 @@ def inject_name_error(product_name):
         return product_name.strip()
     return product_name
 
+
 def inject_brand_error(brand):
     if random.random() < BRAND_ERROR_RATE:
         brand = case_and_typography(brand)
@@ -104,16 +124,19 @@ def inject_brand_error(brand):
         return brand.strip()
     return brand
 
+
 def inject_category_error(category):
     if random.random() < CATEGORY_ERROR_RATE:
         return random.choice(CATEGORY_TO_STORE[category])
     return category
+
 
 def inject_price_error(price):
     if random.random() < PRICE_ERROR_RATE:
         mismatch_factor = random.uniform(0.85, 1.15)
         return round(price * mismatch_factor, 2)
     return price
+
 
 store_product_listings = []
 for store_id in store_ids:
@@ -127,14 +150,17 @@ for store_id in store_ids:
 
     # ensure essential items are always present
     essen_low, essen_high = STORE_TYPE_CONFIG[store_type]["Essential"]
-    essential_count = min(int(total_products * random.uniform(essen_low, essen_high)), len(essential_product_ids))
+    essential_count = min(
+        int(total_products * random.uniform(essen_low, essen_high)),
+        len(essential_product_ids),
+    )
     selected_essentials = random.sample(essential_product_ids, essential_count)
 
     # fill up the rest of the assortment
     remaining_slots = max(total_products - essential_count, 0)
     selected_non_essentials = random.sample(
         non_essentials_product_ids,
-        min(remaining_slots, len(non_essentials_product_ids))
+        min(remaining_slots, len(non_essentials_product_ids)),
     )
     selected_product = selected_essentials + selected_non_essentials
 
@@ -165,5 +191,10 @@ for store_id in store_ids:
         )
 
 df_store_product_listings = pd.DataFrame(store_product_listings)
-df_store_product_listings.to_csv("data_generation/raw_data/store_product_listings_raw.csv", index=False)
+df_store_product_listings = df_store_product_listings.sort_values(
+    by=["store_id", "product_id"]
+).reset_index(drop=True)
+df_store_product_listings.to_csv(
+    "data_generation/raw_data/store_product_listings_raw.csv", index=False
+)
 print("store_product_listings_raw.csv file generated")

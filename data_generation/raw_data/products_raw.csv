@@ -2,7 +2,7 @@ product_id,product_name,brand,category,selling_price,cost_price
 PROD001,CP Family Pack Dumplings 400g,CP,Frozen Food,7.56,5.8
 PROD002,Cowhead Yogurt,Cowhead,Dairy & Eggs,2.93,1.99
 PROD003,Zojirushi Cutleries,Zojirushi,Home & Living,93.47,60.56
-PROD004,Ajax Dish Soap 500ml 2-pack,Ajax,Cleaning Supplies,10.45,5.53
+PROD004,Ajax Eco-Friendly Dish Soap 500ml 2-pack,Ajax,Cleaning Supplies,10.45,5.53
 PROD005,Pasar Fresh Organic Chicken 300g,Pasar Fresh,Meat & Seafood,11.55,8.17
 PROD006,Farmhouse Beef 500g,Farmhouse,Meat & Seafood,26.55,19.03
 PROD007,Mission Chocolate Croissant 2-pack,Mission,Bakery,3.19,1.53
@@ -16,7 +16,7 @@ PROD014,Royal Umbrella Instant Vermicelli 100g 5-pack,Royal Umbrella,Rice & Nood
 PROD015,Dyson Mini Microwave,Dyson,Electronics & Appliances,307.49,252.8
 PROD016,Farmpride Family Pack Dumplings 400g,Farmpride,Frozen Food,3.04,1.96
 PROD017,Cowhead Value Cheese 4-pack,Cowhead,Dairy & Eggs,10.4,7.92
-PROD018,Vanish Heavy Duty Wipes 1L 2-pack,Vanish,Cleaning Supplies,41.8,27.39
+PROD018,Vanish Heavy Duty Wipes 1L 4-pack,Vanish,Cleaning Supplies,74.8,49.01
 PROD019,McCain Fries 800g,McCain,Frozen Food,13.76,6.91
 PROD020,Pepsi Cola 1L,Pepsi,Beverages,4.4,2.4
 PROD021,Zojirushi Cutleries,Zojirushi,Home & Living,20.38,16.26
@@ -25,7 +25,7 @@ PROD023,McCain Family Pack Fries 1kg 2-pack,McCain,Frozen Food,26.6,15.52
 PROD024,Colgate Cooling Conditioner 100ml,Colgate,Health & Beauty,5.84,4.81
 PROD025,Dove Herbal Conditioner 200ml,Dove,Health & Beauty,11.02,6.15
 PROD026,Jack n Jill Chocolate Bars 150g,Jack n Jill,Snacks,0.73,0.36
-PROD027,Pokka Energy Drinks 1L,Pokka,Beverages,7.6,4.19
+PROD027,Pokka Concentrate Energy Drinks 330ml 12-pack,Pokka,Beverages,4.75,2.58
 PROD028,Xiaomi Energy Saving Blender,Xiaomi,Electronics & Appliances,305.62,265.52
 PROD029,L'Oreal Cooling Toothpaste 100ml,L'Oreal,Health & Beauty,3.1,2.18
 PROD030,Samsung Mini Refrigerator Grey,Samsung,Electronics & Appliances,209.98,182.25
@@ -35,14 +35,14 @@ PROD033,Ayam Brand Reduced Salt Mushroom 800g,Ayam Brand,Canned Goods,4.64,3.3
 PROD034,Tefal Eco-Friendly Water Bottles,Tefal,Home & Living,85.62,73.28
 PROD035,Panasonic Refrigerator Grey,Panasonic,Electronics & Appliances,41.16,32.24
 PROD036,Zenxin Organic Food Pre-cut Carrots 250g,Zenxin Organic Food,Fresh Produce,2.4,1.4
-PROD037,Little Farms Local Apples 500g,Little Farms,Fresh Produce,4.9,1.92
+PROD037,Little Farms Whole Apples 250g,Little Farms,Fresh Produce,2.45,0.96
 PROD038,Heaven & Earth Original Juice 330ml 12-pack,Heaven & Earth,Beverages,27.8,17.37
 PROD039,Dove Herbal Lotion 100ml,Dove,Health & Beauty,4.91,3.16
 PROD040,Nivea Lotion 200ml,Nivea,Health & Beauty,4.22,3.32
 PROD041,Maggi Wholegrain Vermicelli 100g,Maggi,Rice & Noodles,0.96,0.56
-PROD042,Meiji Organic Butter 4-pack,Meiji,Dairy & Eggs,19.58,10.47
+PROD042,Meiji Pasteurised Butter 4-pack,Meiji,Dairy & Eggs,19.58,10.47
 PROD043,Huggies Toddler Formula,Huggies,Baby Products,19.06,14.78
-PROD044,Mr Muscle Heavy Duty Glass Cleaner 500ml 2-pack,Mr Muscle,Cleaning Supplies,29.16,14.59
+PROD044,Mr Muscle Eco-Friendly Glass Cleaner 1L,Mr Muscle,Cleaning Supplies,8.1,6.3
 PROD045,Tempur Durable Curtains,Tempur,Home & Living,82.97,52.88
 PROD046,Del Monte Reduced Salt Mushroom 400g,Del Monte,Canned Goods,3.76,1.76
 PROD047,Sunshine Butter Muffin 6-pack,Sunshine,Bakery,8.55,3.96

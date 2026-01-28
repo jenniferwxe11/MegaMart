@@ -1,11 +1,17 @@
 from datetime import date, datetime
+from typing import Any, Dict, List
 
+# sample mode
 DATA_START_DATE = date(2023, 1, 1)
 DATA_END_DATE = date(2025, 12, 31)
 SIMULATION_DATE = date(2025, 12, 31)
 NUM_CUSTOMERS = 100
 NUM_PHYSICAL_STORES = 5
 NUM_PRODUCTS = 50
+BRAND_ERROR_RATE = 1
+CATEGORY_ERROR_RATE = 1
+NAME_ERROR_RATE = 1
+PRICE_ERROR_RATE = 1
 NUM_REVIEWS = 100
 NUM_CAMPAIGNS = 200
 CONTROL_GROUP_PERCENTAGE = 0.5
@@ -13,16 +19,17 @@ AUDIENCE_PERCENTAGE = 1
 NUM_CLICKSTREAMS = 100
 PAYDAY_BOOST = 2.5
 PARETO_ALPHA = 1.8
-MAX_SESSIONS = 3
-MAX_EVENTS_PER_SESSION = 10
+MAX_SESSIONS = 5
+MAX_EVENTS_PER_SESSION = 20
 MAX_CLICKSTREAM = 200
 NUM_TRANSACTIONS = 10
+# production mode
 # MAX_SESSIONS = 50
 # MAX_EVENTS_PER_SESSION = 60
-BRAND_ERROR_RATE = 0.05
-CATEGORY_ERROR_RATE = 0.08
-NAME_ERROR_RATE = 0.15
-PRICE_ERROR_RATE = 0.1
+# BRAND_ERROR_RATE = 0.05
+# CATEGORY_ERROR_RATE = 0.08
+# NAME_ERROR_RATE = 0.15
+# PRICE_ERROR_RATE = 0.1
 
 
 MONTH_WEIGHTS_2024 = {
@@ -149,7 +156,15 @@ BRANDS = {
     "Dairy & Eggs": ["Farmers Union", "Marigold", "Meiji", "SCS", "Cowhead", "Chew's"],
     "Frozen Food": ["CP", "McCain", "Farmpride", "First Pride"],
     "Fresh Produce": ["Dole", "Zespri", "Zenxin Organic Food", "Pasar", "Little Farms"],
-    "Pantry Staples": ["Knife", "Lee Kum Kee", "Ayam Brand", "San Remo", "Golden Farm", "Maggie", "A1"],
+    "Pantry Staples": [
+        "Knife",
+        "Lee Kum Kee",
+        "Ayam Brand",
+        "San Remo",
+        "Golden Farm",
+        "Maggie",
+        "A1",
+    ],
     "Household Essentials": ["Kleenex", "FairPrice", "Hada", "Premier"],
     "Health & Beauty": ["Colgate", "Dove", "Nivea", "L'Oreal", "Sensodyne"],
     "Baby Products": ["Pampers", "Huggies", "MamyPoko", "Johnson's"],
@@ -162,7 +177,16 @@ BRANDS = {
         "Pantene",
         "Head & Shoulders",
     ],
-    "Meat & Seafood": ["Ben's Farm", "Sadia", "Ocean Fresh", "Farmhouse", "Pasar Fresh", "Hego", "Kee Song", "Aw's Market"],
+    "Meat & Seafood": [
+        "Ben's Farm",
+        "Sadia",
+        "Ocean Fresh",
+        "Farmhouse",
+        "Pasar Fresh",
+        "Hego",
+        "Kee Song",
+        "Aw's Market",
+    ],
     "Bakery": ["Gardenia", "Sunshine", "Mission", "Apollo"],
     "Cleaning Supplies": ["Mr Muscle", "Vanish", "Ajax", "Clorox"],
     "Rice & Noodles": ["Royal Umbrella", "SongHe", "Maggi", "Koka"],
@@ -173,12 +197,11 @@ BRANDS = {
         "Samsung",
         "Panasonic",
         "Dyson",
-        "Toyomi"
+        "Toyomi",
     ],
     "Kitchenware": ["Lock&Lock", "Tefal", "Zojirushi"],
     "Storage & Organization": ["Lock&Lock", "HomeBasics"],
     "Bedding & Furnishings": ["Tempur", "HomeBasics"],
-
     "Fitness & Wellness": ["Nike", "Adidas", "Puma", "Fitbit", "Wilson"],
     "Travel Gear": ["American Tourister", "Nike", "Adidas"],
     "Games & Hobbies": ["Hasbro", "Mattel"],
@@ -191,8 +214,32 @@ CATEGORY_ITEMS = {
     "Beverages": ["Cola", "Juice", "Tea", "Coffee", "Soda", "Energy Drinks"],
     "Dairy & Eggs": ["Milk", "Cheese", "Butter", "Yogurt", "Cream", "Eggs"],
     "Frozen Food": ["Pizza", "Fries", "Dumplings", "Ice Cream", "Frozen Vegetables"],
-    "Fresh Produce": ["Apples", "Bananas", "Carrots", "Tomatoes", "Spinach", "Broccoli", "Potatoes", "Lettuce", "Cucumbers", "Peppers"],
-    "Pantry Staples": ["Cooking Oil", "Salt", "Sugar", "Flour", "Tumeric", "Mustard", "Vinegar", "Honey", "Soy Sauce", "Ketchup", "Chili Sauce", "Mayonnaise"],
+    "Fresh Produce": [
+        "Apples",
+        "Bananas",
+        "Carrots",
+        "Tomatoes",
+        "Spinach",
+        "Broccoli",
+        "Potatoes",
+        "Lettuce",
+        "Cucumbers",
+        "Peppers",
+    ],
+    "Pantry Staples": [
+        "Cooking Oil",
+        "Salt",
+        "Sugar",
+        "Flour",
+        "Tumeric",
+        "Mustard",
+        "Vinegar",
+        "Honey",
+        "Soy Sauce",
+        "Ketchup",
+        "Chili Sauce",
+        "Mayonnaise",
+    ],
     "Household Essentials": [
         "Toilet Paper",
         "Trash Bags",
@@ -205,12 +252,51 @@ CATEGORY_ITEMS = {
     ],
     "Health & Beauty": ["Toothpaste", "Lotion", "Shampoo", "Conditioner", "Body Wash"],
     "Baby Products": ["Diapers", "Wipes", "Powder", "Cream", "Formula"],
-    "Canned Goods": ["Tomatoes", "Corn", "Beans", "Tuna", "Sardines", "Mushroom", "Pickles"],
+    "Canned Goods": [
+        "Tomatoes",
+        "Corn",
+        "Beans",
+        "Tuna",
+        "Sardines",
+        "Mushroom",
+        "Pickles",
+    ],
     "Personal Care": ["Deodorant", "Shaving Foam", "Razors", "Hand Sanitizer"],
-    "Meat & Seafood": ["Chicken", "Beef", "Fish", "Prawns", "Salmon", "Lamb", "Turkey", "Fillet", "Drumsticks"],
+    "Meat & Seafood": [
+        "Chicken",
+        "Beef",
+        "Fish",
+        "Prawns",
+        "Salmon",
+        "Lamb",
+        "Turkey",
+        "Fillet",
+        "Drumsticks",
+    ],
     "Bakery": ["Bread", "Cake", "Buns", "Croissant", "Muffin"],
-    "Cleaning Supplies": ["Bleach", "All-purpose Spray", "Scrub Brush", "Wipes", "Dish Soap", "Floor Cleaner", "Glass Cleaner", "Sponges"],
-    "Rice & Noodles": ["Rice", "Soba", "Udon", "Noodles", "Vermicelli", "Spaghetti", "Macaroni", "Fettuccine", "Lasagna", "Penne", "Ramen"],
+    "Cleaning Supplies": [
+        "Bleach",
+        "All-purpose Spray",
+        "Scrub Brush",
+        "Wipes",
+        "Dish Soap",
+        "Floor Cleaner",
+        "Glass Cleaner",
+        "Sponges",
+    ],
+    "Rice & Noodles": [
+        "Rice",
+        "Soba",
+        "Udon",
+        "Noodles",
+        "Vermicelli",
+        "Spaghetti",
+        "Macaroni",
+        "Fettuccine",
+        "Lasagna",
+        "Penne",
+        "Ramen",
+    ],
     "Breakfast Foods": ["Cereal", "Oats", "Granola", "Muesli", "Porridge"],
     "Electronics & Appliances": [
         "Blender",
@@ -269,86 +355,127 @@ SUBCATEGORY_ITEMS = {
 }
 
 
-CATEGORY_PROFILES = {
+CATEGORY_PROFILES: Dict[str, Dict[str, List[Any]]] = {
     "Snacks": {
         "variants": [None, "Original", "Baked", "Chocolate", "Honey", "Salted"],
         "net_content": ["50g", "100g", "150g", "300g"],
-        "pack_quantity": [None]
+        "pack_quantity": [None],
     },
     "Beverages": {
         "variants": [None, "Original", "Zero Sugar", "Less Sugar", "Concentrate"],
         "net_content": ["330ml", "500ml", "1L", "1.5L"],
-        "pack_quantity": [None, "6-pack", "12-pack", "24-pack"]
+        "pack_quantity": [None, "6-pack", "12-pack", "24-pack"],
     },
     "Dairy & Eggs": {
         "variants": [None, "Value", "Imported", "Local", "Organic", "Pasteurised"],
         "net_content": [None],
-        "pack_quantity": [None, "2-pack", "4-pack"]
+        "pack_quantity": [None, "2-pack", "4-pack"],
     },
     "Frozen Food": {
         "variants": [None, "Family Pack", "Single Serve", "Low Calorie"],
         "net_content": ["400g", "800g", "1kg"],
-        "pack_quantity": [None, "2-pack"]
+        "pack_quantity": [None, "2-pack"],
     },
     "Fresh Produce": {
-        "variants": [None, "Organic", "Local", "Imported", "Washed", "Pre-cut", "Whole"],
+        "variants": [
+            None,
+            "Organic",
+            "Local",
+            "Imported",
+            "Washed",
+            "Pre-cut",
+            "Whole",
+        ],
         "net_content": ["Loose", "250g", "500g"],
-        "pack_quantity": [None]
+        "pack_quantity": [None],
     },
     "Pantry Staples": {
         "variants": [None, "Organic", "Shelf Stable"],
         "net_content": [None],
-        "pack_quantity": [None]
+        "pack_quantity": [None],
     },
     "Household Essentials": {
         "variants": [None, "Regular", "Eco", "Bulk", "Travel Size"],
         "net_content": [None],
-        "pack_quantity": [None, "2-pack", "4-pack"]
+        "pack_quantity": [None, "2-pack", "4-pack"],
     },
     "Health & Beauty": {
         "variants": [None, "Sensitive", "Whitening", "Herbal", "Cooling"],
         "net_content": ["100ml", "200ml", "400ml"],
-        "pack_quantity": [None, "2-pack"]
+        "pack_quantity": [None, "2-pack"],
     },
     "Baby Products": {
         "variants": [None, "Newborn", "Toddler", "Premium"],
         "net_content": [None],
-        "pack_quantity": [None]
+        "pack_quantity": [None],
     },
     "Canned Goods": {
         "variants": [None, "Reduced Salt"],
         "net_content": ["200g", "400g", "800g"],
-        "pack_quantity": [None]
+        "pack_quantity": [None],
     },
     "Personal Care": {
         "variants": [None, "Travel Size"],
         "net_content": ["50ml", "100ml", "200ml"],
-        "pack_quantity": [None, "2-pack"]
+        "pack_quantity": [None, "2-pack"],
     },
     "Meat & Seafood": {
-        "variants": [None, "Fresh", "Frozen", "Marinated", "Smoked", "Boneless", "Skinless", "Organic"],
+        "variants": [
+            None,
+            "Fresh",
+            "Frozen",
+            "Marinated",
+            "Smoked",
+            "Boneless",
+            "Skinless",
+            "Organic",
+        ],
         "net_content": ["300g", "500g", "800g", "1kg"],
-        "pack_quantity": [None]
+        "pack_quantity": [None],
     },
     "Bakery": {
-        "variants": [None, "Wholemeal", "Multigrain", "Sourdough", "Butter", "Chocolate", "Almond", "Cheese", "Gluten-Free"],
+        "variants": [
+            None,
+            "Wholemeal",
+            "Multigrain",
+            "Sourdough",
+            "Butter",
+            "Chocolate",
+            "Almond",
+            "Cheese",
+            "Gluten-Free",
+        ],
         "net_content": [None],
-        "pack_quantity": [None, "2-pack", "6-pack"]
+        "pack_quantity": [None, "2-pack", "6-pack"],
     },
     "Cleaning Supplies": {
         "variants": [None, "Eco-Friendly", "Heavy Duty", "Antibacterial"],
         "net_content": ["500ml", "1L", "2L"],
-        "pack_quantity": [None, "2-pack", "4-pack"]
+        "pack_quantity": [None, "2-pack", "4-pack"],
     },
     "Rice & Noodles": {
         "variants": [None, "Wholegrain", "Organic", "Gluten-Free", "Instant"],
         "net_content": [None, "100g", "250g", "500g"],
-        "pack_quantity": [None, "2-pack", "5-pack"]
+        "pack_quantity": [None, "2-pack", "5-pack"],
     },
     "Breakfast Foods": {
-        "variants": [None, "Honey", "Low Sugar", "Fuits", "Multigrain", "Protein", "Gluten-Free", "High Fiber", "Kids"],
+        "variants": [
+            None,
+            "Honey",
+            "Low Sugar",
+            "Fuits",
+            "Multigrain",
+            "Protein",
+            "Gluten-Free",
+            "High Fiber",
+            "Kids",
+        ],
         "net_content": ["100g", "250g", "500g"],
-        "pack_quantity": [None, "2-pack", "4-pack",]
+        "pack_quantity": [
+            None,
+            "2-pack",
+            "4-pack",
+        ],
     },
     "Electronics & Appliances": {
         "variants": [None, "Mini", "Low Power", "Smart", "Energy Saving", "Quiet"],
@@ -359,17 +486,17 @@ CATEGORY_PROFILES = {
     "Home & Living": {
         "variants": [None, "Durable", "Eco-Friendly"],
         "net_content": [None],
-        "pack_quantity": [None]
+        "pack_quantity": [None],
     },
     "Sports, Travel & Leisure": {
         "variants": [None, "Portable", "Compact", "Adjustable"],
         "net_content": [None],
-        "pack_quantity": [None]
-    }
+        "pack_quantity": [None],
+    },
 }
 
 
-# Approximate price ranges per category 
+# Approximate price ranges per category
 CATEGORY_PRICE_RANGES = {
     # per 100g/100ml
     "Snacks": (0.3, 1.5),
@@ -383,12 +510,10 @@ CATEGORY_PRICE_RANGES = {
     "Cleaning Supplies": (0.8, 4.0),
     "Breakfast Foods": (0.4, 2.5),
     "Rice & Noodles": (0.6, 1.5),
-
     # per pack
     "Dairy & Eggs": (2.0, 6.0),
     "Bakery": (1.2, 3.5),
     "Household Essentials": (1.2, 5.0),
-
     # item count
     "Pantry Staples": (1.5, 8.0),
     "Baby Products": (8.0, 40.0),
@@ -455,7 +580,7 @@ ESSENTIAL_CATEGORIES = [
     "Household Essentials",
     "Rice & Noodles",
     "Cleaning Suppliers",
-    "Personal Care"
+    "Personal Care",
 ]
 
 
@@ -465,7 +590,11 @@ CATEGORY_TO_STORE = {
     "Dairy & Eggs": ["Dairy", "Dairy, Chilled & Eggs"],
     "Frozen Food": ["Frozen"],
     "Fresh Produce": ["Vegetables & Fruits", "Fruits & Vegetables"],
-    "Pantry Staples": ["Cupboard Essentials", "Rice, Noodles & Cooking Ingredients", "Cooking Ingredients"],
+    "Pantry Staples": [
+        "Cupboard Essentials",
+        "Rice, Noodles & Cooking Ingredients",
+        "Cooking Ingredients",
+    ],
     "Household Essentials": ["Household"],
     "Health & Beauty": ["Beauty", "Beauty & Personal Care", "Personal Care"],
     "Baby Products": ["Mummy & Baby", "Baby", "Baby & Child"],
@@ -474,11 +603,19 @@ CATEGORY_TO_STORE = {
     "Meat & Seafood": [""],
     "Bakery": ["Bread"],
     "Cleaning Supplies": ["Soft Drinks"],
-    "Rice & Noodles": ["Rice & Pasta", "Food Cupboard", "Rice, Noodles & Cooking Ingredients"],
+    "Rice & Noodles": [
+        "Rice & Pasta",
+        "Food Cupboard",
+        "Rice, Noodles & Cooking Ingredients",
+    ],
     "Breakfast Foods": ["Granolas & Cereals", "Food Cupboard", "Breakfast"],
     "Electronics & Appliances": ["Electronics"],
     "Home & Living": ["Home & Living (Kitchenware, Storage, Bedding)", "Home Living"],
-    "Sports, Travel & Leisure": ["Lifestyle & Recreation (Fitness, Toys, Travel)", "Sports & Travel", "Lifestyle"],
+    "Sports, Travel & Leisure": [
+        "Lifestyle & Recreation (Fitness, Toys, Travel)",
+        "Sports & Travel",
+        "Lifestyle",
+    ],
 }
 
 
@@ -495,25 +632,110 @@ DESCRIPTOR_MAP = {
 }
 
 CATEGORY_ATTRIBUTES = {
-    "Snacks": ["dietary_tag(vegan, gluten-free)", "allergen_info", "is_sweet/savoury", "is_baked/fried", "texture(crispy, chewy)"],
-    "Beverages": ["beverage_type(soda, juice, tea)", "caffine_content", "carbonation(yes/no)", "is_concentrate", "serving_temperature", "packaging_type(can/bottle)"],
-    "Dairy & Eggs": ["lactose_free", "storage_type(chilled/room temperature)", "expiry_date", "source(cow, free-range)", "pasteurised(yes/no)"],
-    "Frozen Food": ["is_pre_cooked", "cooking_method(oven, air fryer, stove)", "cook_time_minutes"],
-    "Fresh Produce": ["country_of_origin", "wash_type(washed/unwashed)", "cut_type(whole, pre-cut)", "seasonality", "perishability_score", "organic_certified"],
+    "Snacks": [
+        "dietary_tag(vegan, gluten-free)",
+        "allergen_info",
+        "is_sweet/savoury",
+        "is_baked/fried",
+        "texture(crispy, chewy)",
+    ],
+    "Beverages": [
+        "beverage_type(soda, juice, tea)",
+        "caffine_content",
+        "carbonation(yes/no)",
+        "is_concentrate",
+        "serving_temperature",
+        "packaging_type(can/bottle)",
+    ],
+    "Dairy & Eggs": [
+        "lactose_free",
+        "storage_type(chilled/room temperature)",
+        "expiry_date",
+        "source(cow, free-range)",
+        "pasteurised(yes/no)",
+    ],
+    "Frozen Food": [
+        "is_pre_cooked",
+        "cooking_method(oven, air fryer, stove)",
+        "cook_time_minutes",
+    ],
+    "Fresh Produce": [
+        "country_of_origin",
+        "wash_type(washed/unwashed)",
+        "cut_type(whole, pre-cut)",
+        "seasonality",
+        "perishability_score",
+        "organic_certified",
+    ],
     "Pantry Staples": ["shelf_life_days", "allergen_info", "country_of_origin"],
-    "Household Essentials": ["disposable/reusable", "scent", "refillable", "eco-certified"],
-    "Health & Beauty": ["skin_type", "dermatologically_tested", "gender_target", "fragrance_free"],
-    "Baby Products": ["hypoallergenic", "safety_certification", "baby_stage(newborn, toddler)", "fragrance_free"],
-    "Canned Goods": ["pull_tab(yes/no)", "ready_to_eat", "liquid_base(oil, brine, syrup)"],
+    "Household Essentials": [
+        "disposable/reusable",
+        "scent",
+        "refillable",
+        "eco-certified",
+    ],
+    "Health & Beauty": [
+        "skin_type",
+        "dermatologically_tested",
+        "gender_target",
+        "fragrance_free",
+    ],
+    "Baby Products": [
+        "hypoallergenic",
+        "safety_certification",
+        "baby_stage(newborn, toddler)",
+        "fragrance_free",
+    ],
+    "Canned Goods": [
+        "pull_tab(yes/no)",
+        "ready_to_eat",
+        "liquid_base(oil, brine, syrup)",
+    ],
     "Personal Care": ["alcohol_free", "dermatologist_tested", "skin_type"],
-    "Meat & Seafood": ["cut_type", "country_of_origin", "farmed_or_wild", "storage_temperature", "expiry_days", "halal_certified"],
+    "Meat & Seafood": [
+        "cut_type",
+        "country_of_origin",
+        "farmed_or_wild",
+        "storage_temperature",
+        "expiry_days",
+        "halal_certified",
+    ],
     "Bakery": ["baked_today(yes/no)", "contains_nuts", "shelf_life_days"],
     "Cleaning Supplies": ["eco_certified", "antibacterial", "dilution_required"],
-    "Rice & Noodles": ["instant(yes/no)", "gluten_free", "country_of_origin", "cooking_time"],
+    "Rice & Noodles": [
+        "instant(yes/no)",
+        "gluten_free",
+        "country_of_origin",
+        "cooking_time",
+    ],
     "Breakfast Foods": ["fibre_content", "kids_focused"],
-    "Electronics & Appliances": ["power_rating", "dimensions", "weight", "color", "warranty_period", "noise_level", "country_of_manufacture", "is_smart"],
-    "Home & Living": ["dimensions", "weight", "assembly_required", "color", "care_instructions", "eco_certified", "durability_rating"],
-    "Sports, Travel & Leisure": ["usage_area(indoor/outdoor)", "weight", "skill_level", "weather_resistant", "durability_rating", "portability"],
+    "Electronics & Appliances": [
+        "power_rating",
+        "dimensions",
+        "weight",
+        "color",
+        "warranty_period",
+        "noise_level",
+        "country_of_manufacture",
+        "is_smart",
+    ],
+    "Home & Living": [
+        "dimensions",
+        "weight",
+        "assembly_required",
+        "color",
+        "care_instructions",
+        "eco_certified",
+        "durability_rating",
+    ],
+    "Sports, Travel & Leisure": [
+        "usage_area(indoor/outdoor)",
+        "weight",
+        "skill_level",
+        "weather_resistant",
+        "durability_rating",
+        "portability",
+    ],
 }
 
 
@@ -609,15 +831,27 @@ POSITIVE_CATEGORY_DESCRIPTORS = {
         "usage": ["easy to use", "user-friendly", "intuitive", "versatile"],
     },
     "Home & Living": {
-        "performance": ["practical", "functional", "reliable", "efficient", "versatile"],
+        "performance": [
+            "practical",
+            "functional",
+            "reliable",
+            "efficient",
+            "versatile",
+        ],
         "build": ["simple", "modern", "space-efficient", "well-designed", "aesthetic"],
         "usage": ["comfortable", "supportive", "pleasant", "cozy", "well-balanced"],
     },
     "Sports, Travel & Leisure": {
         "performance": ["effective", "balanced", "reliable", "good experience"],
         "build": ["durable", "robust", "long-lasting", "well-built"],
-        "usage": ["portable", "easy to carry", "lightweight", "travel-friendly", "compact"],
-    }
+        "usage": [
+            "portable",
+            "easy to carry",
+            "lightweight",
+            "travel-friendly",
+            "compact",
+        ],
+    },
 }
 
 
@@ -801,12 +1035,19 @@ NEGATIVE_CATEGORY_DESCRIPTORS = {
     "Home & Living": {
         "functionality": ["impractical", "inconvenient", "unsatisfactory"],
         "build": ["cheap", "not a good quality"],
-        "design": ["clunky", "bulky", "unappealing", "poorly designed", "outdated", "too small"],
+        "design": [
+            "clunky",
+            "bulky",
+            "unappealing",
+            "poorly designed",
+            "outdated",
+            "too small",
+        ],
     },
     "Sports, Travel & Leisure": {
         "performance": [
             "unreliable",
-            "underperforming", 
+            "underperforming",
             "frustrating",
             "difficult",
             "underwhelming",

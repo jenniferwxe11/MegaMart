@@ -1,6 +1,6 @@
 import random
-from datetime import date, timedelta
 import re
+
 import pandas as pd
 from config import (
     BRANDS,
@@ -19,6 +19,7 @@ random.seed(42)
 products = []
 product_ids = []
 
+
 def parse_net_content(net_content):
     if net_content is None:
         return None
@@ -34,6 +35,7 @@ def parse_net_content(net_content):
     elif net_content.endswith("l"):
         return float(net_content.replace("l", "")) * 1000
     return None
+
 
 def parse_pack_quantity(pack_quantity):
     if pack_quantity is None:
@@ -70,12 +72,14 @@ def generate_price(base_price_per_unit, net_content, pack_quantity):
     price = max(price, base_price_per_unit * units * 0.4)
     return round(price, 2)
 
-for i in range(1, NUM_PRODUCTS+1):
+
+for i in range(1, NUM_PRODUCTS + 1):
     product_id = f"PROD{i:03d}"
     product_ids.append(product_id)
 
     # pick a category
     category = random.choice(CATEGORIES)
+    subcategory = None
 
     # check if category has subcategories
     if category in SUBCATEGORIES:
@@ -83,15 +87,14 @@ for i in range(1, NUM_PRODUCTS+1):
         brand = random.choice(BRANDS[subcategory])
         item = random.choice(SUBCATEGORY_ITEMS[subcategory])
     else:
-        subcategory = None
         brand = random.choice(BRANDS[category])
         item = random.choice(CATEGORY_ITEMS[category])
-    
+
     # category level profiles
     profile = CATEGORY_PROFILES[category]
-    variant = random.choice(profile["variants"])
-    net_content = random.choice(profile["net_content"])
-    pack_quantity = random.choice(profile["pack_quantity"])
+    variant = random.choice(profile.get("variants", [None]))
+    net_content = random.choice(profile.get("net_content", [None]))
+    pack_quantity = random.choice(profile.get("pack_quantity", [None]))
     colour = random.choice(profile.get("colour", [None]))
 
     # build product name
@@ -105,7 +108,7 @@ for i in range(1, NUM_PRODUCTS+1):
         product_name_parts.append(net_content)
     if pack_quantity:
         product_name_parts.append(pack_quantity)
-    
+
     product_name = " ".join(product_name_parts)
 
     # Prices
