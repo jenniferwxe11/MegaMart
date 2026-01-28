@@ -1,0 +1,86 @@
+category,attribute
+Snacks,"dietary_tag(vegan, gluten-free)"
+Snacks,allergen_info
+Snacks,is_sweet/savoury
+Snacks,is_baked/fried
+Snacks,"texture(crispy, chewy)"
+Beverages,"beverage_type(soda, juice, tea)"
+Beverages,caffine_content
+Beverages,carbonation(yes/no)
+Beverages,is_concentrate
+Beverages,serving_temperature
+Beverages,packaging_type(can/bottle)
+Dairy & Eggs,lactose_free
+Dairy & Eggs,storage_type(chilled/room temperature)
+Dairy & Eggs,expiry_date
+Dairy & Eggs,"source(cow, free-range)"
+Dairy & Eggs,pasteurised(yes/no)
+Frozen Food,is_pre_cooked
+Frozen Food,"cooking_method(oven, air fryer, stove)"
+Frozen Food,cook_time_minutes
+Fresh Produce,country_of_origin
+Fresh Produce,wash_type(washed/unwashed)
+Fresh Produce,"cut_type(whole, pre-cut)"
+Fresh Produce,seasonality
+Fresh Produce,perishability_score
+Fresh Produce,organic_certified
+Pantry Staples,shelf_life_days
+Pantry Staples,allergen_info
+Pantry Staples,country_of_origin
+Household Essentials,disposable/reusable
+Household Essentials,scent
+Household Essentials,refillable
+Household Essentials,eco-certified
+Health & Beauty,skin_type
+Health & Beauty,dermatologically_tested
+Health & Beauty,gender_target
+Health & Beauty,fragrance_free
+Baby Products,hypoallergenic
+Baby Products,safety_certification
+Baby Products,"baby_stage(newborn, toddler)"
+Baby Products,fragrance_free
+Canned Goods,pull_tab(yes/no)
+Canned Goods,ready_to_eat
+Canned Goods,"liquid_base(oil, brine, syrup)"
+Personal Care,alcohol_free
+Personal Care,dermatologist_tested
+Personal Care,skin_type
+Meat & Seafood,cut_type
+Meat & Seafood,country_of_origin
+Meat & Seafood,farmed_or_wild
+Meat & Seafood,storage_temperature
+Meat & Seafood,expiry_days
+Meat & Seafood,halal_certified
+Bakery,baked_today(yes/no)
+Bakery,contains_nuts
+Bakery,shelf_life_days
+Cleaning Supplies,eco_certified
+Cleaning Supplies,antibacterial
+Cleaning Supplies,dilution_required
+Rice & Noodles,instant(yes/no)
+Rice & Noodles,gluten_free
+Rice & Noodles,country_of_origin
+Rice & Noodles,cooking_time
+Breakfast Foods,fibre_content
+Breakfast Foods,kids_focused
+Electronics & Appliances,power_rating
+Electronics & Appliances,dimensions
+Electronics & Appliances,weight
+Electronics & Appliances,color
+Electronics & Appliances,warranty_period
+Electronics & Appliances,noise_level
+Electronics & Appliances,country_of_manufacture
+Electronics & Appliances,is_smart
+Home & Living,dimensions
+Home & Living,weight
+Home & Living,assembly_required
+Home & Living,color
+Home & Living,care_instructions
+Home & Living,eco_certified
+Home & Living,durability_rating
+"Sports, Travel & Leisure",usage_area(indoor/outdoor)
+"Sports, Travel & Leisure",weight
+"Sports, Travel & Leisure",skill_level
+"Sports, Travel & Leisure",weather_resistant
+"Sports, Travel & Leisure",durability_rating
+"Sports, Travel & Leisure",portability

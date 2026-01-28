@@ -1,51 +1,51 @@
-product_id,product_name,brand,category,selling_price,cost_price,status,promotion_type,bogo_flag,discount_percentage,promotion_start_date,promotion_end_date,discontinuation_date,stock_quantity
-PROD001,Classic CP Dumplings,CP,Frozen Food,7.91,5.7,Active,Buy One Get One,True,,2024-08-21,2024-08-25,,216
-PROD002,Classic Coca-Cola Cola,Coca-Cola,Beverages,2.63,1.53,Active,,False,,,,,279
-PROD003,Deluxe Vanish Wipes,Vanish,Cleaning Supplies,20.62,10.35,Active,,False,,,,,174
-PROD004,Deluxe Huggies Wipes,Huggies,Baby Products,10.62,6.72,Active,,False,,,,,135
-PROD005,Premium Nestle Soda,Nestle,Beverages,7.81,4.01,Active,,False,,,,,185
-PROD006,Premium Nike Dumbbells,Nike,"Lifestyle & Recreation (Fitness, Toys, Travel)",332.33,276.47,Discontinued,Buy One Get One,True,,2024-01-10,2024-01-14,2024-04-19,194
-PROD007,Classic Johnson's Powder,Johnson's,Baby Products,25.36,14.54,Active,Discounted,False,7.0,2024-03-22,2024-04-03,,87
-PROD008,Extra Lock&Lock Food Containers,Lock&Lock,"Home & Living (Kitchenware, Storage, Bedding)",116.94,104.88,Active,,False,,,,,166
-PROD009,Deluxe Pepsi Cola,Pepsi,Beverages,3.81,1.6,Active,,False,,,,,161
-PROD010,Extra Premier Soap Refills,Premier,Household Essentials,6.0,3.25,Active,,False,,,,,299
-PROD011,Classic Clorox Scrub Brush,Clorox,Cleaning Supplies,24.94,13.5,Active,,False,,,,,56
-PROD012,Premium Sunkist Tomatoes,Sunkist,Fresh Produce,2.23,1.07,Active,,False,,,,,283
-PROD013,Deluxe Nature Valley Chips,Nature Valley,Snacks,7.8,3.92,Active,,False,,,,,1
-PROD014,Premium Huggies Formula,Huggies,Baby Products,52.88,31.96,Active,,False,,,,,78
-PROD015,Premium Sadia Salmon,Sadia,Meat & Seafood,31.95,19.88,Active,,False,,,,,157
-PROD016,Premium Colgate Lotion,Colgate,Health & Beauty,7.03,4.71,Active,,False,,,,,64
-PROD017,Classic Local Farm Spinach,Local Farm,Fresh Produce,1.69,0.95,Active,,False,,,,,276
-PROD018,Deluxe Hada Soap Refills,Hada,Household Essentials,14.27,9.35,Active,,False,,,,,173
-PROD019,Classic Ritz Nuts,Ritz,Snacks,6.09,2.45,Active,,False,,,,,34
-PROD020,Classic Heaven & Earth Cola,Heaven & Earth,Beverages,2.95,1.61,Active,,False,,,,,292
-PROD021,Extra Samsonite Yoga Mat,Samsonite,"Lifestyle & Recreation (Fitness, Toys, Travel)",404.71,265.94,Active,,False,,,,,216
-PROD022,Premium Clorox Bleach,Clorox,Cleaning Supplies,3.39,2.44,Active,,False,,,,,98
-PROD023,Extra Premier Trash Bags,Premier,Household Essentials,7.14,4.56,Active,,False,,,,,281
-PROD024,Premium CP Ice Cream,CP,Frozen Food,24.32,18.92,Active,,False,,,,,248
-PROD025,Premium Quaker Muesli,Quaker,Breakfast Foods,6.62,3.31,Active,Discounted,False,19.0,2024-09-25,2024-10-02,,216
-PROD026,Classic Zojirushi Food Containers,Zojirushi,"Home & Living (Kitchenware, Storage, Bedding)",92.53,82.41,Active,,False,,,,,160
-PROD027,Extra Coca-Cola Soda,Coca-Cola,Beverages,4.52,2.96,Active,Discounted,False,7.0,2024-09-03,2024-09-08,,35
-PROD028,Premium Marigold Yogurt,Marigold,Dairy & Eggs,14.24,9.55,Active,,False,,,,,41
-PROD029,Classic Ajax Scrub Brush,Ajax,Cleaning Supplies,17.4,10.34,Active,,False,,,,,153
-PROD030,Premium Maggi Rice,Maggi,Rice & Noodles,7.69,6.15,Discontinued,,False,,,,2024-11-21,109
-PROD031,Deluxe Samsung Blender,Samsung,Electronics & Appliances,883.25,812.43,Active,,False,,,,,278
-PROD032,Deluxe Ayam Brand Soup,Ayam Brand,Canned Goods,9.39,4.1,Active,,False,,,,,54
-PROD033,Deluxe Lock&Lock Bedsheets,Lock&Lock,"Home & Living (Kitchenware, Storage, Bedding)",183.42,149.54,Active,,False,,,,,135
-PROD034,Premium Panasonic Air Fryer,Panasonic,Electronics & Appliances,110.45,89.01,Active,,False,,,,,66
-PROD035,Extra Huggies Cream,Huggies,Baby Products,35.85,19.33,Active,,False,,,,,76
-PROD036,Classic IKEA Bedsheets,IKEA,"Home & Living (Kitchenware, Storage, Bedding)",131.79,80.73,Active,Discounted,False,6.0,2024-02-01,2024-02-09,,107
-PROD037,Extra Colgate Shampoo,Colgate,Health & Beauty,48.77,37.18,Active,,False,,,,,83
-PROD038,Classic San Remo Cooking Oil,San Remo,Pantry Staples,14.99,8.99,Active,,False,,,,,127
-PROD039,Extra Huggies Diapers,Huggies,Baby Products,52.97,42.4,Active,,False,,,,,235
-PROD040,Classic Ocean Fresh Beef,Ocean Fresh,Meat & Seafood,6.06,3.32,Active,Buy One Get One,True,,2024-06-03,2024-06-10,,179
-PROD041,Deluxe Panasonic Vacuum Cleaner,Panasonic,Electronics & Appliances,940.45,685.43,Discontinued,,False,,,,2024-01-11,135
-PROD042,Extra Coca-Cola Soda,Coca-Cola,Beverages,3.42,2.17,Active,Discounted,False,8.0,2024-03-20,2024-03-29,,295
-PROD043,Extra Hada Toilet Paper,Hada,Household Essentials,2.05,1.59,Active,,False,,,,,100
-PROD044,Deluxe Farmhouse Chicken,Farmhouse,Meat & Seafood,33.04,22.0,Active,Discounted,False,14.0,2024-07-03,2024-07-16,,209
-PROD045,Classic Dettol Razors,Dettol,Personal Care,10.1,7.4,Active,,False,,,,,89
-PROD046,Premium Adidas Suitcase,Adidas,"Lifestyle & Recreation (Fitness, Toys, Travel)",155.42,103.05,Active,,False,,,,,164
-PROD047,Classic Koka Vermicelli,Koka,Rice & Noodles,8.4,6.2,Discontinued,,False,,,,2024-01-10,43
-PROD048,Classic Del Monte Tomatoes,Del Monte,Canned Goods,7.06,3.38,Active,,False,,,,,125
-PROD049,Extra Kellogg's Muesli,Kellogg's,Breakfast Foods,22.5,15.14,Active,,False,,,,,204
-PROD050,Premium Dove Toothpaste,Dove,Health & Beauty,39.59,22.83,Active,,False,,,,,237
+product_id,product_name,brand,category,selling_price,cost_price
+PROD001,CP Family Pack Dumplings 400g,CP,Frozen Food,7.56,5.8
+PROD002,Cowhead Yogurt,Cowhead,Dairy & Eggs,2.93,1.99
+PROD003,Zojirushi Cutleries,Zojirushi,Home & Living,93.47,60.56
+PROD004,Ajax Eco-Friendly Dish Soap 500ml 2-pack,Ajax,Cleaning Supplies,10.45,5.53
+PROD005,Pasar Fresh Organic Chicken 300g,Pasar Fresh,Meat & Seafood,11.55,8.17
+PROD006,Farmhouse Beef 500g,Farmhouse,Meat & Seafood,26.55,19.03
+PROD007,Mission Chocolate Croissant 2-pack,Mission,Bakery,3.19,1.53
+PROD008,Cowhead Value Eggs,Cowhead,Dairy & Eggs,3.52,2.8
+PROD009,Zojirushi Water Bottles,Zojirushi,Home & Living,54.13,33.55
+PROD010,Hasbro Adjustable Puzzle Sets,Hasbro,"Sports, Travel & Leisure",40.83,33.62
+PROD011,HomeBasics Durable Shelving Units,HomeBasics,Home & Living,66.05,41.43
+PROD012,Coca-Cola Original Juice 1.5L,Coca-Cola,Beverages,8.25,5.77
+PROD013,Samsung Hair Dryer Grey,Samsung,Electronics & Appliances,73.55,59.48
+PROD014,Royal Umbrella Instant Vermicelli 100g 5-pack,Royal Umbrella,Rice & Noodles,5.52,3.25
+PROD015,Dyson Mini Microwave,Dyson,Electronics & Appliances,307.49,252.8
+PROD016,Farmpride Family Pack Dumplings 400g,Farmpride,Frozen Food,3.04,1.96
+PROD017,Cowhead Value Cheese 4-pack,Cowhead,Dairy & Eggs,10.4,7.92
+PROD018,Vanish Heavy Duty Wipes 1L 4-pack,Vanish,Cleaning Supplies,74.8,49.01
+PROD019,McCain Fries 800g,McCain,Frozen Food,13.76,6.91
+PROD020,Pepsi Cola 1L,Pepsi,Beverages,4.4,2.4
+PROD021,Zojirushi Cutleries,Zojirushi,Home & Living,20.38,16.26
+PROD022,Kee Song Organic Turkey 300g,Kee Song,Meat & Seafood,9.39,5.49
+PROD023,McCain Family Pack Fries 1kg 2-pack,McCain,Frozen Food,26.6,15.52
+PROD024,Colgate Cooling Conditioner 100ml,Colgate,Health & Beauty,5.84,4.81
+PROD025,Dove Herbal Conditioner 200ml,Dove,Health & Beauty,11.02,6.15
+PROD026,Jack n Jill Chocolate Bars 150g,Jack n Jill,Snacks,0.73,0.36
+PROD027,Pokka Concentrate Energy Drinks 330ml 12-pack,Pokka,Beverages,4.75,2.58
+PROD028,Xiaomi Energy Saving Blender,Xiaomi,Electronics & Appliances,305.62,265.52
+PROD029,L'Oreal Cooling Toothpaste 100ml,L'Oreal,Health & Beauty,3.1,2.18
+PROD030,Samsung Mini Refrigerator Grey,Samsung,Electronics & Appliances,209.98,182.25
+PROD031,Heinz Beans 200g,Heinz,Canned Goods,0.68,0.32
+PROD032,Huggies Powder,Huggies,Baby Products,13.05,10.33
+PROD033,Ayam Brand Reduced Salt Mushroom 800g,Ayam Brand,Canned Goods,4.64,3.3
+PROD034,Tefal Eco-Friendly Water Bottles,Tefal,Home & Living,85.62,73.28
+PROD035,Panasonic Refrigerator Grey,Panasonic,Electronics & Appliances,41.16,32.24
+PROD036,Zenxin Organic Food Pre-cut Carrots 250g,Zenxin Organic Food,Fresh Produce,2.4,1.4
+PROD037,Little Farms Whole Apples 250g,Little Farms,Fresh Produce,2.45,0.96
+PROD038,Heaven & Earth Original Juice 330ml 12-pack,Heaven & Earth,Beverages,27.8,17.37
+PROD039,Dove Herbal Lotion 100ml,Dove,Health & Beauty,4.91,3.16
+PROD040,Nivea Lotion 200ml,Nivea,Health & Beauty,4.22,3.32
+PROD041,Maggi Wholegrain Vermicelli 100g,Maggi,Rice & Noodles,0.96,0.56
+PROD042,Meiji Pasteurised Butter 4-pack,Meiji,Dairy & Eggs,19.58,10.47
+PROD043,Huggies Toddler Formula,Huggies,Baby Products,19.06,14.78
+PROD044,Mr Muscle Eco-Friendly Glass Cleaner 1L,Mr Muscle,Cleaning Supplies,8.1,6.3
+PROD045,Tempur Durable Curtains,Tempur,Home & Living,82.97,52.88
+PROD046,Del Monte Reduced Salt Mushroom 400g,Del Monte,Canned Goods,3.76,1.76
+PROD047,Sunshine Butter Muffin 6-pack,Sunshine,Bakery,8.55,3.96
+PROD048,Mattel Adjustable Puzzle Sets,Mattel,"Sports, Travel & Leisure",136.89,93.79
+PROD049,Gillette Travel Size Shaving Foam 50ml,Gillette,Personal Care,0.56,0.33
+PROD050,Kellogg's Gluten-Free Muesli 500g 4-pack,Kellogg's,Breakfast Foods,32.47,19.98

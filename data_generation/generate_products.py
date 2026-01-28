@@ -1,5 +1,5 @@
 import random
-from datetime import date, timedelta
+import re
 
 import pandas as pd
 from config import (
@@ -8,89 +8,124 @@ from config import (
     CATEGORY_COST_MARGIN,
     CATEGORY_ITEMS,
     CATEGORY_PRICE_RANGES,
+    CATEGORY_PROFILES,
     NUM_PRODUCTS,
+    SUBCATEGORIES,
+    SUBCATEGORY_ITEMS,
 )
-from faker import Faker
 
-fake = Faker()
-Faker.seed(42)
 random.seed(42)
 
 products = []
 product_ids = []
 
+
+def parse_net_content(net_content):
+    if net_content is None:
+        return None
+    if net_content == "Loose":
+        return 1
+    net_content = net_content.lower().strip()
+    if net_content.endswith("kg"):
+        return float(net_content.replace("kg", "")) * 1000
+    elif net_content.endswith("g"):
+        return float(net_content.replace("g", ""))
+    elif net_content.endswith("ml"):
+        return float(net_content.replace("ml", ""))
+    elif net_content.endswith("l"):
+        return float(net_content.replace("l", "")) * 1000
+    return None
+
+
+def parse_pack_quantity(pack_quantity):
+    if pack_quantity is None:
+        return 1
+    m = re.match(r"(\d+)-pack", pack_quantity)
+    return int(m.group(1)) if m else 1
+
+
+def pack_discount(pack_quantity):
+    if pack_quantity is None:
+        return 1.0
+    m = re.match(r"(\d+)-pack", pack_quantity)
+    qty = int(m.group(1)) if m else 1
+    discount = 0.05 * (qty - 1)
+    factor = max(0.6, 1 - discount)
+    return factor
+
+
+def generate_price(base_price_per_unit, net_content, pack_quantity):
+    net_value = parse_net_content(net_content)
+    units = parse_pack_quantity(pack_quantity)
+
+    # size multiplier
+    if net_value is None:
+        net_multiplier = 1
+    else:
+        net_multiplier = net_value / 100
+
+    # larger pack -> cheaper per unit
+    discount_factor = pack_discount(pack_quantity)
+    price = base_price_per_unit * net_multiplier * units * discount_factor
+
+    # floor price protection
+    price = max(price, base_price_per_unit * units * 0.4)
+    return round(price, 2)
+
+
 for i in range(1, NUM_PRODUCTS + 1):
-    pid = f"PROD{i:03d}"
-    product_ids.append(pid)
+    product_id = f"PROD{i:03d}"
+    product_ids.append(product_id)
 
+    # pick a category
     category = random.choice(CATEGORIES)
-    brand = random.choice(BRANDS.get(category, ["Generic"]))
-    item = random.choice(CATEGORY_ITEMS.get(category, ["Item"]))
+    subcategory = None
 
-    product_name = (
-        f"{random.choice(['Premium', 'Classic', 'Deluxe', 'Extra'])} {brand} {item}"
-    )
+    # check if category has subcategories
+    if category in SUBCATEGORIES:
+        subcategory = random.choice(SUBCATEGORIES[category])
+        brand = random.choice(BRANDS[subcategory])
+        item = random.choice(SUBCATEGORY_ITEMS[subcategory])
+    else:
+        brand = random.choice(BRANDS[category])
+        item = random.choice(CATEGORY_ITEMS[category])
+
+    # category level profiles
+    profile = CATEGORY_PROFILES[category]
+    variant = random.choice(profile.get("variants", [None]))
+    net_content = random.choice(profile.get("net_content", [None]))
+    pack_quantity = random.choice(profile.get("pack_quantity", [None]))
+    colour = random.choice(profile.get("colour", [None]))
+
+    # build product name
+    product_name_parts = [brand]
+    if variant:
+        product_name_parts.append(variant)
+    product_name_parts.append(item)
+    if colour:
+        product_name_parts.append(colour)
+    if net_content:
+        product_name_parts.append(net_content)
+    if pack_quantity:
+        product_name_parts.append(pack_quantity)
+
+    product_name = " ".join(product_name_parts)
 
     # Prices
-    min_price, max_price = CATEGORY_PRICE_RANGES.get(category, (1.5, 100))
+    min_price, max_price = CATEGORY_PRICE_RANGES.get(category, (1.5, 10))
     selling_price = round(random.uniform(min_price, max_price), 2)
+    selling_price = generate_price(selling_price, net_content, pack_quantity)
     min_margin, max_margin = CATEGORY_COST_MARGIN.get(category, (0.5, 0.95))
     cost_price = round(selling_price * random.uniform(min_margin, max_margin), 2)
 
-    status = random.choices(["Active", "Discontinued"], weights=[0.95, 0.05])[0]
-
-    promotion_type = random.choices(
-        [None, "Buy One Get One", "Discounted"], weights=[0.85, 0.05, 0.10]
-    )[0]
-
-    promotion_start_date = None
-    promotion_end_date = None
-    discount_percentage = None
-    bogo_flag = False
-
-    if promotion_type == "Discounted":
-        discount_percentage = random.randint(5, 20)
-    elif promotion_type == "Buy One Get One":
-        bogo_flag = True
-
-    if promotion_type:
-        promotion_start_date = fake.date_between(
-            start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
-        )
-        promotion_end_date = promotion_start_date + timedelta(
-            days=random.randint(3, 14)
-        )  # 3-14 days promotion
-
-    discontinuation_date = None
-
-    if status == "Discontinued":
-        if promotion_end_date:
-            discontinuation_date = fake.date_between(
-                start_date=promotion_end_date, end_date=date(2024, 12, 31)
-            )
-        else:
-            discontinuation_date = fake.date_between(
-                start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
-            )
-
-    stock_quantity = random.randint(0, 300)
-
     products.append(
         {
-            "product_id": pid,
+            "product_id": product_id,
             "product_name": product_name,
             "brand": brand,
             "category": category,
             "selling_price": selling_price,
             "cost_price": cost_price,
-            "status": status,
-            "promotion_type": promotion_type,
-            "bogo_flag": bogo_flag,
-            "discount_percentage": discount_percentage,
-            "promotion_start_date": promotion_start_date,
-            "promotion_end_date": promotion_end_date,
-            "discontinuation_date": discontinuation_date,
-            "stock_quantity": stock_quantity,
         }
     )
 
