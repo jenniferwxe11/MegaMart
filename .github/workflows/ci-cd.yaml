@@ -107,7 +107,7 @@ jobs:
         fi
 
         echo "$PY_FILES" | xargs -r bandit -x tests
-        
+
     - name: Install Gitleaks
       uses: gitleaks/gitleaks-action@v2
       env:
