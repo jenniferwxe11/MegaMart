@@ -8,75 +8,185 @@ on:
     branches:
       - dev
       - main
+  workflow_dispatch:
+    
 
 permissions:
   contents: read
   id-token: write
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DBT_PROFILES_DIR: ./dbt_profiles
+  DBT_TARGET: ci
+
 jobs:
-  lint-test:
+  # --- CHANGE DETECTION ---
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      dbt: ${{ steps.filter.outputs.dbt }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            python:
+              - '**/*.py'
+              - 'tests/**'
+            dbt:
+              - 'models/**'
+              - 'seeds/**'
+              - 'snapshots/**'
+              - 'dbt_project.yml'
+
+  # --- CI ---
+  ci:
+    runs-on: ubuntu-latest
+    needs: changes
+    timeout-minutes: 20
+    if: needs.changes.outputs.python == 'true'
 
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.11
+      
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pre-commit dbt-core dbt-bigquery
+        pip install pre-commit pytest-cov pip-audit bandit
 
-    - name: Run pre-commit hooks
-      run: pre-commit run --all-files
+    - name: Run pre-commit hooks (lint, format)
+      run: pre-commit run --all-files --show-diff-on-failure
+    
+    - name: Security scan (dependencies)
+      run: pip-audit
+    
+    - name: Security can (code)
+      run: bandit -r .
 
-    - name: Run tests
-      run: pytest tests/
+    - name: Scan for secrets
+      uses: zricethezav/gitleaks-action@v2
 
-    - name: Google Auth
-      uses: google-github-actions/auth@v2
+    # - name: Get changed files
+    #   id: changes
+    #   uses: tj-actions/changed-files@v44
+
+    - name: Run unit tests with coverage enforcement
+      run: pytest --cov=. --cov-fail-under=80
+
+    # --- DBT ---
+  dbt:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.dbt == 'true'
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        workload_identity_provider: projects/594876062374/locations/global/workloadIdentityPools/mega-mart-pool/providers/github
-        service_account: mega-mart-service@mega-mart-storage.iam.gserviceaccount.com
+        python-version: 3.11
+      
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: dbt-${{ hashFiles('**/requirements.txt') }}
 
-    - name: Run DBT compile
-      run: dbt compile --profiles-dir ./dbt_profiles
+    - name: Install dbt
+      run: |
+        pip install --upgrade pip
+        pip install dbt-core dbt-bigquery
 
+    - name: dbt dependencies
+      run: dbt deps
+
+    # - name: dbt compile
+    #   run: dbt compile --profiles-dir ./dbt_profiles
+
+    - name: Download previous artifacts (state)
+      uses: actions/download-artifact@v4
+      with:
+        name: dbt-target
+      continue-on-error: true
+
+    - name: dbt build (state aware with fallback)
+      run: dbt build --select state:modified+ --state target/ || dbt build
+
+    - name: Upload dbt artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dbt-target
+        path: target/
+
+    - name: Upload dbt logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: dbt-logs
+        path: logs/
+
+  # --- DEPLOY DBT DOCS ---
   deploy-dbt-docs:
     runs-on: ubuntu-latest
-    needs: lint-test
+    needs: [ci,dbt]
     if: github.ref == 'refs/heads/main'
 
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Google Auth
-      uses: google-github-actions/auth@v2
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        token_format: access_token
-        workload_identity_provider: projects/594876062374/locations/global/workloadIdentityPools/mega-mart-pool/providers/github
-        service_account: mega-mart-service@mega-mart-storage.iam.gserviceaccount.com
-
-    - name: Verify auth
-      run: gcloud auth list
+        python-version: 3.11
 
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
         pip install dbt-core dbt-bigquery
 
-    - name: Generate DBT docs
+    - name: Authenticate to Google Cloud Platform
+      uses: google-github-actions/auth@v2
+      with:
+        token_format: access_token
+        workload_identity_provider: projects/594876062374/locations/global/workloadIdentityPools/mega-mart-pool/providers/github
+        service_account: mega-mart-service@mega-mart-storage.iam.gserviceaccount.com
+
+    - name: Verify authentication
+      run: gcloud auth list
+
+    - name: Generate dbt docs
       run: dbt docs generate --profiles-dir ./dbt_profiles
 
     - name: Authenticate gsutil
       run: gcloud config set project mega-mart-storage
 
-    - name: Deploy DBT docs
+    - name: Deploy dbt docs to Google Cloud Storage
       run: |
         gcloud storage cp -r target/* gs://mega-mart/dbt_docs/ --project=mega-mart-storage
+    
+    - name: Create tag
+      run: |
+        git tag v1.${{ github.run_number }}
+        git push origin v1.${{ github.run_number }}
