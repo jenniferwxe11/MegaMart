@@ -209,3 +209,7 @@ __marimo__/
 # Credentials
 .key
 .json
+
+# Raw data
+/data_generation/raw_data/
+/dirty_data_generation/dirty_data/

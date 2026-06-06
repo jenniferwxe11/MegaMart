@@ -1,0 +1,5 @@
+colorama
+Faker
+numpy
+pandas
+pytest
