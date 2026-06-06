@@ -81,7 +81,7 @@ jobs:
       run: pip-audit
 
     - name: Security can (code)
-      run: bandit -r . --exclude tests
+      run: bandit -r . -x tests
 
     - name: Scan for secrets
       uses: zricethezav/gitleaks-action@v2
