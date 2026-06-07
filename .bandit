@@ -1,4 +1,3 @@
-per-file-ignores:
-  "tests/*": [B101]
-  "MegaMart/tests/*": [B101]
-  "data_generation/*": [B311]
+[bandit]
+skips = B311
+exclude_dirs = data_generation/tests
