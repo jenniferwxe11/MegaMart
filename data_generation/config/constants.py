@@ -1,4 +1,5 @@
-from datetime import datetime, date
+from datetime import date, datetime
+
 import pandas as pd
 
 DATA_START_DATE = pd.Timestamp("2023-01-01")
