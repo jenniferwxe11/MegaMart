@@ -1,17 +1,19 @@
 import random
 import re
+
 from data_generation.config.products_config import (
     CATEGORY_COST_MARGIN,
     CATEGORY_MIN_PRICE,
     CATEGORY_PRICE_RANGES,
+    ITEM_PRICE_RANGES,
     PACK_PRICE_CAP,
     SUBCATEGORY_PRICE_RANGES,
-    ITEM_PRICE_RANGES,
 )
 
 # ---------------------------
 # Helper Functions
 # ---------------------------
+
 
 def parse_net_content(net_content):
     """
@@ -49,7 +51,7 @@ def pack_discount(pack_quantity):
     """
     if pack_quantity is None:
         return 1.0
-    
+
     m = re.match(r"(\d+)-pack", pack_quantity)
     qty = int(m.group(1)) if m else 1
 
@@ -63,11 +65,7 @@ def pack_discount(pack_quantity):
         return random.uniform(0.5, 0.7)
 
 
-def get_price_range(
-        category, 
-        subcategory=None, 
-        item=None
-):
+def get_price_range(category, subcategory=None, item=None):
     """
     Retrieves appropriate pricing ranges.
 
@@ -82,12 +80,8 @@ def get_price_range(
         return SUBCATEGORY_PRICE_RANGES[subcategory]
     return CATEGORY_PRICE_RANGES[category]
 
-def generate_price(
-        category,
-        base_price_per_unit,
-        net_content, 
-        pack_quantity
-):
+
+def generate_price(category, base_price_per_unit, net_content, pack_quantity):
     """
     Calculates final selling and cost price of product.
 
@@ -137,4 +131,4 @@ def generate_price(
     # Cost cap
     cost_price = min(cost_price, price * 0.95)
 
-    return round(price, 2), round(cost_price,2)
+    return round(price, 2), round(cost_price, 2)
