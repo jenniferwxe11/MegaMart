@@ -1,19 +1,21 @@
 import random
 import re
+
 from data_generation.config.products_config import (
     CATEGORY_TO_STORE,
 )
 from data_generation.config.store_products_config import (
     BRAND_ERROR_RATE,
     CATEGORY_ERROR_RATE,
+    DESCRIPTOR_MAP,
     NAME_ERROR_RATE,
     PRICE_ERROR_RATE,
-    DESCRIPTOR_MAP,
 )
 
 # ---------------------------
 # Helper Functions
 # ---------------------------
+
 
 def distort_pack_and_size(product_name):
     """

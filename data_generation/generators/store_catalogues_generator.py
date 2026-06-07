@@ -1,19 +1,22 @@
 import random
 from typing import Any
+
 import pandas as pd
+
 from data_generation.config.generation_config import LIMIT_STORE_CATALOGUES
 from data_generation.config.store_products_config import (
-    STORE_TYPE_CONFIG,
-    NATURAL_NAME_VARIATION_RATE,
     NATURAL_BRAND_VARIATION_RATE,
+    NATURAL_NAME_VARIATION_RATE,
+    STORE_TYPE_CONFIG,
 )
+from data_generation.context.generation_context import GenerationContext
+from data_generation.registry import register
 from data_generation.services.products.store_catalogue_service import (
-    inject_name_error,
     inject_brand_error,
+    inject_name_error,
 )
 from data_generation.utils.io_utils import save
-from data_generation.registry import register
-from data_generation.context.generation_context import GenerationContext
+
 
 @register("store_catalogues_generator")
 def store_catalogues_generator(ctx: GenerationContext):
@@ -27,7 +30,7 @@ def store_catalogues_generator(ctx: GenerationContext):
     product_ids = ctx.products.product_ids
     essential_product_ids = ctx.products.essential_product_ids
     non_essential_product_ids = ctx.products.non_essential_product_ids
-    
+
     # ---------------------------
     # Storage
     # ---------------------------
@@ -42,8 +45,10 @@ def store_catalogues_generator(ctx: GenerationContext):
 
         if len(store_catalogues) >= LIMIT_STORE_CATALOGUES:
             break
-        
-        store_type = stores_df.loc[stores_df["store_id"] == store_id, "store_type"].iloc[0]
+
+        store_type = stores_df.loc[
+            stores_df["store_id"] == store_id, "store_type"
+        ].iloc[0]
 
         # Determine store assortment size based on store type
         assort_low, assort_high = STORE_TYPE_CONFIG[store_type]["Assortment"]
@@ -66,9 +71,7 @@ def store_catalogues_generator(ctx: GenerationContext):
         selected_product = selected_essentials + selected_non_essentials
 
         for product_id in selected_product:
-            product_match = products_df.loc[
-                products_df["product_id"] == product_id
-            ]
+            product_match = products_df.loc[products_df["product_id"] == product_id]
 
             if product_match.empty:
                 continue
