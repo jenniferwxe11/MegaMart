@@ -83,7 +83,7 @@ class ProductContentQualityContext:
 @dataclass(frozen=True)
 class StockoutEventContext:
     stockout_events_df: pd.DataFrame
-    stockout_event_map: Dict[str, pd.DataFrame]
+    stockout_event_map: dict[tuple[str, str], pd.DataFrame]
 
 
 @dataclass(frozen=True)
