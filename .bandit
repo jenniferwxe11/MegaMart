@@ -1,2 +1,5 @@
 [bandit]
-exclude_dirs = tests, MegaMart/tests
+per-file-ignores =
+    tests/*:B101
+    MegaMart/tests/*:B101
+    data_generation/*:B311
