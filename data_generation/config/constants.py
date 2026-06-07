@@ -1,12 +1,11 @@
-from datetime import datetime
-
+from datetime import datetime, date
 import pandas as pd
 
 DATA_START_DATE = pd.Timestamp("2023-01-01")
 DATA_END_DATE = pd.Timestamp("2025-12-31")
 SIMULATION_DATE = pd.Timestamp("2025-12-31")
 
-SEASONAL_DATES = {
+SEASONAL_DATES: dict[str, dict[str, list[date]]] = {
     "Commercial Mega Sale": {
         "Black Friday": [
             datetime(2023, 11, 24),
