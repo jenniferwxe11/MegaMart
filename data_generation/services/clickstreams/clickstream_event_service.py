@@ -1,24 +1,27 @@
 import random
+
 import numpy as np
-from data_generation.config.products_config import CATEGORY_AFFINITY, CATEGORY_ITEMS
+
 from data_generation.config.clickstreams_config import (
-    TIME_ON_PAGE,
-    IN_STOCK_STATUS,
     EVENT_PAGE_MAPPING,
+    IN_STOCK_STATUS,
+    TIME_ON_PAGE,
 )
+from data_generation.config.products_config import CATEGORY_AFFINITY, CATEGORY_ITEMS
 from data_generation.services.clickstreams.clickstream_lookup_service import (
-    get_segment_category,
     get_product_stock_status,
-    get_random_product_from_category,
     get_random_in_stock_product_from_category,
+    get_random_product_from_category,
     get_random_product_from_search_term,
     get_search_term,
+    get_segment_category,
     slugify,
 )
 from data_generation.services.clickstreams.clickstream_session_service import (
-    generate_scroll_depth,
     determine_purchase_alpha_beta,
+    generate_scroll_depth,
 )
+
 
 def resolve_scroll_and_time(event_type: str, mission_choice: str) -> tuple:
     """
@@ -35,7 +38,7 @@ def resolve_scroll_and_time(event_type: str, mission_choice: str) -> tuple:
         time_on_page = random.triangular(low, high, mode) * (
             0.8 + (scroll_depth / 100) * 0.6
         )
-    else:               
+    else:
         # No scroll depth
         scroll_depth = None
         time_on_page = random.triangular(low, high, mode)
@@ -43,12 +46,7 @@ def resolve_scroll_and_time(event_type: str, mission_choice: str) -> tuple:
     return scroll_depth, time_on_page
 
 
-def resolve_page(
-        event_type: str, 
-        product_id, 
-        category: str, 
-        search_term: str
-) -> str:
+def resolve_page(event_type: str, product_id, category: str, search_term: str) -> str:
     """
     Maps event type + context to a URL page string.
     """
@@ -66,11 +64,11 @@ def resolve_page(
 
 
 def resolve_remove_from_cart(
-        ctx,
-        cart_content: list,
+    ctx,
+    cart_content: list,
 ) -> tuple:
     """
-    Picks a product to remove. 
+    Picks a product to remove.
     Returns (product_id, category, product_name, updated_cart).
     """
     product_name_map = ctx.products.product_name_map
@@ -105,7 +103,9 @@ def resolve_add_to_cart(
         # Add in stock product from previous product view into cart
         if previous_product_id:
             # Check if product is in stock
-            stock_status = get_product_stock_status(ctx, store_id, previous_product_id, timestamp)
+            stock_status = get_product_stock_status(
+                ctx, store_id, previous_product_id, timestamp
+            )
             if stock_status in IN_STOCK_STATUS:
                 product_id = previous_product_id
 
@@ -164,18 +164,27 @@ def resolve_product_view(
             category = get_segment_category(customer_segment)
             product_id = get_random_product_from_category(ctx, category)
 
-        elif previous_event_type in ("Add to Cart", "Cart View", "Remove from Cart") and cart_content:
+        elif (
+            previous_event_type in ("Add to Cart", "Cart View", "Remove from Cart")
+            and cart_content
+        ):
             anchor = random.choice(cart_content)
             anchor_category = product_category_map.get(anchor)
 
             # 70% stay within affinity of anchor category
             if random.random() < 0.7:
                 # Build a local navigation cluster
-                affinity_pool = {anchor_category} | set(CATEGORY_AFFINITY.get(anchor_category, []))
+                affinity_pool = {anchor_category} | set(
+                    CATEGORY_AFFINITY.get(anchor_category, [])
+                )
                 # Intersect of categories in affinity pool with those in session intent
                 candidates = list(affinity_pool & session_affinity_categories)
-                category = random.choice(candidates) if candidates else get_segment_category(customer_segment)
-                
+                category = (
+                    random.choice(candidates)
+                    if candidates
+                    else get_segment_category(customer_segment)
+                )
+
             # 30% does not co-relate to anchor category
             else:
                 category = get_segment_category(customer_segment)
@@ -185,7 +194,9 @@ def resolve_product_view(
 
     # Fallback
     if product_id is None:
-        product_id = get_random_product_from_category(ctx, category) or random.choice(product_ids)
+        product_id = get_random_product_from_category(ctx, category) or random.choice(
+            product_ids
+        )
 
     product_name = product_name_map.get(product_id, None)
     stock_status = get_product_stock_status(ctx, store_id, product_id, timestamp)
@@ -199,23 +210,29 @@ def resolve_category_view(
     session_affinity_categories: set,
 ) -> str:
     """
-    Resolves which category to navigate to. 
+    Resolves which category to navigate to.
     Returns category
     """
     if previous_category:
         # 70% stay within affinity of previous category
         if random.random() < 0.7:
             # Build a local navigation cluster
-            affinity_pool = {previous_category} | set(CATEGORY_AFFINITY.get(previous_category, []))
+            affinity_pool = {previous_category} | set(
+                CATEGORY_AFFINITY.get(previous_category, [])
+            )
             # Intersect of categories in affinity pool with those in session intent
             candidates = list(affinity_pool & session_affinity_categories)
-            return random.choice(candidates) if candidates else get_segment_category(customer_segment)
+            return (
+                random.choice(candidates)
+                if candidates
+                else get_segment_category(customer_segment)
+            )
         return get_segment_category(customer_segment)
 
     if random.random() < 0.7 and session_affinity_categories:
         # Follow session intent only
         return random.choice(list(session_affinity_categories))
-    
+
     # Fallback
     return get_segment_category(customer_segment)
 
@@ -226,7 +243,7 @@ def resolve_search_view(
     session_affinity_categories: set,
 ) -> str:
     """
-    Resolves the search term used. 
+    Resolves the search term used.
     Returns search_term.
     """
     if random.random() < 0.6 and previous_category:
@@ -234,7 +251,7 @@ def resolve_search_view(
         items = CATEGORY_ITEMS.get(previous_category, [])
         if items:
             return random.choice(items)
-        
+
     # Bias search towards session affinity categories
     if random.random() < 0.7 and session_affinity_categories:
         cat = random.choice(list(session_affinity_categories))
@@ -268,7 +285,9 @@ def resolve_payment_successful(
     bundle_dict = ctx.bundles.bundle_dict
 
     # --- Determine Purchase Count ---
-    alpha, beta = determine_purchase_alpha_beta(mission_choice, has_treatment, customer_segment)
+    alpha, beta = determine_purchase_alpha_beta(
+        mission_choice, has_treatment, customer_segment
+    )
     purchase_ratio = np.random.beta(alpha, beta)
     purchase_count = max(1, int(len(cart_content) * purchase_ratio))
 
@@ -287,10 +306,9 @@ def resolve_payment_successful(
         cart_counter[item] = cart_counter.get(item, 0) + 1
 
     # --- Decide Bundle Purchase ---
-    for bid, required_items in bundle_map.items():
+    for _, required_items in bundle_map.items():
         bundle_valid = all(
-            cart_counter.get(pid, 0) >= qty
-            for pid, qty in required_items.items()
+            cart_counter.get(pid, 0) >= qty for pid, qty in required_items.items()
         )
         if bundle_valid and random.random() < 0.7:
             # Strong bundle cohesion
