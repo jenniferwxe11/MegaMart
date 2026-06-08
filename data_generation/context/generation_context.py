@@ -29,6 +29,7 @@ class ReferenceDataContext:
 class CustomerContext:
     customers_df: pd.DataFrame
     customer_ids: List[str]
+    customer_type_to_ids_map: Dict[str, List[str]]
     customer_type_map: Dict[str, str]
     customer_segment_map: Dict[str, str]
     customer_area_map: Dict[str, str]

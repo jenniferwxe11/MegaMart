@@ -72,6 +72,7 @@ def build_base_context() -> GenerationContext:
         customers=CustomerContext(
             customers_df=customers_df,
             customer_ids=customer_maps["customer_ids"],
+            customer_type_to_ids_map=customer_maps["customer_type_to_ids_map"],
             customer_type_map=customer_maps["customer_type_map"],
             customer_segment_map=customer_maps["customer_segment_map"],
             customer_area_map=customer_maps["customer_area_map"],

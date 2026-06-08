@@ -86,6 +86,9 @@ def get_customer_maps():
     df = load_data.load_customers()
     return {
         "customer_ids": df["customer_id"].dropna().tolist(),
+        "customer_type_to_ids_map": df.groupby("customer_type")["customer_id"]
+        .apply(list)
+        .to_dict(),
         "customer_type_map": df.set_index("customer_id")["customer_type"].to_dict(),
         "customer_segment_map": df.set_index("customer_id")[
             "customer_segment"
