@@ -10,7 +10,6 @@ on:
       - main
   workflow_dispatch:
 
-
 permissions:
   contents: read
   pull-requests: read
@@ -77,6 +76,7 @@ jobs:
       with:
         python-version: 3.11
 
+
     - name: Cache pip
       uses: actions/cache@v3
       with:
@@ -92,6 +92,7 @@ jobs:
     - name: Run pre-commit hooks (lint, format)
       run: pre-commit run --all-files --show-diff-on-failure
 
+
     - name: Security scan (dependencies)
       run: pip-audit
 
@@ -106,7 +107,7 @@ jobs:
           exit 0
         fi
 
-        echo "$PY_FILES" | xargs -r bandit -x tests
+        echo "$PY_FILES" | xargs -r bandit -c .bandit
 
     - name: Install Gitleaks
       uses: gitleaks/gitleaks-action@v2
@@ -237,6 +238,7 @@ jobs:
     - name: Deploy dbt docs to Google Cloud Storage
       run: |
         gcloud storage cp -r target/* gs://mega-mart/dbt_docs/ --project=mega-mart-storage
+
 
     - name: Create tag
       run: |

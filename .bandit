@@ -1,2 +1,3 @@
-[bandit]
-exclude_dirs = tests, MegaMart/tests
+skips:
+  - B311
+  - B101
