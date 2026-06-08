@@ -124,7 +124,7 @@ ADDITIONAL_CAMPAIGN_RULES: dict[str, CampaignRule] = {
 }
 
 
-CAMPAIGN_PEAK_CATEGORIES = {
+CAMPAIGN_PEAK_CATEGORIES: dict[str, dict[str, list[str]] | list[str]] = {
     "Seasonal": {
         "Cultural Festival": [
             "Snacks",
