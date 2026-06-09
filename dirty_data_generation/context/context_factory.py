@@ -3,7 +3,8 @@ from data_generation.config.constants import (
     DATA_START_DATE,
     SIMULATION_DATE,
 )
-from data_generation.context.generation_context import (
+from data_generation.data_retrieval import data_lookup, load_data, transform_data
+from dirty_data_generation.context.generation_context import (
     AppConfig,
     BundleContext,
     CampaignAssignmentContext,
@@ -25,7 +26,6 @@ from data_generation.context.generation_context import (
     StoreContext,
     TransactionContext,
 )
-from data_generation.data_retrieval import data_lookup, load_data, transform_data
 
 
 def build_base_context() -> GenerationContext:
