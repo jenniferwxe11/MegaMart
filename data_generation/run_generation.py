@@ -18,7 +18,7 @@ from data_generation.registry import REGISTRY
 # ─────────────────────────────────────────────────────────────────────────────
 
 fake = Faker()
-Faker.seed(42)
+fake.seed_instance(42)
 random.seed(42)
 np.random.seed(42)
 
@@ -41,17 +41,18 @@ def run_generation():
 
     order = topo_sort(DEPENDENCIES)
 
-    print("\nExecution order:")
+    print(f"\nOUTPUT DIRECTORY: {RAW_DIR}")
+
+    print("\nEXECUTION ORDER:")
     for o in order:
         print(" -", o)
 
-    print("\nGENERATING:\n")
+    print("\nGENERATING RAW VERSIONS:")
 
     errors = []
 
     for generator_name in order:
         try:
-            print(f"Running {generator_name}...")
 
             fn = REGISTRY.get(generator_name)
 
@@ -61,8 +62,6 @@ def run_generation():
             fn(ctx)
 
             refresh_context(ctx, generator_name)
-
-            print(f"✓ {generator_name} done")
 
         except Exception as e:
             print(f"✗ {generator_name} failed: {e}")
