@@ -34,7 +34,7 @@ CHANGE_REASONS = {
     "pre_stockout_drain": "Anticipated stockout — proactive drawdown",
     "seasonal_restock": "Pre-seasonal restock",
     "seasonal_drop": "Post-seasonal demand drop",
-    "overstocked": "Overstocked — replenishment paused",
+    "overstocked_reduction": "Overstocked — replenishment paused",
     "overorder": "Forecasting error — over-ordered",
     "healthy_drift": "Normal healthy-band drift",
     "low_band_drift": "Low-band minor fluctuation",

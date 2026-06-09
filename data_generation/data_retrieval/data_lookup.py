@@ -1,5 +1,6 @@
 import pandas as pd
 
+from data_generation.config.constants import REGIONS_TO_AREAS
 from data_generation.config.products_config import BRANDS, CATEGORIES, CATEGORY_ITEMS
 from data_generation.config.store_products_config import ESSENTIAL_CATEGORIES
 from data_generation.data_retrieval import load_data
@@ -33,17 +34,20 @@ def get_product_map(products_df):
 # ─────────────────────────────────────────────────────────────
 
 
-def get_region_area_map():
-    df = load_data.load_region_areas()
-    region_area_map = df.groupby("region")["area"].apply(list).to_dict()
-    return region_area_map
-
-
-def get_area_region_map(region_area_map):
+def get_area_region_map():
     area_region_map = {
-        area: region for region, areas in region_area_map.items() for area in areas
+        area: region for region, areas in REGIONS_TO_AREAS.items() for area in areas
     }
     return area_region_map
+
+
+def get_areas():
+    areas = [area for areas in REGIONS_TO_AREAS.values() for area in areas]
+    return areas
+
+
+def get_regions():
+    return list(REGIONS_TO_AREAS.keys())
 
 
 def get_store_maps():
@@ -177,8 +181,3 @@ def get_search_term():
     for item_list in CATEGORY_ITEMS.values():
         SEARCH_TERMS.extend(item_list)
     return SEARCH_TERMS
-
-
-def get_areas():
-    LOCATIONS = load_data.load_region_areas()["area"].tolist()
-    return LOCATIONS

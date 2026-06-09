@@ -14,15 +14,14 @@ class AppConfig:
 
 @dataclass(frozen=True)
 class RegionAreaContext:
-    region_area_df: pd.DataFrame
-    region_area_map: Dict[str, List[str]]
     area_region_map: Dict[str, str]
+    areas: List[str]
+    regions: List[str]
 
 
 @dataclass(frozen=True)
 class ReferenceDataContext:
     search_terms: list[str]
-    locations: list[str]
 
 
 @dataclass(frozen=True)
