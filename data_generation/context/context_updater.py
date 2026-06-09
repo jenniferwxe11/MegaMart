@@ -10,8 +10,6 @@ from data_generation.context.generation_context import (
     ProductLifecycleContext,
     ProductReviewContext,
     PromotionContext,
-    ReferenceDataContext,
-    RegionAreaContext,
     StockoutEventContext,
     StockSnapshotContext,
     StoreCatalogueContext,
@@ -38,14 +36,6 @@ def refresh_context(ctx, generator_name):
             customer_segment_map=customer_maps["customer_segment_map"],
             customer_area_map=customer_maps["customer_area_map"],
             customer_region_map=customer_maps["customer_region_map"],
-        )
-        ctx.region_areas = RegionAreaContext(
-            area_region_map=data_lookup.get_area_region_map(),
-            areas=data_lookup.get_areas(),
-            regions=data_lookup.get_regions(),
-        )
-        ctx.reference_data = ReferenceDataContext(
-            search_terms=data_lookup.get_search_term(),
         )
 
     # =========================================================
