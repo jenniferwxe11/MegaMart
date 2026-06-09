@@ -1,4 +1,4 @@
-from config.constants import SEASONAL_DATES
+from data_generation.config.constants import SEASONAL_DATES
 
 
 def overlapping_dates(windows, start, end):

@@ -24,13 +24,13 @@ def stores_generator(ctx: GenerationContext):
     # ---------------------------
 
     stores: list[dict[str, Any]] = []
+    available_malls = MALL_TO_AREA.copy()
 
     # ---------------------------
     # Generation
     # ---------------------------
 
-    i = 1
-    while len(stores) < NUM_STORES:
+    for i in range(1, NUM_STORES + 1):
         store_id = f"STOR{i:03d}"
 
         # Ensure a realistic mix of store types
@@ -39,19 +39,22 @@ def stores_generator(ctx: GenerationContext):
         )[0]
 
         if store_type in ("Mall", "Flagship"):
-            mall = random.choice(list(MALL_TO_AREA.keys()))
-            area = MALL_TO_AREA[mall]
+            mall = random.choice(list(available_malls.keys()))
+            area = available_malls[mall]
             region = get_region_from_area(ctx, area)
             if store_type == "Mall":
                 store_name = f"MegaMart {mall}"
             elif store_type == "Flagship":
                 store_name = f"MegaMart {mall} - Flagship Store"
-            MALL_TO_AREA.pop(mall)
+            del available_malls[mall]
 
         elif store_type == "Neighbourhood":
             block_no = random.randint(100, 999)
             region, area = get_random_region_area(ctx)
             store_name = f"MegaMart Blk {block_no} {area} Street"
+
+        else:
+            raise ValueError(f"Unknown store_type: {store_type}")
 
         # Store Record
         stores.append(

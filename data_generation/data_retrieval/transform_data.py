@@ -55,7 +55,22 @@ def get_campaigns_df():
     df.loc[:, "is_ab_test"] = (
         df["is_ab_test"].astype(str).str.lower().map({"true": True, "false": False})
     )
-    df.loc[:, "channels"] = df["channels"].apply(
-        lambda x: ast.literal_eval(x) if isinstance(x, str) else x
-    )
+
+    def parse_channels(val):
+        if isinstance(val, list):
+            return val
+        if isinstance(val, str):
+            # Handle Python list repr e.g. "['Email', 'Push Notifications']"
+            try:
+                parsed = ast.literal_eval(val)
+                if isinstance(parsed, list):
+                    return parsed
+            except (ValueError, SyntaxError):
+                pass
+            # Handle comma-separated string e.g. "Email,Push Notifications"
+            return [v.strip() for v in val.split(",")]
+        return []
+
+    df["channels"] = df["channels"].apply(parse_channels)
+
     return df
