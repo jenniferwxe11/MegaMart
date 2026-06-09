@@ -36,7 +36,7 @@ def competitor_products_generator(ctx: GenerationContext):
 
         if (
             len(all_competitor_products) >= LIMIT_COMPETITOR_PRODUCTS
-            and len(competitor_price_history) >= LIMIT_COMPETITOR_PRICE_HISTORY
+            or len(competitor_price_history) >= LIMIT_COMPETITOR_PRICE_HISTORY
         ):
             break
 

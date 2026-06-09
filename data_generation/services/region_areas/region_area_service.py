@@ -1,12 +1,20 @@
 import random
 
+from data_generation.config.constants import REGIONS_TO_AREAS
+
 
 def get_random_region_area(ctx):
     """
     Retrieves a random region and area
     """
-    region = random.choice(list(ctx.region_areas.region_area_map.keys()))
-    area = random.choice(ctx.region_areas.region_area_map[region])
+    region = random.choice(ctx.region_areas.regions)
+    areas = REGIONS_TO_AREAS.get(region)
+
+    if not areas:
+        raise ValueError(f"No areas found for region {region}")
+
+    area = random.choice(areas)
+
     return region, area
 
 

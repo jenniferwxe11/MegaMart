@@ -4,7 +4,10 @@ from typing import Any
 
 import pandas as pd
 
-from data_generation.config.generation_config import LIMIT_STOCK_SNAPSHOTS
+from data_generation.config.generation_config import (
+    LIMIT_INVENTORY_CHANGE_EVENTS,
+    LIMIT_STOCK_SNAPSHOTS,
+)
 from data_generation.config.stocks_config import (
     BRAND_STOCKOUT_MULTIPLIER,
     CATEGORY_BASE_STOCK,
@@ -67,7 +70,10 @@ def stock_snapshots_generator(ctx: GenerationContext):
 
     for _, row in store_catalogues_df.iterrows():
 
-        if len(inventory_change_events) >= LIMIT_STOCK_SNAPSHOTS:
+        if (
+            len(weekly_snapshots) >= LIMIT_STOCK_SNAPSHOTS
+            or len(inventory_change_events) >= LIMIT_INVENTORY_CHANGE_EVENTS
+        ):
             break
 
         store_id = row["store_id"]

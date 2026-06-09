@@ -9,52 +9,37 @@ if DEV_MODE:
     NUM_PRODUCTS = 80
     NUM_CAMPAIGNS = 20
     NUM_BUNDLES = 20
-    NUM_CLICKSTREAM_SESSIONS = 300
-    NUM_TRANSACTIONS = 300
-
+    NUM_CLICKSTREAM_SESSIONS = 100
+    NUM_TRANSACTIONS = 200
     # 5 stores × ~64 products each (80% overlap)
     LIMIT_STORE_CATALOGUES = 320
-
     # every product gets ~3 lifecycle events
     LIMIT_PRODUCT_LIFECYCLES = 240
-
     # every product gets ~3 content quality records
     LIMIT_PRODUCT_CONTENT_QUALITY = 240
-
     # ~32 stockout events per store
     LIMIT_STOCKOUT_EVENTS = 160
-
-    # unchanged — already well-proportioned
-    LIMIT_STOCK_SNAPSHOTS = 20000
-
+    LIMIT_STOCK_SNAPSHOTS = 250
+    LIMIT_INVENTORY_CHANGE_EVENTS = 1000
     # 4 promos per campaign
     LIMIT_PROMOTIONS = 80
-
     # 50 customers × 30 campaign touches
     LIMIT_CAMPAIGN_ASSIGNMENTS = 1500
-
     # 3 exposures per assignment
     LIMIT_CAMPAIGN_EXPOSURES = 4500
-
     # 3 pricing periods per bundle
     LIMIT_BUNDLE_PRICINGS = 60
-
     # 3.5 items per bundle on average
     LIMIT_BUNDLE_ITEMS = 70
-
     # 20 events per session
-    LIMIT_CLICKSTREAM_EVENTS = 6000
-
+    LIMIT_CLICKSTREAM_EVENTS = 2000
     # 6 items per transaction
     LIMIT_TRANSACTION_ITEMS = 1800
-
     # ~4 reviews per customer
     LIMIT_PRODUCT_REVIEWS = 200
-
-    LIMIT_COMPETITOR_PRODUCTS = 350
-
+    LIMIT_COMPETITOR_PRODUCTS = 100
     # 20 price updates per competitor product
-    LIMIT_COMPETITOR_PRICE_HISTORY = 7000
+    LIMIT_COMPETITOR_PRICE_HISTORY = 2000
 
 
 if TEST_MODE:

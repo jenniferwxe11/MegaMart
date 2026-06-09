@@ -9,6 +9,7 @@ from data_generation.config.clickstreams_config import (
     CATEGORY_EXPOSURE_MULTIPLIER,
     IN_STOCK_STATUS,
 )
+from data_generation.config.constants import REGIONS_TO_AREAS
 from data_generation.config.customers_config import SEGMENT_CATEGORY_BIAS
 
 fake = Faker()
@@ -30,8 +31,7 @@ def get_location(
     - 5% -> random (travel/VPN/anomaly)
     """
     customers_df = ctx.customers.customers_df
-    region_area_map = ctx.region_areas.region_area_map
-    all_areas = ctx.reference_data.locations
+    all_areas = ctx.region_areas.areas
 
     customer_row = customers_df.loc[customers_df["customer_id"] == customer_id]
 
@@ -53,7 +53,7 @@ def get_location(
 
     # 15%: same region
     elif r < 0.95:
-        areas_in_region = region_area_map.get(region, [])
+        areas_in_region = REGIONS_TO_AREAS.get(region, [])
         if areas_in_region:
             return random.choice(areas_in_region)
         return random.choice(all_areas)
