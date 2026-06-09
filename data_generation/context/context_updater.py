@@ -4,13 +4,18 @@ from data_generation.context.generation_context import (
     CampaignContext,
     ClickstreamContext,
     CompetitorProductContext,
+    CustomerContext,
     ProductContentQualityContext,
+    ProductContext,
     ProductLifecycleContext,
     ProductReviewContext,
     PromotionContext,
+    ReferenceDataContext,
+    RegionAreaContext,
     StockoutEventContext,
     StockSnapshotContext,
     StoreCatalogueContext,
+    StoreContext,
     TransactionContext,
 )
 from data_generation.data_retrieval import data_lookup, load_data, transform_data
@@ -19,10 +24,71 @@ from data_generation.data_retrieval import data_lookup, load_data, transform_dat
 def refresh_context(ctx, generator_name):
 
     # =========================================================
+    # CUSTOMERS
+    # =========================================================
+
+    if generator_name == "customers_generator":
+        customers_df = load_data.load_customers()
+        customer_maps = data_lookup.get_customer_maps()
+        ctx.customers = CustomerContext(
+            customers_df=customers_df,
+            customer_ids=customer_maps["customer_ids"],
+            customer_type_to_ids_map=customer_maps["customer_type_to_ids_map"],
+            customer_type_map=customer_maps["customer_type_map"],
+            customer_segment_map=customer_maps["customer_segment_map"],
+            customer_area_map=customer_maps["customer_area_map"],
+            customer_region_map=customer_maps["customer_region_map"],
+        )
+        ctx.region_areas = RegionAreaContext(
+            area_region_map=data_lookup.get_area_region_map(),
+            areas=data_lookup.get_areas(),
+            regions=data_lookup.get_regions(),
+        )
+        ctx.reference_data = ReferenceDataContext(
+            search_terms=data_lookup.get_search_term(),
+        )
+
+    # =========================================================
+    # STORES
+    # =========================================================
+
+    elif generator_name == "stores_generator":
+        stores_df = load_data.load_stores()
+        store_maps = data_lookup.get_store_maps()
+        ctx.stores = StoreContext(
+            stores_df=stores_df,
+            store_ids=store_maps["store_ids"],
+            store_area_map=store_maps["store_area_map"],
+            store_region_map=store_maps["store_region_map"],
+            online_store_id=store_maps["online_store_id"],
+            retail_store_ids=store_maps["retail_store_ids"],
+        )
+
+    # =========================================================
+    # PRODUCTS
+    # =========================================================
+
+    elif generator_name == "products_generator":
+        products_df = load_data.load_products()
+        product_maps = data_lookup.get_product_maps()
+        ctx.products = ProductContext(
+            products_df=products_df,
+            product_ids=product_maps["product_ids"],
+            essential_product_ids=product_maps["essential_product_ids"],
+            non_essential_product_ids=product_maps["non_essential_product_ids"],
+            product_map=data_lookup.get_product_map(products_df),
+            product_name_map=product_maps["product_name_map"],
+            product_price_map=product_maps["product_price_map"],
+            product_category_map=product_maps["product_category_map"],
+            product_cost_map=product_maps["product_cost_map"],
+            category_to_products=data_lookup.get_category_to_products(products_df),
+        )
+
+    # =========================================================
     # STORE CATALOGUES
     # =========================================================
 
-    if generator_name == "store_catalogues_generator":
+    elif generator_name == "store_catalogues_generator":
 
         store_catalogues_df = load_data.load_store_catalogues()
         catalogue_maps = data_lookup.get_store_catalogue_maps()

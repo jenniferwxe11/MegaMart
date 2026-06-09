@@ -27,33 +27,10 @@ from data_generation.context.generation_context import (
     StoreContext,
     TransactionContext,
 )
-from data_generation.data_retrieval import data_lookup, load_data
+from data_generation.data_retrieval import data_lookup
 
 
 def build_base_context() -> GenerationContext:
-    # =========================================================
-    # LOAD DATAFRAMES
-    # =========================================================
-
-    region_area_df = load_data.load_region_areas()
-    customers_df = load_data.load_customers()
-    stores_df = load_data.load_stores()
-    products_df = load_data.load_products()
-
-    # =========================================================
-    # LOOKUP MAPS
-    # =========================================================
-
-    region_area_map = data_lookup.get_region_area_map()
-    area_region_map = data_lookup.get_area_region_map(region_area_map)
-    customer_maps = data_lookup.get_customer_maps()
-    store_maps = data_lookup.get_store_maps()
-    product_maps = data_lookup.get_product_maps()
-
-    # =========================================================
-    # BUILD CONTEXT
-    # =========================================================
-
     return GenerationContext(
         config=AppConfig(
             DATA_START_DATE=DATA_START_DATE,
@@ -61,42 +38,41 @@ def build_base_context() -> GenerationContext:
             SIMULATION_DATE=SIMULATION_DATE,
         ),
         region_areas=RegionAreaContext(
-            region_area_df=region_area_df,
-            region_area_map=region_area_map,
-            area_region_map=area_region_map,
+            area_region_map=data_lookup.get_area_region_map(),
+            areas=data_lookup.get_areas(),
+            regions=data_lookup.get_regions(),
         ),
         reference_data=ReferenceDataContext(
             search_terms=data_lookup.get_search_term(),
-            locations=data_lookup.get_areas(),
         ),
         customers=CustomerContext(
-            customers_df=customers_df,
-            customer_ids=customer_maps["customer_ids"],
-            customer_type_to_ids_map=customer_maps["customer_type_to_ids_map"],
-            customer_type_map=customer_maps["customer_type_map"],
-            customer_segment_map=customer_maps["customer_segment_map"],
-            customer_area_map=customer_maps["customer_area_map"],
-            customer_region_map=customer_maps["customer_region_map"],
+            customers_df=pd.DataFrame(),
+            customer_ids=[],
+            customer_type_to_ids_map={},
+            customer_type_map={},
+            customer_segment_map={},
+            customer_area_map={},
+            customer_region_map={},
         ),
         stores=StoreContext(
-            stores_df=stores_df,
-            store_ids=store_maps["store_ids"],
-            store_area_map=store_maps["store_area_map"],
-            store_region_map=store_maps["store_region_map"],
-            online_store_id=store_maps["online_store_id"],
-            retail_store_ids=store_maps["retail_store_ids"],
+            stores_df=pd.DataFrame(),
+            store_ids=[],
+            store_area_map={},
+            store_region_map={},
+            online_store_id="",
+            retail_store_ids=[],
         ),
         products=ProductContext(
-            products_df=products_df,
-            product_ids=product_maps["product_ids"],
-            essential_product_ids=product_maps["essential_product_ids"],
-            non_essential_product_ids=product_maps["non_essential_product_ids"],
-            product_map=data_lookup.get_product_map(products_df),
-            product_name_map=product_maps["product_name_map"],
-            product_price_map=product_maps["product_price_map"],
-            product_category_map=product_maps["product_category_map"],
-            product_cost_map=product_maps["product_cost_map"],
-            category_to_products=data_lookup.get_category_to_products(products_df),
+            products_df=pd.DataFrame(),
+            product_ids=[],
+            essential_product_ids=[],
+            non_essential_product_ids=[],
+            product_map={},
+            product_name_map={},
+            product_price_map={},
+            product_category_map={},
+            product_cost_map={},
+            category_to_products={},
         ),
         store_catalogues=StoreCatalogueContext(
             store_catalogues_df=pd.DataFrame(),
