@@ -14,15 +14,6 @@ RAW_DIR = "data_generation/raw_data"
 
 
 @lru_cache(maxsize=None)
-def _load_region_areas():
-    return pd.read_csv(f"{RAW_DIR}/region_areas.csv")
-
-
-def load_region_areas():
-    return _load_region_areas().copy()
-
-
-@lru_cache(maxsize=None)
 def _load_customers():
     return pd.read_csv(
         f"{RAW_DIR}/customers_raw.csv", parse_dates=["signup_date", "dob"]
