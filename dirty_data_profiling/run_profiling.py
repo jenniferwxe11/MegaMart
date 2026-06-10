@@ -49,7 +49,6 @@ def run_profiling():
 
     print(summary_df)
 
-    print("\n")
     print("=" * 60)
     print("✓ All Dirty Tables Profiled Successfully")
     print("=" * 60)
