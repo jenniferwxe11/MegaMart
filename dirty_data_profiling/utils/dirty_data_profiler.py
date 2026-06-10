@@ -26,9 +26,8 @@ def parse_error_types(df: pd.DataFrame) -> pd.DataFrame:
         if isinstance(x, str):
             try:
                 return ast.literal_eval(x)
-            except Exception:
+            except (ValueError, SyntaxError):
                 return []
-
         return []
 
     parsed = [_parse(x) for x in df["error_types"]]
@@ -273,8 +272,9 @@ def run_validation_checks(df: pd.DataFrame) -> dict:
 
             checks["inverted_date_ranges"] = int(bad_dates)
 
-        except Exception:
-            pass
+        except (ValueError, TypeError) as exc:
+            checks["inverted_date_ranges"] = 0
+            print(f"Date validation skipped: {exc}")
 
     # Negative prices
     price_cols = [c for c in df.columns if "price" in c.lower()]
