@@ -213,3 +213,6 @@ __marimo__/
 # Raw data
 /data_generation/raw_data/
 /dirty_data_generation/dirty_data/
+
+# Profling reports
+/dirty_data_profiling/reports
