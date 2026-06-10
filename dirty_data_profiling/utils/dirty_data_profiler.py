@@ -9,37 +9,6 @@ import pandas as pd
 # Helpers
 # ─────────────────────────────────────────────────────────────
 
-# def parse_error_types(df: pd.DataFrame) -> pd.DataFrame:
-#     """
-#     Convert stringified error_types into actual Python lists.
-#     """
-
-#     if "error_types" not in df.columns:
-#         df["error_types"] = [[] for _ in range(len(df))]
-#         return df
-
-#     def _parse(x):
-#         if pd.isna(x):
-#             return []
-
-#         if isinstance(x, list):
-#             return x
-
-#         if isinstance(x, str):
-#             try:
-#                 return ast.literal_eval(x)
-#             except Exception:
-#                 return []
-
-#         return []
-
-#     print(df["error_types"].dtype)
-#     print(type(df["error_types"].iloc[0]))
-#     print(df["error_types"].head())
-#     df.loc[:, "error_types"] = df["error_types"].apply(_parse)
-
-#     return df
-
 
 def parse_error_types(df: pd.DataFrame) -> pd.DataFrame:
 
@@ -144,8 +113,11 @@ def profile_numeric_columns(df: pd.DataFrame) -> dict:
     """
     Generate descriptive statistics for numeric columns.
     """
-
-    numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
+    numeric_cols = [
+        c
+        for c in df.select_dtypes(include=["number"]).columns
+        if c not in {"num_errors"}
+    ]
 
     results = {}
 
@@ -176,8 +148,11 @@ def detect_outliers(df: pd.DataFrame) -> dict:
     """
     Detect outliers using IQR rule.
     """
-
-    numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
+    numeric_cols = [
+        c
+        for c in df.select_dtypes(include=["number"]).columns
+        if c not in {"num_errors"}
+    ]
 
     outlier_results = {}
 
@@ -343,6 +318,8 @@ def profile_dataset(file_path, reports_dir="profiling/reports"):
 
     validations = run_validation_checks(df)
 
+    numeric_profile = profile_numeric_columns(df)
+
     health_score = dataset_health_score(stats["dirty_ratio"])
 
     os_report = []
@@ -379,6 +356,18 @@ def profile_dataset(file_path, reports_dir="profiling/reports"):
     for k, v in validations.items():
         os_report.append(f"{k}: {v}")
 
+    os_report.append("\nNUMERIC PROFILING")
+
+    for col, num_stats in numeric_profile.items():
+        os_report.append(
+            f"{col}: "
+            f"mean={num_stats['mean']}, "
+            f"median={num_stats['median']}, "
+            f"std={num_stats['std']}, "
+            f"min={num_stats['min']}, "
+            f"max={num_stats['max']}"
+        )
+
     os_report.append("\nOUTLIERS")
 
     for col, info in outliers.items():
@@ -409,4 +398,5 @@ def profile_dataset(file_path, reports_dir="profiling/reports"):
         "top_error": (
             error_counter.most_common(1)[0][0] if len(error_counter) > 0 else None
         ),
+        "numeric_columns": len(numeric_profile),
     }
