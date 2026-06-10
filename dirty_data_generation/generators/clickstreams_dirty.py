@@ -17,11 +17,14 @@ from dirty_data_generation.utils.clickstreams_dirty_helpers import (
     mismatch_fields,
     missing_fields,
     orphan_sessions,
-    populate_fields,
+    populate_wrong_fields,
     time_anomaly,
     wrong_event_sequence,
 )
 from dirty_data_generation.utils.io_utils import save
+
+Row = dict[str, Any]
+CorruptionFunc = Callable[..., Row]
 
 
 @register("dirty_clickstreams")
@@ -48,12 +51,9 @@ def dirty_clickstreams(ctx: GenerationContext):
                 previous_row = dirty_row
                 continue
 
-            Row = dict[str, Any]
-            CorruptionFunc = Callable[..., Row]
-
             CORRUPTION_FUNCS: list[CorruptionFunc] = [
                 missing_fields,
-                populate_fields,
+                populate_wrong_fields,
                 mismatch_fields,
                 field_corruption,
                 time_anomaly,
@@ -72,7 +72,7 @@ def dirty_clickstreams(ctx: GenerationContext):
                 elif func.__name__ == "wrong_event_sequence":
                     dirty_row = func(previous_row, dirty_row, session_rows)
                     break
-                elif func.__name__ in ("mismatch_fields", "populate_fields"):
+                elif func.__name__ in ("mismatch_fields", "populate_wrong_fields"):
                     dirty_row = func(ctx, dirty_row)
                 else:
                     dirty_row = func(dirty_row)

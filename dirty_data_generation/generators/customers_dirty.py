@@ -61,10 +61,12 @@ def dirty_customers(ctx: GenerationContext):
 
     # Age < 18 (DOB too recent)
     young_indices = df[df["dob"].notna()].sample(frac=0.02, random_state=4).index
-    df.loc[young_indices, "dob"] = [
-        fake.date_between(start_date="-12y", end_date="-5y")
-        for _ in range(len(young_indices))
-    ]
+    df.loc[young_indices, "dob"] = pd.to_datetime(
+        [
+            fake.date_between(start_date="-12y", end_date="-5y")
+            for _ in range(len(young_indices))
+        ]
+    )
     append_error(df, young_indices, "underage date of birth")
 
     # Loyalty points negative

@@ -18,6 +18,85 @@ from dirty_data_generation.config.constants import MAX_ERRORS_PER_ROW
 
 fake = Faker()
 
+# ---------------------------------------------------------------------------
+# Core error management helpers
+# ---------------------------------------------------------------------------
+
+
+def coinflip(prob: float) -> bool:
+    return random.random() < prob
+
+
+def _get_errors(df: pd.DataFrame, idx) -> list:
+    """Safely retrieve error list for a row."""
+    errors = df.at[idx, "error_types"]
+    if isinstance(errors, list):
+        return errors.copy()
+    return []
+
+
+def _set_errors(df: pd.DataFrame, idx, errors: list) -> None:
+    """Safely write error list back."""
+    df.at[idx, "error_types"] = errors
+
+
+def _under_cap(errors: list, max_errors: int = MAX_ERRORS_PER_ROW) -> bool:
+    """Check whether a row can receive more errors."""
+    return len(set(errors)) < max_errors
+
+
+def append_error(
+    df: pd.DataFrame,
+    indices,
+    error_label: str,
+    max_errors: int = MAX_ERRORS_PER_ROW,
+) -> None:
+    """
+    Append an error label to rows by index.
+    Deduplicates labels and respects error cap.
+    """
+    for idx in list(indices):
+        errors = _get_errors(df, idx)
+        if not _under_cap(errors, max_errors):
+            continue
+        if error_label not in errors:
+            errors.append(error_label)
+        _set_errors(df, idx, errors)
+
+
+# ---------------------------------------------------------------------------
+# Row level helpers
+# ---------------------------------------------------------------------------
+
+
+def _row_get_errors(row: dict) -> list:
+    errors = row.get("error_types", [])
+    return errors if isinstance(errors, list) else []
+
+
+def _row_can_add(row: dict) -> bool:
+    return _under_cap(_row_get_errors(row))
+
+
+def _row_add_error(row: dict, label: str) -> bool:
+    """
+    Add *label* to row["error_types"] if under cap and not already present.
+    Returns True if the label was added.
+    """
+    errors = _row_get_errors(row)
+    if not _under_cap(errors):
+        return False
+    if label not in errors:
+        errors.append(label)
+        row["error_types"] = errors
+        return True
+    return False
+
+
+# ---------------------------------------------------------------------------
+# Session/corruption budget helpers
+# ---------------------------------------------------------------------------
+
 
 def clone_clean_row(row):
     return {k: v for k, v in row.items() if k != "error_types"} | {"error_types": []}
@@ -41,11 +120,15 @@ def assign_corruption_budget(intensity):
         return np.random.poisson(4)
 
 
+# ---------------------------------------------------------------------------
+# Corruption functions
+# ---------------------------------------------------------------------------
+
+
 def missing_fields(row):
-    if len(set(row.get("error_types", []))) >= MAX_ERRORS_PER_ROW:
+    if not _row_can_add(row):
         return row
 
-    # Missing fields
     field = random.choice(
         [
             "product_id",
@@ -63,196 +146,153 @@ def missing_fields(row):
     )
 
     row[field] = None
-    row["error_types"].append(f"missing {field}")
+    _row_add_error(row, f"missing {field}")
     return row
 
 
-def populate_fields(ctx, row):
-    if len(set(row.get("error_types", []))) >= MAX_ERRORS_PER_ROW:
-        return row
-
+def populate_wrong_fields(ctx, row):
     product_ids = ctx.products.product_ids
 
     if row.get("scroll_depth") is None:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+        if _row_add_error(row, "populate scroll depth"):
             row["scroll_depth"] = random.randint(0, 100)
-            row["error_types"].append("populate scroll depth")
 
     if row.get("category") is None:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+        if _row_add_error(row, "populate category"):
             row["category"] = random.choices(
                 list(CATEGORY_PRODUCT_DISTRIBUTION.keys()),
                 weights=list(CATEGORY_PRODUCT_DISTRIBUTION.values()),
                 k=1,
             )[0]
-            row["error_types"].append("populate category")
 
     if row.get("product_id") is None:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+        if _row_add_error(row, "populate product id"):
             row["product_id"] = random.choice(product_ids)
-            row["error_types"].append("populate product id")
 
     if row.get("cart_size") is None:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+        if _row_add_error(row, "populate cart size"):
             row["cart_size"] = random.randint(0, 20)
-            row["error_types"].append("populate cart size")
 
     return row
 
 
 def mismatch_fields(ctx, row):
-    if len(set(row.get("error_types", []))) >= MAX_ERRORS_PER_ROW:
-        return row
-
     product_ids = ctx.products.product_ids
 
-    # Page/product_id mismatch
-    if random.random() < 0.3 and row.get("event_type") in (
+    if coinflip(0.3) and row.get("event_type") in (
         "Product View",
         "Add to Cart",
         "Remove from Cart",
     ):
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+        if _row_add_error(row, "mismatch product"):
             row["product_id"] = random.choice(product_ids)
-            row["error_types"].append("mismatch product")
 
-    # cart_size disagrees with cart_content length
-    if random.random() < 0.3 and row.get("cart_size") is not None:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+    if coinflip(0.3) and row.get("cart_size") is not None:
+        if _row_add_error(row, "mismatch cart size"):
             row["cart_size"] = random.randint(0, 20)
-            row["error_types"].append("mismatch cart size")
 
-    if random.random() < 0.2 and row.get("scroll_depth") is not None:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+    if coinflip(0.2) and row.get("scroll_depth") is not None:
+        if _row_add_error(row, "mismatch scroll depth"):
             row["scroll_depth"] += random.uniform(-25, 25)
-            row["error_types"].append("mismatch scroll depth")
 
     return row
 
 
 def field_corruption(row):
-    if len(set(row.get("error_types", []))) >= MAX_ERRORS_PER_ROW:
-        return row
-
-    # Scoll depth out of range
-    if row.get("scroll_depth") is not None and random.random() < 0.2:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+    if row.get("scroll_depth") is not None and coinflip(0.2):
+        if _row_add_error(row, "scroll out of bound"):
             row["scroll_depth"] = random.choice(
                 [random.uniform(100.1, 150), random.uniform(-20, -0.1)]
             )
-            row["error_types"].append("scroll out of bound")
 
-    if row.get("category") is not None and random.random() < 0.3:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+    if row.get("category") is not None and coinflip(0.3):
+        if _row_add_error(row, "category corruption"):
             row["category"] = fake.word()
-            row["error_types"].append("category corruption")
 
-    if row.get("bounce_flag") is not None and random.random() < 0.2:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+    if row.get("bounce_flag") is not None and coinflip(0.2):
+        if _row_add_error(row, "bounce flag corruption"):
             row["bounce_flag"] = "Bounced"
-            row["error_types"].append("bounce flag corruption")
 
-    if row.get("event_type") == "Checkout Start" and random.random() < 0.3:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+    if row.get("event_type") == "Checkout Start" and coinflip(0.3):
+        if _row_add_error(row, "checkout without cart"):
             row["cart_size"] = 0
             row["cart_content"] = []
-            row["error_types"].append("checkout without cart")
 
-    # ATC without product
-    if row.get("event_type") == "Add to Cart" and random.random() < 0.03:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+    if row.get("event_type") == "Add to Cart" and coinflip(0.03):
+        if _row_add_error(row, "missing add to cart product"):
             row["product_id"] = None
-            row["error_types"].append("missing add to cart product")
 
     return row
 
 
 def time_anomaly(row, previous_row):
-    if len(set(row.get("error_types", []))) >= MAX_ERRORS_PER_ROW:
+    if not _row_can_add(row) or previous_row is None:
         return row
 
-    if previous_row is None:
-        return row
-
-    # Timestamp anomaly
-    if random.random() < 0.3:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+    if coinflip(0.3):
+        if _row_add_error(row, "timestamp gap anomaly"):
             shift = random.choice(
                 [
-                    random.randint(1, 3),  # impatient
-                    random.randint(30, 120),  # normal
-                    random.randint(300, 1200),  # distracted - long idle
-                    -random.randint(5, 300),  # goes backwards
-                    random.randint(86400, 864000),  # 1-10 days gap (huge jump forward)
+                    random.randint(1, 3),
+                    random.randint(30, 120),
+                    random.randint(300, 1200),
+                    -random.randint(5, 300),
+                    random.randint(86400, 864000),
                 ]
             )
             if previous_row.get("timestamp") is not None:
                 row["timestamp"] = previous_row["timestamp"] + timedelta(seconds=shift)
-                row["error_types"].append("timestamp gap anomaly")
 
-    elif random.random() < 0.02:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
-            # Future timestamp
+    elif coinflip(0.02):
+        if _row_add_error(row, "future timestamp"):
             row["timestamp"] = fake.future_datetime(end_date="+10y")
-            row["error_types"].append("future timestamp")
 
     return row
 
 
 def break_cart_persistence(row):
-    if len(set(row.get("error_types", []))) >= MAX_ERRORS_PER_ROW:
+    if not _row_can_add(row):
         return row
 
-    # Cart content corruption
     cart = row.get("cart_content")
-
     if isinstance(cart, str):
         try:
             cart = ast.literal_eval(cart)
         except Exception:
             cart = []
-
     if cart is None:
         cart = []
 
     r = random.random()
 
     if r < 0.3:
-        if len(cart) > 0 and len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+        if len(cart) > 0 and _row_add_error(row, "partial cart loss"):
             cart = random.sample(cart, k=max(0, len(cart) // 2))
             row["cart_content"] = cart
             row["cart_size"] = len(cart)
-            row["error_types"].append("partial cart loss")
 
     elif r < 0.9:
-        if len(cart) > 0 and len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+        if len(cart) > 0 and _row_add_error(row, "cart reset"):
             row["cart_content"] = []
             row["cart_size"] = 0
-            row["error_types"].append("cart reset")
 
     elif r < 0.95:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+        if _row_add_error(row, "cart is none"):
             row["cart_content"] = None
             row["cart_size"] = None
-            row["error_types"].append("cart is none")
 
     else:
-        if len(cart) > 0 and len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+        if len(cart) > 0 and _row_add_error(row, "cart explosion"):
             random_product = random.choice(cart)
             exploded_cart = cart + [random_product] * random.randint(10, 30)
             row["cart_content"] = exploded_cart
             row["cart_size"] = len(exploded_cart)
-            row["error_types"].append("cart explosion")
 
     return row
 
 
 def messy_search_term(row):
-    if len(set(row.get("error_types", []))) >= MAX_ERRORS_PER_ROW:
-        return row
-
-    # Malformed search term (10% of search events)
-    if row.get("event_type") != "Search View":
+    if not _row_can_add(row) or row.get("event_type") != "Search View":
         return row
 
     original_term = row.get("search_term") or fake.word()
@@ -260,28 +300,27 @@ def messy_search_term(row):
     ops = [
         lambda t: t + random.choice(["!", "??", "."]),
         lambda t: t.replace("a", "aa"),
-        lambda t: t[:-1] if len(t) > 1 else t,  # Truncate
-        lambda t: "".join(random.sample(t, len(t))) if len(t) > 2 else t,  # Shuffle
+        lambda t: t[:-1] if len(t) > 1 else t,
+        lambda t: "".join(random.sample(t, len(t))) if len(t) > 2 else t,
         lambda t: " " * random.randint(1, 5),
         lambda t: "".join(
             random.choices("abcdefghijklmnopqrstuvwxyz", k=random.randint(3, 10))
         ),
     ]
 
-    if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+    if _row_add_error(row, "messy search term"):
         search_term = random.choice(ops)(original_term)
         row["page"] = f"/search?q={search_term}"
-        row["error_types"].append("messy search term")
 
     return row
 
 
 def wrong_event_sequence(previous_row, row, session_rows):
-    if len(set(row.get("error_types", []))) >= MAX_ERRORS_PER_ROW:
+    if not _row_can_add(row):
         return row
 
-    if random.random() < 0.05:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
+    if coinflip(0.05):
+        if _row_add_error(row, "impossible event sequence"):
             row["event_type"] = random.choice(
                 [
                     "Payment Attempt",
@@ -291,40 +330,35 @@ def wrong_event_sequence(previous_row, row, session_rows):
                     "Home View",
                 ]
             )
-            row["error_types"].append("impossible event sequence")
 
     # --- Event Repeat ---
-    if previous_row is not None and random.random() < 0.05:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
-            new_row = clone_clean_row(previous_row)
+    if previous_row is not None and coinflip(0.05):
+        new_row = clone_clean_row(previous_row)
+        if row.get("timestamp") is not None and new_row.get("timestamp") is not None:
             new_row["timestamp"] = row["timestamp"] + timedelta(
                 seconds=random.randint(1, 10)
             )
             new_row["event_order"] = row["event_order"]
             new_row["clickstream_id"] = f"{row['session_id']}_{row['event_order']}"
             new_row["error_types"] = ["event repeat"]
-
             return new_row
 
     # --- Random backtracking ---
-    if len(session_rows) > 0 and random.random() < 0.05:
-        if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
-            old = random.choice(session_rows)
-            new_row = clone_clean_row(row)
-            new_row["page"] = old.get("page")
-            new_row["product_id"] = old.get("product_id")
-            new_row["product_name"] = old.get("product_name")
-            new_row["category"] = old.get("category")
-            new_row["error_types"] = ["random backtracking"]
+    if len(session_rows) > 0 and coinflip(0.05):
+        old = random.choice(session_rows)
+        new_row = clone_clean_row(row)
+        new_row["page"] = old.get("page")
+        new_row["product_id"] = old.get("product_id")
+        new_row["product_name"] = old.get("product_name")
+        new_row["category"] = old.get("category")
+        new_row["error_types"] = ["random backtracking"]
+        return new_row
 
-            return new_row
-
-    # --- Revisit previous product view
-    if random.random() < 0.08:
+    # --- Revisit previous product view ---
+    if coinflip(0.08):
         product_views = [
             r for r in session_rows if r.get("event_type") == "Product View"
         ]
-
         if len(product_views) > 0:
             old = random.choice(product_views)
             new_row = clone_clean_row(row)
@@ -333,29 +367,25 @@ def wrong_event_sequence(previous_row, row, session_rows):
             new_row["product_name"] = old.get("product_name")
             new_row["category"] = old.get("category")
             new_row["error_types"] = ["replay event"]
-
             return new_row
 
     return row
 
 
 def duplicate_event(row):
-    if len(set(row["error_types"])) < MAX_ERRORS_PER_ROW:
-        # Duplicate event
+    if _row_can_add(row):
         if row.get("timestamp") is not None:
             duplicate_row = clone_clean_row(row)
             duplicate_row["timestamp"] = row["timestamp"] + timedelta(
                 seconds=random.randint(1, 3)
             )
-            duplicate_row["error_types"] = row["error_types"] + ["duplicate event"]
-
+            duplicate_row["error_types"] = _row_get_errors(row) + ["duplicate event"]
             return duplicate_row
-
     return None
 
 
 def inject_bot_traffic(ctx, row):
-    if len(set(row.get("error_types", []))) >= MAX_ERRORS_PER_ROW:
+    if not _row_can_add(row):
         return []
 
     product_ids = ctx.products.product_ids
@@ -373,21 +403,17 @@ def inject_bot_traffic(ctx, row):
                 [random.uniform(0.1, 0.5), random.uniform(1, 5), random.uniform(10, 60)]
             )
         )
+
         # --- Event details ---
         event_type = random.choices(
-            [
-                "Home View",
-                "Search View",
-                "Category View",
-                "Product View",
-                "Cart View",
-            ],
+            ["Home View", "Search View", "Category View", "Product View", "Cart View"],
             weights=[10, 25, 20, 40, 5],
             k=1,
         )[0]
         product_id = random.choice(product_ids)
         product_name = product_name_map.get(product_id)
         category = random.choice(CATEGORIES)
+
         bot_row["session_id"] = bot_session_id
         bot_row["event_order"] = i + 1
         bot_row["clickstream_id"] = f"{bot_session_id}_{i + 1}"
@@ -443,17 +469,14 @@ def orphan_sessions(ctx):
     customer_ids = ctx.customers.customer_ids
 
     orphan_rows = []
-    # Generate a small handful of orphan sessions
     n_orphan_sessions = random.randint(5, 20)
 
     for _ in range(n_orphan_sessions):
         orphan_session_id = str(uuid.uuid4())
-        # Attach to a real customer so FK constraints look fine but session is untraceable
         customer_id = random.choice(customer_ids)
         current_time = fake.date_time_between(start_date="-2y", end_date="now")
         n_events = random.randint(3, 12)
 
-        # Orphan sessions skip the landing event — start mid-funnel
         mid_funnel_events = [
             "Product View",
             "Add to Cart",
@@ -502,7 +525,6 @@ def orphan_sessions(ctx):
             elif event_type in ("Checkout Start", "Payment Attempt"):
                 page = "/checkout"
                 if not cart_content:
-                    # Orphan checkout with nothing in cart — extra dirty
                     cart_content = []
 
             current_time += timedelta(seconds=random.randint(10, 300))
@@ -512,16 +534,15 @@ def orphan_sessions(ctx):
                     "clickstream_id": f"{orphan_session_id}_{i + 1}",
                     "session_id": orphan_session_id,
                     "customer_id": customer_id,
-                    "customer_segment": None,  # Unknown — session never resolved
+                    "customer_segment": None,
                     "campaign_ids": [],
-                    "has_treatment_campaign": None,
-                    "has_control_campaign": None,
+                    "has_treatment_campaign": False,
+                    "has_control_campaign": False,
                     "device_category": random.choice(["Desktop", "Mobile", "Tablet"]),
-                    "referrer": None,  # No referrer — orphaned
+                    "referrer": None,
                     "location": None,
                     "timestamp": current_time,
-                    "event_order": i
-                    + 1,  # Starts at 1 but there's no event_order = 0 landing
+                    "event_order": i + 1,
                     "event_type": event_type,
                     "page": page,
                     "scroll_depth": scroll_depth,
