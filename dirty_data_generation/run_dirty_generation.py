@@ -45,7 +45,7 @@ def run_dirty_generation():
     for t in CLEAN_TABLES:
         print(f"  ✓ {t}")
 
-    print("\nGENERATING DIRTY VERSIONS:")
+    print("\nGENERATING TABLES:")
 
     errors = []
     results = []
@@ -86,7 +86,7 @@ def run_dirty_generation():
             )
 
         print("\n" + "=" * 60)
-        print("✓ ALL DIRTY TABLES GENERATED SUCCESSFULLY")
+        print("✓ All Dirty Tables Generated Successfully")
 
     print("=" * 60)
 

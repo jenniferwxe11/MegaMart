@@ -47,7 +47,7 @@ def run_generation():
     for o in order:
         print(" -", o)
 
-    print("\nGENERATING RAW VERSIONS:")
+    print("\nGENERATING TABLES:")
 
     errors = []
 
@@ -75,7 +75,7 @@ def run_generation():
         for name, err in errors:
             print(f"- {name}: {err}")
     else:
-        print("✓ ALL GENERATORS COMPLETED")
+        print("✓ All Tables Generated Successfully")
 
     print("=" * 60)
 
