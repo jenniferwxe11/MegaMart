@@ -89,12 +89,11 @@ def transactions_generator(ctx: GenerationContext):
             break
 
         transaction_id = f"TRAN{i:03d}"
-        local_transaction_items = []
 
         # Get session details
         session_id = pay_row["session_id"]
         customer_id = pay_row["customer_id"]
-        timestamp = pd.Timestamp(pay_row["timestamp"].replace(microsecond=0))
+        timestamp = pd.Timestamp(pay_row["event_timestamp"].replace(microsecond=0))
         customer_segment = pay_row["customer_segment"]
 
         session_events = session_groups.get(session_id)
@@ -229,20 +228,24 @@ def transactions_generator(ctx: GenerationContext):
             )
 
         # --- Transaction Items ---
+
+        local_transaction_items = []
         # Each product in cart is recorded as a separate transaction row
         for item in cart_items:
             product_id = item["product_id"]
             product_name = item["name"]
-            product_price = item["price"]
+            unit_price = round(item["price"], 2)
             category = item["category"]
             quantity = item["quantity"]
 
-            item_subtotal = product_price * quantity
+            item_subtotal = round(unit_price * quantity, 2)
 
             # Prevent over allocation
-            item_discount = min(final_allocation.get(product_id, 0), item_subtotal)
+            item_discount = round(
+                min(final_allocation.get(product_id, 0), item_subtotal), 2
+            )
 
-            total_amount = max(0, item_subtotal - item_discount)
+            final_item_price = round(max(0.0, item_subtotal - item_discount), 2)
 
             # Store In Store Item Transaction Record
             local_transaction_items.append(
@@ -252,10 +255,10 @@ def transactions_generator(ctx: GenerationContext):
                     "product_name": product_name,
                     "category": category,
                     "quantity": quantity,
-                    "unit_price": round(product_price, 2),
-                    "item_subtotal": round(item_subtotal, 2),
-                    "item_discount": round(item_discount, 2),
-                    "final_item_price": round(total_amount, 2),
+                    "unit_price": unit_price,
+                    "item_subtotal": item_subtotal,
+                    "item_discount": item_discount,
+                    "final_item_price": final_item_price,
                 }
             )
 
@@ -267,7 +270,7 @@ def transactions_generator(ctx: GenerationContext):
 
         if local_transaction_items and abs(drift) > 0:
             last = local_transaction_items[-1]
-            last["final_item_price"] += drift
+            last["final_item_price"] = round(last["final_item_price"] + drift, 2)
 
         # Recompute after drift correction
         items_total = sum(item["final_item_price"] for item in local_transaction_items)
@@ -285,17 +288,6 @@ def transactions_generator(ctx: GenerationContext):
 
         basket_size = sum(item["quantity"] for item in cart_items)
         num_unique_items = len(cart_items)
-
-        # Zero out financials on failure
-        # if order_status == "Failed":
-        #     total_discount = 0
-        #     transaction_total = 0
-        #     shipping_discount = 0
-        #     promotion_allocations = []
-        #     final_allocation = {}
-
-        #     # Remove generated transaction items
-        #     local_transaction_items = []
 
         transaction_items.extend(local_transaction_items)
 
@@ -336,7 +328,6 @@ def transactions_generator(ctx: GenerationContext):
             break
 
         transaction_id = f"TRAN{i:03d}"
-        local_transaction_items = []
 
         # --- Construct Transaction Details ---
         customer_type = random.choices(
@@ -474,20 +465,24 @@ def transactions_generator(ctx: GenerationContext):
                 )
 
         # --- Transaction Items ---
+
+        local_transaction_items = []
         # Each product in cart is recorded as a separate transaction row
         for item in cart_items:
             product_id = item["product_id"]
             product_name = item["name"]
-            product_price = item["price"]
+            unit_price = round(item["price"], 2)
             category = item["category"]
             quantity = item["quantity"]
 
-            item_subtotal = product_price * quantity
+            item_subtotal = round(unit_price * quantity, 2)
 
             # Prevent over allocation
-            item_discount = min(final_allocation.get(product_id, 0), item_subtotal)
+            item_discount = round(
+                min(final_allocation.get(product_id, 0), item_subtotal), 2
+            )
 
-            total_amount = max(0, item_subtotal - item_discount)
+            final_item_price = round(max(0.0, item_subtotal - item_discount), 2)
 
             # Store In Store Item Transaction Record
             local_transaction_items.append(
@@ -497,10 +492,10 @@ def transactions_generator(ctx: GenerationContext):
                     "product_name": product_name,
                     "category": category,
                     "quantity": quantity,
-                    "unit_price": round(product_price, 2),
-                    "item_subtotal": round(item_subtotal, 2),
-                    "item_discount": round(item_discount, 2),
-                    "final_item_price": round(total_amount, 2),
+                    "unit_price": unit_price,
+                    "item_subtotal": item_subtotal,
+                    "item_discount": item_discount,
+                    "final_item_price": final_item_price,
                 }
             )
 
@@ -512,7 +507,7 @@ def transactions_generator(ctx: GenerationContext):
 
         if local_transaction_items and abs(drift) > 0:
             last = local_transaction_items[-1]
-            last["final_item_price"] += drift
+            last["final_item_price"] = round(last["final_item_price"] + drift, 2)
 
         # Recompute after drift correction
         items_total = sum(item["final_item_price"] for item in local_transaction_items)
@@ -530,19 +525,6 @@ def transactions_generator(ctx: GenerationContext):
 
         basket_size = sum(item["quantity"] for item in cart_items)
         num_unique_items = len(cart_items)
-
-        # Zero out financials on failure
-        # if order_status == "Failed":
-        #     cart_subtotal = 0
-        #     total_discount = 0
-        #     shipping_fee = 0
-        #     transaction_total = 0
-        #     shipping_discount = 0
-        #     promotion_allocations = []
-        #     final_allocation = {}
-
-        #     # Remove generated transaction items
-        #     local_transaction_items = []
 
         transaction_items.extend(local_transaction_items)
 

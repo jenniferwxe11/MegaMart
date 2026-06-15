@@ -81,7 +81,7 @@ def product_reviews_generator(ctx: GenerationContext):
         selling_price = product_row["selling_price"]
 
         # Avoid duplicate reviews for same purchase
-        pair = (customer_id, transaction_id, product_id)
+        pair = (transaction_id, product_id)
         if pair in reviewed_pairs:
             continue
         reviewed_pairs.add(pair)
@@ -189,6 +189,7 @@ def product_reviews_generator(ctx: GenerationContext):
         reviews.append(
             {
                 "review_id": review_id,
+                "transaction_id": transaction_id,
                 "product_id": product_id,
                 "customer_id": customer_id,
                 "rating": rating,

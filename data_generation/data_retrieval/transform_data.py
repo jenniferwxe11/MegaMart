@@ -12,7 +12,7 @@ def sorted_clickstream():
     return (
         load_data.load_clickstreams()
         .copy()
-        .sort_values(["session_id", "timestamp"])
+        .sort_values(["session_id", "event_timestamp"])
         .reset_index(drop=True)
     )
 

@@ -96,6 +96,42 @@ def generate_scraped_category(category, category_noise):
     return scraped_category
 
 
+def generate_product_name(base_category, brand, item):
+    """
+    Generates a synthetic product name by combining brand, item, and optional
+    category specific attributes (variant, colour, net content, pack quantity).
+    """
+    profile = CATEGORY_PROFILES.get(
+        base_category,
+        {
+            "variants": [None],
+            "net_content": [None],
+            "pack_quantity": [None],
+            "colour": [None],
+        },
+    )
+    variant = random.choice(profile.get("variants", [None]))
+    net_content = random.choice(profile.get("net_content", [None]))
+    pack_quantity = random.choice(profile.get("pack_quantity", [None]))
+    colour = random.choice(profile.get("colour", [None]))
+
+    # Build product name
+    product_name_parts = [brand]
+    if variant:
+        product_name_parts.append(variant)
+    product_name_parts.append(item)
+    if colour:
+        product_name_parts.append(colour)
+    if net_content:
+        product_name_parts.append(net_content)
+    if pack_quantity:
+        product_name_parts.append(pack_quantity)
+
+    product_name = " ".join(product_name_parts)
+
+    return product_name
+
+
 def generate_scraped_name(brand, product_name, name_noise):
     """
     Generates realistic "messy" product names from competitor sources.
@@ -209,31 +245,54 @@ def get_competitor_products(ctx, competitor, configuration):
     products_df = ctx.products.products_df
 
     competitor_products = []
+    seen_competitor_name_keys = set()  # (competitor, scraped_product_name)
+    seen_competitor_id_keys = set()  # (competitor, product_id)
 
     # --- Shared Products ---
-    shared_products = products_df.sample(frac=random.uniform(0.4, 0.8)).copy()
+    shared_products = products_df.sample(
+        frac=random.uniform(0.4, 0.8), replace=False
+    ).drop_duplicates(subset=["product_id"])
 
     for _, product in shared_products.iterrows():
-
-        scraped_category = generate_scraped_category(
-            product["category"], configuration["category_noise"]
-        )
+        product_id = product["product_id"]
 
         scraped_product_name = generate_scraped_name(
             product["brand"], product["product_name"], configuration["name_noise"]
         )
 
+        # Deduplicate for same product id
+        id_key = (competitor, product_id)
+        if id_key in seen_competitor_id_keys:
+            continue
+        seen_competitor_id_keys.add(id_key)
+
+        # Deduplicate for same product name
+        name_key = (competitor, scraped_product_name)
+        if name_key in seen_competitor_name_keys:
+            continue
+        seen_competitor_name_keys.add(name_key)
+
+        scraped_category = generate_scraped_category(
+            product["category"], configuration["category_noise"]
+        )
+
         scraped_price = generate_scraped_price(
             product["selling_price"], price_bias=configuration["price_bias"]
         )
+
+        # Prevent NULL
+        if scraped_product_name is None or competitor is None or scraped_price is None:
+            continue
+
         competitor_products.append(
             {
+                "product_id": product_id,
+                "base_product_name": product["product_name"],
+                "scraped_product_name": scraped_product_name,
                 "brand": product["brand"],
                 "category": scraped_category,
-                "product_name": scraped_product_name,
                 "selling_price": scraped_price,
                 "is_exclusive": False,
-                "product_id": product["product_id"],
             }
         )
 
@@ -272,33 +331,17 @@ def get_competitor_products(ctx, competitor, configuration):
         else:
             item = random.choice(item_pool)
 
-        profile = CATEGORY_PROFILES.get(
-            base_category,
-            {
-                "variants": [None],
-                "net_content": [None],
-                "pack_quantity": [None],
-                "colour": [None],
-            },
+        # Generate product name
+        base_product_name = generate_product_name(base_category, brand, item)
+        scraped_product_name = generate_scraped_name(
+            brand, base_product_name, configuration["name_noise"]
         )
-        variant = random.choice(profile.get("variants", [None]))
-        net_content = random.choice(profile.get("net_content", [None]))
-        pack_quantity = random.choice(profile.get("pack_quantity", [None]))
-        colour = random.choice(profile.get("colour", [None]))
 
-        # Build product name
-        product_name_parts = [brand]
-        if variant:
-            product_name_parts.append(variant)
-        product_name_parts.append(item)
-        if colour:
-            product_name_parts.append(colour)
-        if net_content:
-            product_name_parts.append(net_content)
-        if pack_quantity:
-            product_name_parts.append(pack_quantity)
-
-        product_name = " ".join(product_name_parts)
+        # Deduplicate for same product name
+        name_key = (competitor, scraped_product_name)
+        if name_key in seen_competitor_name_keys:
+            continue
+        seen_competitor_name_keys.add(name_key)
 
         # Generate selling price
         competitor_selling_price_range = COMPETITOR_CATEGORY_PRICE_RANGES.get(
@@ -310,14 +353,19 @@ def get_competitor_products(ctx, competitor, configuration):
             min_selling_price, max_selling_price = selling_price_range
         selling_price = round(random.uniform(min_selling_price, max_selling_price), 2)
 
+        # Prevent NULL
+        if scraped_product_name is None or competitor is None or selling_price is None:
+            continue
+
         competitor_products.append(
             {
+                "product_id": None,
+                "base_product_name": base_product_name,
+                "scraped_product_name": scraped_product_name,
                 "brand": brand,
                 "category": category,
-                "product_name": product_name,
                 "selling_price": selling_price,
                 "is_exclusive": True,
-                "product_id": None,
             }
         )
 
@@ -342,7 +390,7 @@ def get_scrape_batches(ctx):
     batch_count = random.randint(15, 30)
 
     for _ in range(batch_count):
-        scrape_date = fake.date_between(
+        scrape_date = fake.date_time_between(
             start_date=DATA_START_DATE, end_date=DATA_END_DATE
         )
         scrape_batch_dates.append(scrape_date)

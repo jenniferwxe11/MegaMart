@@ -192,6 +192,6 @@ def campaigns_generator(ctx: GenerationContext):
 
     campaigns_df = pd.DataFrame(campaigns)
     campaigns_df["channels"] = campaigns_df["channels"].apply(
-        lambda x: ",".join(x) if isinstance(x, list) else x
+        lambda x: x if isinstance(x, list) else []
     )
     save(campaigns_df, "campaigns_raw.csv")

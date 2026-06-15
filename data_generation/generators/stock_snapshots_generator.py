@@ -42,7 +42,10 @@ def stock_snapshots_generator(ctx: GenerationContext):
     products_df = ctx.products.products_df
 
     assert ctx.store_catalogues is not None
-    store_catalogues_df = ctx.store_catalogues.store_catalogues_df
+    store_catalogues_df = ctx.store_catalogues.store_catalogues_df.copy()
+    store_catalogues_df = store_catalogues_df.drop_duplicates(
+        subset=["store_id", "product_id"]
+    )
 
     assert ctx.product_lifecycles is not None
     product_lifecycles_df = ctx.product_lifecycles.product_lifecycles_df
@@ -64,6 +67,8 @@ def stock_snapshots_generator(ctx: GenerationContext):
     # ---------------------------
     # Generation
     # ---------------------------
+
+    seen_event_keys = set()
 
     # Precompute seasonal demand windows
     seasonal_spikes = get_seasonal_spike()
@@ -130,17 +135,20 @@ def stock_snapshots_generator(ctx: GenerationContext):
         last_stock_band = None
         last_stock_status = None
 
-        # Emit the opening balance as the first event
-        inventory_change_events.append(
-            {
-                "store_id": store_id,
-                "product_id": product_id,
-                "timestamp": DATA_START_DATE,
-                "delta": base_stock,
-                "reason": "Opening balance",
-                "stock_after": base_stock,
-            }
-        )
+        key = (store_id, product_id, DATA_START_DATE)
+        if key not in seen_event_keys:
+            # Emit the opening balance as the first event
+            inventory_change_events.append(
+                {
+                    "store_id": store_id,
+                    "product_id": product_id,
+                    "event_timestamp": DATA_START_DATE,
+                    "delta": base_stock,
+                    "reason": "Opening balance",
+                    "stock_after": base_stock,
+                }
+            )
+            seen_event_keys.add(key)
 
         # Identify stockout events impacting product
         product_stockouts = stockout_event_map.get(
@@ -290,17 +298,23 @@ def stock_snapshots_generator(ctx: GenerationContext):
 
             # Emit an inventory change event only if stock actually moved.
             delta = final_stock - last_week_stock
-            if delta != 0 and reason_key is not None:
+            event_key = (store_id, product_id, week_start_date)
+            if (
+                delta != 0
+                and reason_key is not None
+                and event_key not in seen_event_keys
+            ):
                 inventory_change_events.append(
                     {
                         "store_id": store_id,
                         "product_id": product_id,
-                        "timestamp": week_start_date,
+                        "event_timestamp": week_start_date,
                         "delta": delta,
                         "reason": CHANGE_REASONS[reason_key],
                         "stock_after": final_stock,
                     }
                 )
+                seen_event_keys.add(event_key)
 
             # Emit a sparse snapshot only when the stock BAND or STATUS changes.
             stock_band = get_stock_band(final_stock)
@@ -326,10 +340,10 @@ def stock_snapshots_generator(ctx: GenerationContext):
     # ---------------------------
 
     df_events = pd.DataFrame(inventory_change_events).sort_values(
-        by=["store_id", "product_id", "timestamp"]
+        by=["store_id", "product_id", "event_timestamp"]
     )
     df_snapshots = pd.DataFrame(weekly_snapshots).sort_values(
         by=["week_start_date", "store_id", "product_id"]
     )
-    save(df_events, "inventory_change_events.csv")
+    save(df_events, "inventory_change_events_raw.csv")
     save(df_snapshots, "stock_snapshots_raw.csv")

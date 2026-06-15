@@ -3,6 +3,10 @@ import random
 
 import pandas as pd
 
+from data_generation.config.promotions_config import (
+    DOLLAR_DISCOUNT_MAX_RATIO,
+    PERCENTAGE_DISCOUNT_MAX_PCT,
+)
 from data_generation.config.transactions_config import DISCOUNT_PROB_BY_SEGMENT
 from data_generation.services.transactions.transaction_lookup_service import (
     get_active_bundle_pricing,
@@ -266,6 +270,57 @@ def opt_for_delivery(
     return random.random() < base_prob
 
 
+def is_promotion_viable(promo, eligible_items):
+    """
+    Guards against promotions whose value is disproportionate to the
+    eligible basket — which is not realistic in a supermarket context.
+
+    Dollar discount:
+    - Product Scope: Skip if discount >= subtotal OR discount > 40 % of subtotal
+    - Category Scope: Skip if discount >= category_subtotal OR discount > 40 % of category_subtotal
+
+    Percentage discount:
+    - Skip if percentage discount > 40%
+    """
+    if not eligible_items:
+        return False
+
+    mechanic = promo["promotion_mechanic"]
+    scope = promo["promotion_scope"]
+    discount_value = promo["promotion_value"]
+
+    # --- Percentage Discount Cap ---
+    if mechanic == "percentage_discount":
+        if discount_value > PERCENTAGE_DISCOUNT_MAX_PCT:
+            return False
+
+    # --- Dollar Discount Cap ---
+    elif mechanic == "dollar_discount":
+        if scope == "product":
+            # Only one product
+            item = eligible_items[0]
+            line_subtotal = round(item["price"] * item["quantity"], 2)
+
+            # Skip if discount wipes out the line or exceeds the ratio cap
+            if discount_value >= line_subtotal:
+                return False
+            if discount_value > line_subtotal * DOLLAR_DISCOUNT_MAX_RATIO:
+                return False
+
+        elif scope == "category":
+            category_subtotal = round(
+                sum(item["price"] * item["quantity"] for item in eligible_items), 2
+            )
+
+            # Skip if discount wipes out the whole category basket or exceeds the ratio cap
+            if discount_value >= category_subtotal:
+                return False
+            if discount_value > category_subtotal * DOLLAR_DISCOUNT_MAX_RATIO:
+                return False
+
+    return True
+
+
 def apply_cart_level_discount(
     ctx,
     cart_items,
@@ -321,6 +376,11 @@ def apply_cart_level_discount(
 
     if not eligible_items:
         return 0, {}
+
+    # --- Promotion Viability ---
+    if promo["promotion_mechanic"] in ("dollar_discount", "percentage_discount"):
+        if not is_promotion_viable(promo, eligible_items):
+            return 0, {}
 
     # --- Compute Discount ---
     eligible_subtotal = sum(item["price"] * item["quantity"] for item in eligible_items)

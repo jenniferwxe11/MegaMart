@@ -19,6 +19,7 @@ from data_generation.services.promotions.promotion_service import (
     generate_promotion_name,
     generate_promotion_value,
     get_min_spend,
+    safe_date_window,
     select_active_product_in_timeframe,
     select_bundle_for_campaign,
     select_category,
@@ -72,6 +73,9 @@ def promotions_generator(ctx: GenerationContext):
         effective_end_date = campaign_row["end_date"]
         raw_channels = campaign_row["channels"]
 
+        if effective_end_date < effective_start_date:
+            continue
+
         # Convert datatype
         if isinstance(raw_channels, str):
             channels = ast.literal_eval(raw_channels)
@@ -83,6 +87,9 @@ def promotions_generator(ctx: GenerationContext):
         for promotion_mechanic in promotion_mechanics:
             promotion_id = f"PROMO{i:03d}"
             promotion_scope = random.choice(MECHANIC_SCOPE_RULES[promotion_mechanic])
+
+            promo_start = effective_start_date
+            promo_end = effective_end_date
 
             promotion_target_id = None
             category = None
@@ -103,21 +110,25 @@ def promotions_generator(ctx: GenerationContext):
 
             elif promotion_scope == "bundle":
                 bundle = select_bundle_for_campaign(
-                    ctx, campaign_type, effective_start_date, effective_end_date
+                    ctx, campaign_type, promo_start, promo_end
                 )
                 if bundle is None:
                     continue
 
                 category = random.choice(bundle["categories"])
                 promotion_target_id = bundle["bundle_id"]
-                effective_start_date = max(
+                promo_start = max(
                     pd.Timestamp(bundle["effective_start_date"]),
                     pd.Timestamp(campaign_row["start_date"]),
                 )
-                effective_end_date = min(
+                promo_end = min(
                     pd.Timestamp(bundle["effective_end_date"]),
                     pd.Timestamp(campaign_row["end_date"]),
                 )
+
+            promo_start, promo_end = safe_date_window(
+                promo_start, promo_end, DATA_END_DATE
+            )
 
             promotion_value = generate_promotion_value(
                 ctx,
@@ -169,8 +180,8 @@ def promotions_generator(ctx: GenerationContext):
                     "promotion_value": promotion_value,
                     "min_spend": min_spend,
                     "discount_code": discount_code,
-                    "effective_start_date": effective_start_date,
-                    "effective_end_date": effective_end_date,
+                    "effective_start_date": promo_start,
+                    "effective_end_date": promo_end,
                     "priority": STACKING_PRIORITY[promotion_scope],
                 }
             )
@@ -185,8 +196,13 @@ def promotions_generator(ctx: GenerationContext):
             break
 
         promotion_id = f"PROMO{i:03d}"
-
         promotion_value = round(bundle_row["discount_value"], 2)
+
+        b_start, b_end = safe_date_window(
+            bundle_row["effective_start_date"],
+            bundle_row["effective_end_date"],
+            DATA_END_DATE,
+        )
 
         # Store Bundle Promotions
         promotions.append(
@@ -203,8 +219,8 @@ def promotions_generator(ctx: GenerationContext):
                 "discount_code": generate_discount_code(
                     "bundle", "bundle", bundle_row["bundle_id"], promotion_value
                 ),
-                "effective_start_date": bundle_row["effective_start_date"],
-                "effective_end_date": bundle_row["effective_end_date"],
+                "effective_start_date": b_start,
+                "effective_end_date": b_end,
                 "priority": STACKING_PRIORITY["bundle"],
             }
         )
@@ -217,6 +233,10 @@ def promotions_generator(ctx: GenerationContext):
     # 60–70% → non-campaign promotions (baseline)
     # 30–40% → campaign promotions (treatment)
     NUM_BASELINE_PROMOS = int(len(campaigns_df) * 1.5)
+
+    campaign_type = None
+    season = None
+    target_segment = None
 
     for _ in range(NUM_BASELINE_PROMOS):
         if len(promotions) >= LIMIT_PROMOTIONS:
@@ -232,22 +252,19 @@ def promotions_generator(ctx: GenerationContext):
 
         promotion_target_id = None
         category = None
-        bundle = None
 
         if promotion_scope == "category":
             category = select_category(campaign_type, season, target_segment)
             promotion_target_id = category
-            effective_start_date = pd.to_datetime(
+            promo_start = pd.to_datetime(
                 fake.date_between(
                     start_date=DATA_START_DATE, end_date=pd.Timestamp(DATA_END_DATE)
                 )
             )
 
-            effective_end_date = pd.to_datetime(
+            promo_end = pd.to_datetime(
                 min(
-                    pd.Timestamp(
-                        effective_start_date + timedelta(days=random.randint(30, 120))
-                    ),
+                    pd.Timestamp(promo_start + timedelta(days=random.randint(30, 120))),
                     pd.Timestamp(DATA_END_DATE),
                 )
             )
@@ -265,29 +282,40 @@ def promotions_generator(ctx: GenerationContext):
             )
 
             # Skip bundles with no overlapping product availability window
-            if launch_date and discontinuation_date:
+            if not pd.isna(launch_date) and not pd.isna(discontinuation_date):
                 if launch_date > discontinuation_date:
                     continue
 
             # Fallback: default to global data window if lifecycle data is missing
             if pd.isna(launch_date):
-                launch_date = DATA_START_DATE
+                launch_date = pd.Timestamp(DATA_START_DATE)
             if pd.isna(discontinuation_date):
                 discontinuation_date = pd.Timestamp(DATA_END_DATE)
 
             # Assign active promotion window (30–120 days)
-            effective_start_date = pd.to_datetime(
-                fake.date_between(start_date=launch_date, end_date=discontinuation_date)
+            effective_lifecycle_end = min(
+                pd.Timestamp(discontinuation_date), pd.Timestamp(DATA_END_DATE)
             )
-            effective_end_date = pd.to_datetime(
+            if launch_date > effective_lifecycle_end:
+                continue
+
+            promo_start = pd.to_datetime(
+                fake.date_between(
+                    start_date=launch_date, end_date=effective_lifecycle_end
+                )
+            )
+            promo_end = pd.to_datetime(
                 min(
-                    pd.Timestamp(
-                        effective_start_date + timedelta(days=random.randint(30, 120))
-                    ),
+                    pd.Timestamp(promo_start + timedelta(days=random.randint(30, 120))),
                     pd.Timestamp(discontinuation_date),
                     pd.Timestamp(DATA_END_DATE),
                 )
             )
+
+        else:
+            continue
+
+        promo_start, promo_end = safe_date_window(promo_start, promo_end, DATA_END_DATE)
 
         promotion_value = generate_promotion_value(
             ctx,
@@ -328,8 +356,8 @@ def promotions_generator(ctx: GenerationContext):
                 "promotion_value": promotion_value,
                 "min_spend": min_spend,
                 "discount_code": discount_code,
-                "effective_start_date": effective_start_date,
-                "effective_end_date": effective_end_date,
+                "effective_start_date": promo_start,
+                "effective_end_date": promo_end,
                 "priority": STACKING_PRIORITY[promotion_scope],
             }
         )

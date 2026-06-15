@@ -28,6 +28,7 @@ CLEAN_TABLES = [
     "stockout_events_raw.csv",  # Operational event log — kept clean
     "campaign_assignments_raw.csv",  # Deterministic system output
     "bundle_items_raw.csv",  # Pure join table, no free-text
+    "inventory_change_events_raw.csv",
 ]
 
 

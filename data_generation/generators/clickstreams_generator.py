@@ -167,11 +167,11 @@ def clickstreams_generator(ctx: GenerationContext):
             )
             has_treatment = (
                 active_campaigns is not None
-                and (active_campaigns["group"] == "Treatment").any()
+                and (active_campaigns["assignment_group"] == "Treatment").any()
             )
             has_control = (
                 active_campaigns is not None
-                and (active_campaigns["group"] == "Control").any()
+                and (active_campaigns["assignment_group"] == "Control").any()
             )
             eligible_promotions = check_promotion_eligibility(
                 ctx, session_start_time, active_campaigns
@@ -561,7 +561,7 @@ def clickstreams_generator(ctx: GenerationContext):
                         "device_category": device_category,
                         "referrer": referrer,
                         "location": location,
-                        "timestamp": timestamp,
+                        "event_timestamp": timestamp,
                         "event_order": event_order,
                         "event_type": event_type,
                         "page": page,
@@ -569,8 +569,8 @@ def clickstreams_generator(ctx: GenerationContext):
                         "product_id": product_id,
                         "product_name": product_name,
                         "category": category,
-                        "promotion_id": promotion_ids,
-                        "bundle_id": bundle_ids,
+                        "promotion_ids": promotion_ids,
+                        "bundle_ids": bundle_ids,
                         "bounce_flag": bounce_flag,
                         "cart_size": len(cart_content),
                         "cart_content": cart_content.copy(),

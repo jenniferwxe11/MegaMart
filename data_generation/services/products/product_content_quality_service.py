@@ -19,8 +19,7 @@ def generate_content_characteristics(quality_tier, total_attributes):
     - Excellent: fully optimized product detail page
     """
     if quality_tier == "Poor":
-        has_image = random.random() < 0.4
-        image_count = random.randint(0, 1) if has_image else 0
+        image_count = random.choices([0, 1], weights=[0.6, 0.4], k=1)[0]
         image_quality_score = round(random.uniform(0.1, 0.4), 2)
         has_nutritional_info = random.random() < 0.3
         has_description = random.random() < 0.5
@@ -30,7 +29,6 @@ def generate_content_characteristics(quality_tier, total_attributes):
         )
 
     elif quality_tier == "Average":
-        has_image = True
         image_count = random.randint(1, 3)
         image_quality_score = round(random.uniform(0.4, 0.7), 2)
         has_nutritional_info = random.random() < 0.6
@@ -41,7 +39,6 @@ def generate_content_characteristics(quality_tier, total_attributes):
         )
 
     elif quality_tier == "Good":
-        has_image = True
         image_count = random.randint(3, 5)
         image_quality_score = round(random.uniform(0.7, 0.9), 2)
         has_nutritional_info = random.random() < 0.8
@@ -50,13 +47,14 @@ def generate_content_characteristics(quality_tier, total_attributes):
         missing_attribute_count = random.randint(0, int(0.2 * total_attributes))
 
     else:  # Excellent
-        has_image = True
         image_count = random.randint(5, 8)
         image_quality_score = round(random.uniform(0.9, 1.0), 2)
         has_nutritional_info = True
         has_description = True
         description_length = random.randint(250, 500)
         missing_attribute_count = 0
+
+    has_image = image_count > 0
 
     content = {
         "image_count": image_count,

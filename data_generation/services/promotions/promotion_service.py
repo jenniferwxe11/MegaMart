@@ -24,6 +24,19 @@ from data_generation.config.promotions_config import (
 # ---------------------------
 
 
+def safe_date_window(start, end, data_end_date):
+    """
+    Returns (start, end) as pd.Timestamps, guaranteeing start <= end.
+    If they would invert, end is clamped to start (zero-length window is
+    still valid for the dbt test effective_start_date <= effective_end_date).
+    """
+    start = pd.Timestamp(start)
+    end = pd.Timestamp(min(pd.Timestamp(end), pd.Timestamp(data_end_date)))
+    if end < start:
+        end = start
+    return start, end
+
+
 def select_promotion_mechanics(campaign_type, channels):
     """
     Selects promotion mechanics that aligned with:

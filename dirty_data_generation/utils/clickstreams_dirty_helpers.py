@@ -137,7 +137,7 @@ def missing_fields(row):
             "location",
             "cart_content",
             "cart_size",
-            "timestamp",
+            "event_timestamp",
             "event_order",
             "event_type",
             "page",
@@ -240,12 +240,14 @@ def time_anomaly(row, previous_row):
                     random.randint(86400, 864000),
                 ]
             )
-            if previous_row.get("timestamp") is not None:
-                row["timestamp"] = previous_row["timestamp"] + timedelta(seconds=shift)
+            if previous_row.get("event_timestamp") is not None:
+                row["event_timestamp"] = previous_row["event_timestamp"] + timedelta(
+                    seconds=shift
+                )
 
     elif coinflip(0.02):
         if _row_add_error(row, "future timestamp"):
-            row["timestamp"] = fake.future_datetime(end_date="+10y")
+            row["event_timestamp"] = fake.future_datetime(end_date="+10y")
 
     return row
 
@@ -334,8 +336,11 @@ def wrong_event_sequence(previous_row, row, session_rows):
     # --- Event Repeat ---
     if previous_row is not None and coinflip(0.05):
         new_row = clone_clean_row(previous_row)
-        if row.get("timestamp") is not None and new_row.get("timestamp") is not None:
-            new_row["timestamp"] = row["timestamp"] + timedelta(
+        if (
+            row.get("event_timestamp") is not None
+            and new_row.get("event_timestamp") is not None
+        ):
+            new_row["event_timestamp"] = row["event_timestamp"] + timedelta(
                 seconds=random.randint(1, 10)
             )
             new_row["event_order"] = row["event_order"]
@@ -374,9 +379,9 @@ def wrong_event_sequence(previous_row, row, session_rows):
 
 def duplicate_event(row):
     if _row_can_add(row):
-        if row.get("timestamp") is not None:
+        if row.get("event_timestamp") is not None:
             duplicate_row = clone_clean_row(row)
-            duplicate_row["timestamp"] = row["timestamp"] + timedelta(
+            duplicate_row["event_timestamp"] = row["event_timestamp"] + timedelta(
                 seconds=random.randint(1, 3)
             )
             duplicate_row["error_types"] = _row_get_errors(row) + ["duplicate event"]
@@ -393,7 +398,7 @@ def inject_bot_traffic(ctx, row):
 
     bot_rows = []
     bot_session_id = str(uuid.uuid4())
-    current_time = row.get("timestamp") or pd.Timestamp.now()
+    current_time = row.get("event_timestamp") or pd.Timestamp.now()
     n_events = random.randint(5, 20)
 
     for i in range(n_events):
@@ -417,7 +422,7 @@ def inject_bot_traffic(ctx, row):
         bot_row["session_id"] = bot_session_id
         bot_row["event_order"] = i + 1
         bot_row["clickstream_id"] = f"{bot_session_id}_{i + 1}"
-        bot_row["timestamp"] = current_time
+        bot_row["event_timestamp"] = current_time
         bot_row["event_type"] = event_type
         bot_row["scroll_depth"] = random.uniform(0, 20)
         bot_row["error_types"] = ["bot traffic"]
@@ -541,7 +546,7 @@ def orphan_sessions(ctx):
                     "device_category": random.choice(["Desktop", "Mobile", "Tablet"]),
                     "referrer": None,
                     "location": None,
-                    "timestamp": current_time,
+                    "event_timestamp": current_time,
                     "event_order": i + 1,
                     "event_type": event_type,
                     "page": page,
