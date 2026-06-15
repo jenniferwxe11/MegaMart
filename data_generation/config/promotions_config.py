@@ -1,3 +1,6 @@
+DOLLAR_DISCOUNT_MAX_RATIO = 0.40
+PERCENTAGE_DISCOUNT_MAX_PCT = 40.0
+
 PROMOTION_THEMES = {
     "Seasonal": ["Seasonal Savings", "Limited-Time Deals", "Festive Specials"],
     "Acquisition": ["Welcome Deals", "New Shopper Specials"],

@@ -74,6 +74,19 @@ def calculate_bundle_pricing(
     else:
         raise ValueError(f"Unknown bundle type: {bundle_type}")
 
+    bundle_price = round(bundle_price, 2)
+    discount_value = round(discount_value, 2)
+
+    # Prevent edge cases
+    if bundle_price <= 0:
+        bundle_price = round(total_cost * 1.01, 2)
+        discount_value = round(total_price - bundle_price, 2)
+
+    if discount_value >= bundle_price:
+        discount_value = round(bundle_price * 0.49, 2)
+
+    discount_value = max(discount_value, 0.0)
+
     return bundle_price, discount_value
 
 
@@ -88,6 +101,9 @@ def split_window(start: pd.Timestamp, end: pd.Timestamp):
     """
     total_days = (end - start).days
 
+    if start > end:
+        return [(start, start, "LAUNCH")]
+
     if total_days < MIN_WINDOW_FOR_SPLIT:
         return [(start, end, "LAUNCH")]
 
@@ -96,9 +112,14 @@ def split_window(start: pd.Timestamp, end: pd.Timestamp):
     # --- Phase 1: LAUNCH (30–50 % of total window, minimum MIN_PHASE_DAYS) ---
     launch_days = max(MIN_PHASE_DAYS, int(total_days * random.uniform(0.30, 0.50)))
     launch_end = start + timedelta(days=launch_days - 1)
+    launch_end = min(launch_end, end)
     phases.append((start, launch_end, "LAUNCH"))
 
     remaining_start = launch_end + timedelta(days=1)
+
+    if remaining_start > end:
+        return phases
+
     remaining_days = (end - remaining_start).days
 
     # --- Phase 2 (optional): PROMO ---
@@ -107,8 +128,13 @@ def split_window(start: pd.Timestamp, end: pd.Timestamp):
             MIN_PHASE_DAYS, int(remaining_days * random.uniform(0.30, 0.55))
         )
         promo_end = remaining_start + timedelta(days=promo_days - 1)
+        promo_end = min(promo_end, end)
         phases.append((remaining_start, promo_end, "PROMO"))
         remaining_start = promo_end + timedelta(days=1)
+
+        if remaining_start > end:
+            return phases
+
         remaining_days = (end - remaining_start).days
 
     # ──- Phase 3: EOL (consume whatever remains, if any) ---
@@ -118,7 +144,13 @@ def split_window(start: pd.Timestamp, end: pd.Timestamp):
         # Not enough room for a proper EOL — extend the last phase to the end
         phases[-1] = (phases[-1][0], end, phases[-1][2])
 
-    return phases
+    validated = []
+    for s, e, label in phases:
+        if s > e:
+            e = s  # collapse to a single day phase rather than invert
+        validated.append((s, e, label))
+
+    return validated
 
 
 def phase_prices(base_price: float, base_discount: float, phases: list):
@@ -164,6 +196,17 @@ def phase_prices(base_price: float, base_discount: float, phases: list):
 
         phase_discount = round(retail_total * phase_discount_pct, 2)
         phase_price = round(retail_total - phase_discount, 2)
+
+        # Ensure discount is lesser than price
+        if phase_price <= 0:
+            phase_price = round(retail_total * 0.01, 2)
+            phase_discount = round(retail_total - phase_price, 2)
+
+        if phase_discount >= phase_price:
+            phase_discount = round(phase_price * 0.49, 2)
+
+        phase_discount = max(phase_discount, 0.0)
+
         results.append((phase_price, phase_discount))
 
     return results

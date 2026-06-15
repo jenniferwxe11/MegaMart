@@ -41,7 +41,6 @@ def bundles_generator(ctx: GenerationContext):
     pricing_counter = 1
     while len(bundles) < NUM_BUNDLES:
         bundle_id = f"BUNDLE{len(bundles) + 1:03d}"
-        bundle_pricing_id = f"BPRICE{len(bundle_pricings) + 1:03d}"
 
         # --- Bundle Definition ---
         bundle_type = random.choice(list(BUNDLE_DEFINITIONS.keys()))
@@ -102,7 +101,7 @@ def bundles_generator(ctx: GenerationContext):
         ):
             bundle_pricings.append(
                 {
-                    "bundle_pricing_id": bundle_pricing_id,
+                    "bundle_pricing_id": f"BPRICE{pricing_counter:06d}",
                     "bundle_id": bundle_id,
                     "bundle_price": phase_price,
                     "discount_value": phase_discount,

@@ -78,7 +78,7 @@ def campaign_assignments_generator(ctx: GenerationContext):
                 {
                     "campaign_id": campaign["campaign_id"],
                     "customer_id": customer["customer_id"],
-                    "group": "Treatment",
+                    "assignment_group": "Treatment",
                     "eligible_at": campaign["start_date"],
                 }
             )
@@ -88,7 +88,7 @@ def campaign_assignments_generator(ctx: GenerationContext):
                 {
                     "campaign_id": campaign["campaign_id"],
                     "customer_id": customer["customer_id"],
-                    "group": "Control",
+                    "assignment_group": "Control",
                     "eligible_at": campaign["start_date"],
                 }
             )
@@ -114,7 +114,7 @@ def campaign_assignments_generator(ctx: GenerationContext):
                         "customer_id": customer_id,
                         "campaign_id": campaign_id,
                         "channel": channel,
-                        "group": group,
+                        "assignment_group": group,
                         "eligible": eligible,
                         "exposed": exposure["exposed"],
                         "exposed_time": exposure["exposed_time"],

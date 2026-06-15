@@ -241,7 +241,7 @@ def decide_next_activity(
     if active_campaigns is None:
         campaign_boost = 1.0
     else:
-        groups = set(active_campaigns["group"])
+        groups = set(active_campaigns["assignment_group"])
         if "Treatment" in groups:
             campaign_boost = 1.3
         elif "Control" in groups:
@@ -425,7 +425,7 @@ def attempt_reactivation(
     if active_campaigns is None:
         campaign_boost = 1.0
     else:
-        groups = set(active_campaigns["group"])
+        groups = set(active_campaigns["assignment_group"])
         if "Treatment" in groups:
             campaign_boost = 1.8
         elif "Control" in groups:
@@ -507,7 +507,7 @@ def attempt_reactivation(
 
     has_treatment = (
         active_campaigns is not None
-        and (active_campaigns["group"] == "Treatment").any()
+        and (active_campaigns["assignment_group"] == "Treatment").any()
     )
 
     if has_treatment:

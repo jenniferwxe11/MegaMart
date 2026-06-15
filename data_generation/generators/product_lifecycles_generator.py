@@ -46,17 +46,15 @@ def product_lifecycles_generator(ctx: GenerationContext):
 
         # Seed status: products launched very recently start as New
         if launch_date >= SIMULATION_DATE - timedelta(days=30):
-            initial_status = "New"
+            current_status = "New"
         else:
-            initial_status = random.choices(
+            current_status = random.choices(
                 list(PRODUCT_LIFECYCLE.keys()),
                 weights=list(PRODUCT_LIFECYCLE.values()),
                 k=1,
             )[0]
 
-        current_status = initial_status
         version_start = launch_date
-        discontinuation_date = None
 
         rows_for_product = []
 
@@ -68,10 +66,9 @@ def product_lifecycles_generator(ctx: GenerationContext):
             # Decide whether to transition to the next status at all
             candidates = STATUS_CHAIN.get(current_status, [])
             if not candidates:
-                # Terminal state
-                next_status = current_status
-            else:
-                next_status = random.choice(candidates)
+                break
+
+            next_status = random.choice(candidates)
 
             will_transition = (
                 next_status is not None
@@ -80,46 +77,29 @@ def product_lifecycles_generator(ctx: GenerationContext):
                 and random.random() < STATUS_TRANSITION_PROB.get(current_status, 0.0)
             )
 
+            # If we ever hit Discontinued, lock discontinuation_date immediately
+            row_discontinuation_date = (
+                version_end if current_status == "Discontinued" else None
+            )
+
             # --- Store Product Lifecycle Record ---
-            if will_transition:
-                # Close this version
-                rows_for_product.append(
-                    {
-                        "product_id": product_id,
-                        "status": current_status,
-                        "launch_date": launch_date,
-                        "discontinuation_date": None,
-                        "valid_from": version_start,
-                        "valid_to": version_end,
-                        "is_current": False,
-                    }
-                )
+            rows_for_product.append(
+                {
+                    "product_id": product_id,
+                    "status": current_status,
+                    "launch_date": launch_date,
+                    "discontinuation_date": row_discontinuation_date,
+                    "valid_from": version_start,
+                    "valid_to": version_end if will_transition else pd.NaT,
+                    "is_current": not will_transition,
+                }
+            )
 
-                # Track discontinuation for downstream use
-                if next_status == "Discontinued":
-                    discontinuation_date = version_end
-
-                current_status = next_status
-                version_start = version_end
-
-            else:
-                # This is the final (open) version for this product
-                rows_for_product.append(
-                    {
-                        "product_id": product_id,
-                        "status": current_status,
-                        "launch_date": launch_date,
-                        "discontinuation_date": (
-                            discontinuation_date
-                            if current_status == "Discontinued"
-                            else None
-                        ),
-                        "valid_from": version_start,
-                        "valid_to": pd.NaT,  # Open-ended — still current
-                        "is_current": True,
-                    }
-                )
+            if not will_transition:
                 break
+
+            current_status = next_status
+            version_start = version_end
 
         product_lifecycles.extend(rows_for_product)
 

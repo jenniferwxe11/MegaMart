@@ -58,7 +58,7 @@ def generate_customer_profile(ctx, customer_type):
     area = None
     region = None
     signup_date = None
-    loyalty_points = None
+    loyalty_points = 0
     customer_segment = None
     email_marketing_opt_in = None
     sms_marketing_opt_in = None

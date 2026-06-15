@@ -24,7 +24,6 @@ def competitor_products_generator(ctx: GenerationContext):
     # Storage
     # ---------------------------
 
-    count = 0
     competitor_price_history: list[dict[str, Any]] = []
     all_competitor_products: list[dict[str, Any]] = []
 
@@ -44,32 +43,52 @@ def competitor_products_generator(ctx: GenerationContext):
         generated_products = get_competitor_products(ctx, competitor, configuration)
         for product in generated_products:
 
+            product_name = product.get("scraped_product_name")
+            if not product_name or str(product_name).strip() == "":
+                continue
+
             # Store Clickstream Product Catalogue Record
             all_competitor_products.append(
                 {
                     "competitor": competitor,
-                    "product_name": product["product_name"],
+                    "product_id": product["product_id"],
+                    "product_name": product["scraped_product_name"],
                     "brand": product["brand"],
                     "category": product["category"],
-                    # "selling_price": product["selling_price"],
                     "is_exclusive": product["is_exclusive"],
-                    "product_id": product["product_id"],
                 }
             )
 
         # --- Generate Competitor Price History ---
         scrape_batches = get_scrape_batches(ctx)
 
+        scraped_df = pd.DataFrame(generated_products)
+        if scraped_df.empty:
+            continue
+
+        scraped_df = scraped_df[
+            scraped_df["scraped_product_name"].notna()
+            & (scraped_df["scraped_product_name"].str.strip() != "")
+        ]
+
+        if scraped_df.empty:
+            continue
+
         for batch_date in scrape_batches:
 
-            scraped_products = pd.DataFrame(generated_products).sample(
-                frac=random.uniform(0.5, 0.8)
+            scraped_products = scraped_df.sample(
+                frac=random.uniform(0.5, 0.8), replace=False
             )
 
             for _, product_row in scraped_products.iterrows():
 
+                product_id = product_row["product_id"]
+
                 scraped_category = product_row["category"]
-                scraped_product_name = product_row["product_name"]
+                scraped_product_name = product_row["scraped_product_name"]
+
+                if not scraped_product_name or str(scraped_product_name).strip() == "":
+                    continue
 
                 # Simulate minor intra day price fluctuations
                 scraped_price = round(
@@ -90,6 +109,7 @@ def competitor_products_generator(ctx: GenerationContext):
                 competitor_price_history.append(
                     {
                         "competitor": competitor,
+                        "product_id": product_id,
                         "scraped_product_name": scraped_product_name,
                         "scraped_category": scraped_category,
                         "scraped_price": scraped_price,
@@ -97,7 +117,6 @@ def competitor_products_generator(ctx: GenerationContext):
                         "update_timestamp": update_timestamp,
                     }
                 )
-                count += 1
 
     # ---------------------------
     # Export to CSV

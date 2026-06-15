@@ -253,6 +253,10 @@ def get_active_campaigns(ctx, customer_id, session_start_time):
     if active_campaigns.empty:
         return None
 
+    active_campaigns = active_campaigns.drop_duplicates(
+        subset=["customer_id", "campaign_id"]
+    )
+
     return active_campaigns
 
 
@@ -265,7 +269,7 @@ def get_active_promotions(ctx, timestamp):
     active = promotions_df[
         (promotions_df["effective_start_date"] <= timestamp)
         & (promotions_df["effective_end_date"] >= timestamp)
-    ]
+    ].drop_duplicates(subset=["promotion_id"])
 
     if active.empty:
         return []
@@ -306,7 +310,9 @@ def check_promotion_eligibility(ctx, timestamp, active_campaigns):
 
     # Get active campaign ids for treatment group
     treatment_campaign_ids = {
-        c["campaign_id"] for c in active_campaigns if c.get("group") == "Treatment"
+        c["campaign_id"]
+        for c in active_campaigns
+        if c.get("assignment_group") == "Treatment"
     }
 
     eligible_promotions = []
