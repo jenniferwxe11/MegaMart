@@ -1,5 +1,17 @@
-colorama
-Faker
-numpy
-pandas
+# ci
+pre-commit
 pytest
+pytest-cov
+pip-audit
+bandit
+
+# dbt
+dbt-core>=1.11,<2.0
+dbt-bigquery>=1.11,<2.0
+
+# project deps
+pandas
+numpy
+faker
+pyyaml
+duckdb
