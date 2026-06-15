@@ -1,3 +1,4 @@
+---
 name: CI/CD MegaMart
 
 on:
@@ -8,7 +9,7 @@ on:
     branches:
       - dev
       - main
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -53,83 +54,87 @@ jobs:
     if: needs.changes.outputs.python == 'true'
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Get changed files
-      id: changes
-      uses: tj-actions/changed-files@v44
+      - name: Get changed files
+        id: changes
+        uses: tj-actions/changed-files@v44
 
-    - name: Show changed files
-      run: |
-        echo "${{ steps.changes.outputs.all_changed_files }}"
+      - name: Show changed files
+        run: |
+          echo "${{ steps.changes.outputs.all_changed_files }}"
 
-    - name: Debug changed files
-      run: |
-        echo "Changed files:"
-        echo "${{ steps.changes.outputs.all_changed_files }}"
+      - name: Debug changed files
+        run: |
+          echo "Changed files:"
+          echo "${{ steps.changes.outputs.all_changed_files }}"
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
-
-
-    - name: Cache pip
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pre-commit pytest-cov pip-audit bandit
-
-    - name: Run pre-commit hooks (lint, format)
-      run: pre-commit run --all-files --show-diff-on-failure
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
 
 
-    - name: Security scan (dependencies)
-      run: pip-audit
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.in', 'requirements.txt') }}
 
-    - name: Security scan (code)
-      run: |
-        FILES="${{ steps.changes.outputs.all_changed_files }}"
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pip-tools
+          pip install -r requirements.txt
 
-        PY_FILES=$(echo "$FILES" | tr ' ' '\n' | grep '\.py$' || true)
+      - name: Validate requirements.txt
+        run: |
+          pip-compile requirements.in --quiet
+          git diff --exit-code requirements.txt
 
-        if [ -z "$PY_FILES" ]; then
-          echo "No Python changes → skipping bandit"
-          exit 0
-        fi
+      - name: Run pre-commit hooks (lint, format)
+        run: pre-commit run --all-files --show-diff-on-failure
 
-        echo "$PY_FILES" | xargs -r bandit -c .bandit
+      - name: Security scan (dependencies)
+        run: pip-audit
 
-    - name: Install Gitleaks
-      uses: gitleaks/gitleaks-action@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Security scan (code)
+        run: |
+          FILES="${{ steps.changes.outputs.all_changed_files }}"
 
-    - name: Scan for secrets (gitleaks)
-      run: gitleaks detect --source . --exit-code 2 --redact
+          PY_FILES=$(echo "$FILES" | tr ' ' '\n' | grep '\.py$' || true)
 
-    - name: Run tests (smart selection)
-      run: |
-        FILES="${{ steps.changes.outputs.all_changed_files }}"
+          if [ -z "$PY_FILES" ]; then
+            echo "No Python changes → skipping bandit"
+            exit 0
+          fi
 
-        TEST_FILES=$(echo "$FILES" | tr ' ' '\n' | grep -E '_test\.py|test_.*\.py' || true)
+          echo "$PY_FILES" | xargs -r bandit -c .bandit
 
-        if [ -z "$TEST_FILES" ]; then
-          echo "No test files changed → running full suite"
-          pytest
-        else
-          echo "Running impacted tests"
-          echo "$TEST_FILES" | xargs -r pytest
-        fi
+      - name: Install Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan for secrets (gitleaks)
+        run: gitleaks detect --source . --exit-code 2 --redact
+
+      - name: Run tests (smart selection)
+        run: |
+          FILES="${{ steps.changes.outputs.all_changed_files }}"
+
+          TEST_FILES=$(echo "$FILES" | tr ' ' '\n' | grep -E '_test\.py|test_.*\.py' || true)
+
+          if [ -z "$TEST_FILES" ]; then
+            echo "No test files changed → running full suite"
+            pytest
+          else
+            echo "Running impacted tests"
+            echo "$TEST_FILES" | xargs -r pytest
+          fi
 
     # --- DBT ---
   dbt:
@@ -138,66 +143,67 @@ jobs:
     if: needs.changes.outputs.dbt == 'true'
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Get changed files
-      id: changes
-      uses: tj-actions/changed-files@v44
+      - name: Get changed files
+        id: changes
+        uses: tj-actions/changed-files@v44
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
 
-    - name: Cache pip
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.in', 'requirements.txt') }}
 
-    - name: Install dbt
-      run: |
-        pip install --upgrade pip
-        pip install dbt-core dbt-bigquery
+      - name: Install dbt
+        run: |
+          pip install --upgrade pip
+          pip install pip-tools
+          pip install -r requirements.txt
 
-    - name: dbt dependencies
-      run: dbt deps
+      - name: dbt dependencies
+        run: dbt deps
 
-    - name: Download previous artifacts (state)
-      uses: actions/download-artifact@v4
-      with:
-        name: dbt-target
-      continue-on-error: true
+      - name: Download previous artifacts (state)
+        uses: actions/download-artifact@v4
+        with:
+          name: dbt-target
+        continue-on-error: true
 
-    - name: dbt build (smart file-aware)
-      run: |
-        FILES="${{ steps.changes.outputs.all_changed_files }}"
+      - name: dbt build (smart file-aware)
+        run: |
+          FILES="${{ steps.changes.outputs.all_changed_files }}"
 
-        DBT_FILES=$(echo "$FILES" | tr ' ' '\n' | grep -E 'models/|seeds/|snapshots/' || true)
+          DBT_FILES=$(echo "$FILES" | tr ' ' '\n' | grep -E 'models/|seeds/|snapshots/' || true)
 
-        if [ -z "$DBT_FILES" ]; then
-          echo "No dbt-relevant changes → skipping dbt"
-          exit 0
-        fi
+          if [ -z "$DBT_FILES" ]; then
+            echo "No dbt-relevant changes → skipping dbt"
+            exit 0
+          fi
 
-        if [ -f "target/manifest.json" ]; then
-          dbt build --select state:modified+ --state target/
-        else
-          dbt build
-        fi
+          if [ -f "target/manifest.json" ]; then
+            dbt build --select state:modified+ --state target/
+          else
+            dbt build
+          fi
 
-    - name: Upload dbt artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: dbt-target
-        path: target/
+      - name: Upload dbt artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-target
+          path: target/
 
-    - name: Upload dbt logs
-      uses: actions/upload-artifact@v4
-      with:
-        name: dbt-logs
-        path: logs/
+      - name: Upload dbt logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-logs
+          path: logs/
 
   # --- DEPLOY DBT DOCS ---
   deploy-dbt-docs:
@@ -206,41 +212,39 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
 
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        pip install dbt-core dbt-bigquery
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
 
-    - name: Authenticate to Google Cloud Platform
-      uses: google-github-actions/auth@v2
-      with:
-        token_format: access_token
-        workload_identity_provider: projects/594876062374/locations/global/workloadIdentityPools/mega-mart-pool/providers/github
-        service_account: mega-mart-service@mega-mart-storage.iam.gserviceaccount.com
+      - name: Authenticate to Google Cloud Platform
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: access_token
+          workload_identity_provider: projects/594876062374/locations/global/workloadIdentityPools/mega-mart-pool/providers/github
+          service_account: mega-mart-service@mega-mart-storage.iam.gserviceaccount.com
 
-    - name: Verify authentication
-      run: gcloud auth list
+      - name: Verify authentication
+        run: gcloud auth list
 
-    - name: Generate dbt docs
-      run: dbt docs generate --profiles-dir ./dbt_profiles
+      - name: Generate dbt docs
+        run: dbt docs generate --profiles-dir ./dbt_profiles
 
-    - name: Authenticate gsutil
-      run: gcloud config set project mega-mart-storage
+      - name: Authenticate gsutil
+        run: gcloud config set project mega-mart-storage
 
-    - name: Deploy dbt docs to Google Cloud Storage
-      run: |
-        gcloud storage cp -r target/* gs://mega-mart/dbt_docs/ --project=mega-mart-storage
+      - name: Deploy dbt docs to Google Cloud Storage
+        run: |
+          gcloud storage cp -r target/* gs://mega-mart/dbt_docs/ --project=mega-mart-storage
 
-
-    - name: Create tag
-      run: |
-        git tag v1.${{ github.run_number }}
-        git push origin v1.${{ github.run_number }}
+      - name: Create tag
+        run: |
+          git tag v1.${{ github.run_number }}
+          git push origin v1.${{ github.run_number }}
