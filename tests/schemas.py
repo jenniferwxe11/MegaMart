@@ -1,0 +1,766 @@
+TABLE_CONTRACTS = {
+    "customers": {
+        "pk": ["customer_id"],
+        "required": ["customer_id", "customer_type"],
+        "regex": {
+            "customer_id": "^CUST[0-9]{3,}$",
+            "customer_name": "^[A-Za-z -]+$",
+            "email": "^[^@]+@[^@]+\\.[^@]+$",
+        },
+        "types": {
+            "customer_id": "string",
+            "customer_type": "string",
+            "customer_name": "string",
+            "email": "string",
+            "gender": "string",
+            "area": "string",
+            "region": "string",
+            "loyalty_points": "int",
+            "customer_segment": "string",
+            "email_marketing_opt_in": "bool",
+            "sms_marketing_opt_in": "bool",
+            "push_notifications_opt_in": "bool",
+            "device_category": "string",
+            "device_platform": "string",
+        },
+        "date_columns": [
+            "dob",
+            "signup_date",
+        ],
+        "accepted_values": {
+            "customer_type": [
+                "Retail Walk-In",
+                "Retail Members",
+                "Online Only",
+                "Omnichannel",
+            ],
+            "gender": ["Female", "Male"],
+            "customer_segment": [
+                "New Customers",
+                "Active Customers",
+                "Churn Risk Customers",
+                "High Spenders",
+                "Budget Shoppers",
+            ],
+            "device_category": ["Mobile", "Desktop", "Tablet"],
+            "device_platform": ["iOS", "Android", "Web"],
+        },
+        "ranges": {
+            "loyalty_points": (0, None),
+        },
+    },
+    "stores": {
+        "pk": ["store_id"],
+        "required": ["store_id", "store_name", "area", "region"],
+        "regex": {
+            "store_id": "^STOR[0-9]{3,}$",
+        },
+        "types": {
+            "store_id": "string",
+            "store_name": "string",
+            "area": "string",
+            "region": "string",
+            "store_type": "string",
+        },
+        "accepted_values": {
+            "store_type": ["Online", "Flagship", "Mall", "Neighbourhood"],
+        },
+    },
+    "products": {
+        "pk": ["product_id"],
+        "required": [
+            "product_id",
+            "product_name",
+            "brand",
+            "category",
+            "selling_price",
+            "cost_price",
+        ],
+        "regex": {"product_id": "^PROD[0-9]{3,}$"},
+        "types": {
+            "product_id": "string",
+            "product_name": "string",
+            "brand": "string",
+            "category": "string",
+            "selling_price": "float",
+            "cost_price": "float",
+        },
+        "ranges": {
+            "selling_price": (0, None),
+            "cost_price": (0, None),
+        },
+    },
+    "competitor_products": {
+        "unique_combinations": [
+            ["competitor", "product_name"],
+        ],
+        "required": ["competitor", "product_name"],
+        "fk": {
+            "product_id": ("products", "product_id"),
+        },
+        "types": {
+            "competitor": "string",
+            "product_id": "string",
+            "product_name": "string",
+            "brand": "string",
+            "category": "string",
+            "is_exclusive": "bool",
+        },
+    },
+    "competitor_price_history": {
+        "unique_combinations": [
+            ["competitor", "scraped_product_name", "update_timestamp"],
+        ],
+        "required": [
+            "competitor",
+            "scraped_product_name",
+            "scraped_price",
+            "update_timestamp",
+        ],
+        "fk": {
+            "product_id": ("products", "product_id"),
+        },
+        "types": {
+            "competitor": "string",
+            "product_id": "string",
+            "scraped_product_name": "string",
+            "scraped_category": "string",
+            "scraped_price": "float",
+            "has_active_promo": "bool",
+        },
+        "datetime_columns": ["update_timestamp"],
+        "ranges": {
+            "scraped_price": (0, None),
+        },
+    },
+    "store_catalogues": {
+        "unique_combinations": [
+            ["store_id", "product_id"],
+        ],
+        "required": [
+            "store_id",
+            "product_id",
+            "store_product_name",
+            "store_selling_price",
+        ],
+        "fk": {
+            "store_id": ("stores", "store_id"),
+            "product_id": ("products", "product_id"),
+        },
+        "types": {
+            "store_id": "string",
+            "product_id": "string",
+            "store_product_name": "string",
+            "store_brand": "string",
+            "store_category": "string",
+            "store_selling_price": "float",
+        },
+        "ranges": {
+            "store_selling_price": (0, None),
+        },
+    },
+    "product_lifecycles": {
+        "unique_combinations": [
+            ["product_id", "valid_from"],
+        ],
+        "required": ["product_id", "status", "launch_date", "valid_from", "is_current"],
+        "fk": {
+            "product_id": ("products", "product_id"),
+        },
+        "types": {
+            "product_id": "string",
+            "status": "string",
+            "is_current": "bool",
+        },
+        "date_columns": [
+            "launch_date",
+            "discontinuation_date",
+            "valid_from",
+            "valid_to",
+        ],
+        "accepted_values": {
+            "status": ["New", "Active", "Phasing Out", "Discontinued", "Seasonal"],
+        },
+    },
+    "product_content_quality": {
+        "pk": ["content_version_id"],
+        "unique_combinations": [
+            ["product_id", "valid_from"],
+        ],
+        "required": [
+            "content_version_id",
+            "product_id",
+            "quality_tier",
+            "has_image",
+            "image_count",
+            "has_nutritional_info",
+            "has_description",
+            "description_length",
+            "missing_attribute_count",
+            "valid_from",
+            "is_current",
+        ],
+        "fk": {
+            "product_id": ("products", "product_id"),
+        },
+        "regex": {
+            "content_version_id": "^PCQ[0-9]{7,}$",
+        },
+        "types": {
+            "content_version_id": "string",
+            "product_id": "string",
+            "quality_tier": "string",
+            "has_image": "bool",
+            "image_count": "int",
+            "image_quality_score": "float",
+            "has_nutritional_info": "bool",
+            "has_description": "bool",
+            "description_length": "int",
+            "missing_attribute_count": "int",
+            "is_current": "bool",
+        },
+        "date_columns": ["valid_from", "valid_to"],
+        "accepted_values": {
+            "quality_tier": ["Poor", "Average", "Good", "Excellent"],
+        },
+        "ranges": {
+            "image_count": (0, None),
+            "image_quality_score": (0, 1),
+            "description_length": (0, None),
+            "missing_attribute_count": (0, None),
+        },
+    },
+    "stockout_events": {
+        "unique_combinations": [
+            ["store_id", "product_id", "stockout_start_date"],
+        ],
+        "required": ["store_id", "product_id", "stockout_start_date"],
+        "fk": {
+            "store_id": ("stores", "store_id"),
+            "product_id": ("products", "product_id"),
+        },
+        "types": {
+            "store_id": "string",
+            "product_id": "string",
+        },
+        "date_columns": [
+            "stockout_start_date",
+            "stockout_end_date",
+        ],
+    },
+    "stock_snapshots": {
+        "unique_combinations": [
+            ["week_start_date", "store_id", "product_id"],
+        ],
+        "required": [
+            "week_start_date",
+            "store_id",
+            "product_id",
+            "stock_status",
+            "stock_band",
+        ],
+        "fk": {
+            "store_id": ("stores", "store_id"),
+            "product_id": ("products", "product_id"),
+        },
+        "types": {
+            "store_id": "string",
+            "product_id": "string",
+            "stock_status": "string",
+            "stock_band": "string",
+        },
+        "date_columns": [
+            "week_start_date",
+        ],
+        "accepted_values": {
+            "stock_status": [
+                "Out of Stock",
+                "Low Stock",
+                "Limited Stock",
+                "In Stock",
+                "Overstocked",
+            ],
+            "stock_band": ["0", "1-5", "6-20", "21-100", "101+"],
+        },
+    },
+    "inventory_change_events": {
+        "unique_combinations": [
+            ["store_id", "product_id", "event_timestamp"],
+        ],
+        "required": ["store_id", "product_id", "event_timestamp"],
+        "fk": {
+            "store_id": ("stores", "store_id"),
+            "product_id": ("products", "product_id"),
+        },
+        "types": {
+            "store_id": "string",
+            "product_id": "string",
+            "delta": "int",
+            "reason": "string",
+            "stock_after": "int",
+        },
+        "datetime_columns": [
+            "event_timestamp",
+        ],
+        "ranges": {
+            "stock_after": (0, None),
+        },
+    },
+    "campaigns": {
+        "pk": ["campaign_id"],
+        "required": [
+            "campaign_id",
+            "campaign_name",
+            "campaign_type",
+            "channels",
+            "start_date",
+            "end_date",
+            "budget",
+            "is_ab_test",
+            "status",
+        ],
+        "regex": {
+            "campaign_id": "^CAMP[0-9]{3,}$",
+        },
+        "types": {
+            "campaign_id": "string",
+            "campaign_name": "string",
+            "campaign_type": "string",
+            "target_segment": "string",
+            "season": "string",
+            "channels": "list[string]",
+            "budget": "int",
+            "is_ab_test": "bool",
+            "status": "string",
+        },
+        "date_columns": [
+            "start_date",
+            "end_date",
+        ],
+        "accepted_values": {
+            "campaign_type": ["Acquisition", "Retention", "Clearance", "Seasonal"],
+            "target_segment": [
+                "New Customers",
+                "Active Customers",
+                "Churn Risk Customers",
+                "High Spenders",
+                "Budget Shoppers",
+            ],
+            "status": ["Planned", "Active", "Completed", "Cancelled"],
+        },
+        "ranges": {
+            "budget": (1, None),
+        },
+    },
+    "campaign_assignments": {
+        "unique_combinations": [
+            ["campaign_id", "customer_id", "eligible_at"],
+        ],
+        "required": ["campaign_id", "customer_id", "assignment_group", "eligible_at"],
+        "fk": {
+            "customer_id": ("customers", "customer_id"),
+            "campaign_id": ("campaigns", "campaign_id"),
+        },
+        "types": {
+            "campaign_id": "string",
+            "customer_id": "string",
+            "assignment_group": "string",
+        },
+        "date_columns": [
+            "eligible_at",
+        ],
+        "accepted_values": {
+            "assignment_group": ["Treatment", "Control"],
+        },
+    },
+    "campaign_exposures": {
+        "unique_combinations": [
+            ["customer_id", "campaign_id", "channel", "exposed_time"],
+        ],
+        "required": [
+            "customer_id",
+            "campaign_id",
+            "channel",
+            "assignment_group",
+            "eligible",
+            "exposed",
+            "opened",
+            "clicked",
+            "cost_per_msg",
+        ],
+        "fk": {
+            "customer_id": ("customers", "customer_id"),
+            "campaign_id": ("campaigns", "campaign_id"),
+        },
+        "types": {
+            "customer_id": "string",
+            "campaign_id": "string",
+            "channel": "string",
+            "assignment_group": "string",
+            "eligible": "bool",
+            "exposed": "bool",
+            "opened": "bool",
+            "clicked": "bool",
+            "device_platform": "string",
+            "cost_per_msg": "float",
+        },
+        "datetime_columns": [
+            "exposed_time",
+            "opened_time",
+            "clicked_time",
+        ],
+        "accepted_values": {
+            "assignment_group": ["Treatment", "Control"],
+            "device_platform": ["iOS", "Android", "Web"],
+        },
+        "ranges": {"cost_per_msg": (0, None)},
+    },
+    "bundles": {
+        "pk": ["bundle_id"],
+        "required": ["bundle_id", "bundle_type"],
+        "regex": {
+            "bundle_id": "^BUNDLE[0-9]{3,}$",
+        },
+        "types": {
+            "bundle_id": "string",
+            "bundle_name": "string",
+            "bundle_type": "string",
+            "categories": "list[string]",
+        },
+        "accepted_values": {
+            "bundle_type": ["Buy One, Get One", "Set", "2 For X", "Buy N Save X"],
+        },
+    },
+    "bundle_items": {
+        "test_unique_combinations": [
+            ["bundle_id", "product_id"],
+        ],
+        "required": ["bundle_id", "product_id"],
+        "fk": {
+            "bundle_id": ("bundles", "bundle_id"),
+            "product_id": ("products", "product_id"),
+        },
+        "types": {
+            "bundle_id": "string",
+            "product_id": "string",
+            "quantity": "int",
+        },
+        "ranges": {
+            "quantity": (1, None),
+        },
+    },
+    "bundle_pricings": {
+        "pk": ["bundle_pricing_id"],
+        "unique_combinations": [
+            ["bundle_id", "effective_start_date"],
+        ],
+        "required": [
+            "bundle_pricing_id",
+            "bundle_id",
+            "bundle_price",
+            "effective_start_date",
+            "effective_end_date",
+        ],
+        "fk": {
+            "bundle_id": ("bundles", "bundle_id"),
+        },
+        "regex": {
+            "bundle_pricing_id": "^BPRICE[0-9]{3,}$",
+        },
+        "types": {
+            "bundle_pricing_id": "string",
+            "bundle_id": "string",
+            "bundle_price": "float",
+            "discount_value": "float",
+            "pricing_phase": "string",
+        },
+        "date_columns": ["effective_start_date", "effective_end_date"],
+        "accepted_values": {
+            "pricing_phase": ["LAUNCH", "EOL", "PROMO"],
+        },
+        "ranges": {
+            "bundle_price": (0, None),
+            "discount_value": (0, None),
+        },
+    },
+    "promotions": {
+        "pk": ["promotion_id"],
+        "required": [
+            "promotion_id",
+            "discount_code",
+            "effective_start_date",
+            "effective_end_date",
+        ],
+        "fk": {
+            "campaign_id": ("campaigns", "campaign_id"),
+        },
+        "regex": {
+            "promotion_id": "^PROMO[0-9]{3,}$",
+        },
+        "types": {
+            "promotion_id": "string",
+            "promotion_name": "string",
+            "promotion_theme": "string",
+            "campaign_id": "string",
+            "promotion_mechanic": "string",
+            "promotion_scope": "string",
+            "promotion_target_id": "string",
+            "promotion_value": "float",
+            "min_spend": "float",
+            "discount_code": "string",
+            "priority": "int",
+        },
+        "date_columns": [
+            "effective_start_date",
+            "effective_end_date",
+        ],
+        "accepted_values": {
+            "promotion_mechanic": [
+                "percentage_discount",
+                "dollar_discount",
+                "free_shipping",
+                "bundle",
+            ],
+            "promotion_scope": ["cart", "category", "product", "bundle"],
+        },
+        "ranges": {
+            "promotion_value": (0, None),
+            "min_spend": (0, None),
+            "priority": (1, 4),
+        },
+    },
+    "clickstreams": {
+        "pk": ["clickstream_id"],
+        "unique_combinations": [["session_id", "event_order", "event_timestamp"]],
+        "required": [
+            "clickstream_id",
+            "session_id",
+            "customer_id",
+            "event_timestamp",
+            "event_order",
+            "event_type",
+            "page",
+            "cart_size",
+        ],
+        "fk": {
+            "customer_id": ("customers", "customer_id"),
+            "product_id": ("products", "product_id"),
+        },
+        "list_fk": {
+            "campaign_ids": ("campaigns", "campaign_id"),
+            "promotion_ids": ("promotions", "promotion_id"),
+            "bundle_ids": ("bundles", "bundle_id"),
+        },
+        "bridge_unique_combinations": {
+            "campaign_ids": ["clickstream_id", "campaign_id"],
+            "bundle_ids": ["clickstream_id", "bundle_id"],
+            "promotion_ids": ["clickstream_id", "promotion_id"],
+        },
+        "types": {
+            "clickstream_id": "string",
+            "session_id": "string",
+            "customer_id": "string",
+            "customer_segment": "string",
+            "campaign_ids": "list[string]",
+            "has_treatment_campaign": "bool",
+            "has_control_campaign": "bool",
+            "device_category": "string",
+            "referrer": "string",
+            "location": "string",
+            "event_order": "int",
+            "event_type": "string",
+            "page": "string",
+            "scroll_depth": "int",
+            "product_id": "string",
+            "product_name": "string",
+            "category": "string",
+            "promotion_ids": "list[string]",
+            "bundle_ids": "list[string]",
+            "bounce_flag": "int",
+            "cart_size": "int",
+            "cart_content": "list[string]",
+            "purchased_items": "list[string]",
+            "stock_status": "string",
+        },
+        "datetime_columns": [
+            "event_timestamp",
+        ],
+        "accepted_values": {
+            "customer_segment": [
+                "New Customers",
+                "Active Customers",
+                "Churn Risk Customers",
+                "High Spenders",
+                "Budget Shoppers",
+            ],
+            "device_category": ["Mobile", "Desktop", "Tablet"],
+            "referrer": [
+                "organic_search",
+                "direct",
+                "social_media",
+                "email",
+                "unknown",
+            ],
+            "event_type": [
+                "Home View",
+                "Category View",
+                "Search View",
+                "Product View",
+                "Cart View",
+                "Add to Cart",
+                "Remove from Cart",
+                "Checkout Start",
+                "Payment Attempt",
+                "Payment Successful",
+                "Payment Failed",
+            ],
+            "stock_status": [
+                "Out of Stock",
+                "Low Stock",
+                "Limited Stock",
+                "In Stock",
+                "Overstocked",
+            ],
+        },
+        "ranges": {
+            "event_order": (1, None),
+            "scroll_depth": (0, 100),
+            "bounce_flag": (0, 1),
+            "cart_size": (0, None),
+        },
+    },
+    "transactions": {
+        "pk": ["transaction_id"],
+        "unique_combinations": [["customer_id", "store_id", "transaction_time"]],
+        "required": [
+            "transaction_id",
+            "customer_id",
+            "store_id",
+            "transaction_time",
+            "cart_subtotal",
+            "total_discount",
+            "shipping_fee",
+            "shipping_discount",
+            "transaction_total",
+            "payment_method",
+            "basket_size",
+            "num_unique_items",
+        ],
+        "fk": {
+            "customer_id": ("customers", "customer_id"),
+            "store_id": ("stores", "store_id"),
+        },
+        "regex": {
+            "transaction_id": "^TRAN[0-9]{3,}$",
+        },
+        "types": {
+            "transaction_id": "string",
+            "customer_id": "string",
+            "store_id": "string",
+            "cart_subtotal": "float",
+            "total_discount": "float",
+            "shipping_fee": "float",
+            "shipping_discount": "float",
+            "transaction_total": "float",
+            "payment_method": "string",
+            "basket_size": "int",
+            "num_unique_items": "int",
+            "applied_promotions": "list[dict]",
+        },
+        "datetime_columns": [
+            "transaction_time",
+        ],
+        "accepted_values": {
+            "payment_method": [
+                "Credit Card",
+                "Debit Card",
+                "Digital Wallet",
+                "Buy Now Pay Later",
+                "Cash",
+            ],
+        },
+        "ranges": {
+            "cart_subtotal": (0, None),
+            "total_discount": (0, None),
+            "shipping_fee": (0, None),
+            "shipping_discount": (0, None),
+            "transaction_total": (0, None),
+            "basket_size": (1, None),
+            "num_unique_items": (1, None),
+        },
+        "list_dict_fk": {
+            "applied_promotions": {
+                "id_key": "promotion_id",
+                "ref_table": "promotions",
+                "ref_col": "promotion_id",
+            },
+        },
+        "list_dict_bridge_unique": {
+            "applied_promotions": {
+                "id_key": "promotion_id",
+                "parent_col": "transaction_id",
+                "bridge_col": "promotion_id",
+            },
+        },
+    },
+    "transaction_items": {
+        "unique_combinations": [
+            ["transaction_id", "product_id"],
+        ],
+        "required": [
+            "transaction_id",
+            "product_id",
+            "product_name",
+            "category",
+            "quantity",
+            "unit_price",
+        ],
+        "fk": {
+            "transaction_id": ("transactions", "transaction_id"),
+            "product_id": ("products", "product_id"),
+        },
+        "types": {
+            "transaction_id": "string",
+            "product_id": "string",
+            "product_name": "string",
+            "category": "string",
+            "quantity": "int",
+            "unit_price": "float",
+            "item_subtotal": "float",
+            "item_discount": "float",
+            "final_item_price": "float",
+        },
+        "ranges": {
+            "quantity": (1, None),
+            "unit_price": (0, None),
+            "item_subtotal": (0, None),
+            "item_discount": (0, None),
+            "final_item_price": (0, None),
+        },
+    },
+    "product_reviews": {
+        "pk": ["review_id"],
+        "unique_combinations": [
+            ["transaction_id", "product_id"],
+        ],
+        "required": ["review_id", "product_id", "customer_id", "rating", "review_date"],
+        "fk": {
+            "product_id": ("products", "product_id"),
+            "customer_id": ("customers", "customer_id"),
+        },
+        "regex": {
+            "review_id": "^REV[0-9]{3,}$",
+        },
+        "types": {
+            "review_id": "string",
+            "product_id": "string",
+            "customer_id": "string",
+            "rating": "int",
+            "review_text": "string",
+        },
+        "date_columns": ["review_date"],
+        "ranges": {
+            "rating": (1, 5),
+        },
+    },
+}
