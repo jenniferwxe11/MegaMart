@@ -1,0 +1,60 @@
+import pandas as pd
+
+# --- CUSTOMERS ---
+
+
+def test_customer_dob_less_than_signup_date(dataframes):
+    df = dataframes["customers"].copy()
+    mask = df["dob"].notna() & df["signup_date"].notna()
+    assert (
+        pd.to_datetime(df.loc[mask, "dob"])
+        <= pd.to_datetime(df.loc[mask, "signup_date"])
+    ).all()
+
+
+def test_customer_dob_not_in_future(dataframes):
+    df = dataframes["customers"].copy()
+    assert (
+        df["dob"].isna()
+        | (pd.to_datetime(df["dob"], errors="coerce") <= pd.Timestamp.now())
+    ).all()
+
+
+def test_customer_signup_date_not_in_future(dataframes):
+    df = dataframes["customers"].copy()
+    assert (
+        df["signup_date"].isna()
+        | (pd.to_datetime(df["signup_date"], errors="coerce") <= pd.Timestamp.now())
+    ).all()
+
+
+def test_customer_online_omnichannel_customers_have_email(dataframes):
+    """
+    Online Only and Omnichannel customers should have an email address.
+    """
+    df = dataframes["customers"].copy()
+    online_types = {"Online Only", "Omnichannel"}
+    online = df[df["customer_type"].isin(online_types)]
+    assert online["email"].notna().all(), "Online/Omnichannel customer missing email"
+
+
+def test_customer_online_omnichannel_customers_have_device_info(dataframes):
+    """
+    Online Only and Omnichannel customers should have device category and platform.
+    """
+    df = dataframes["customers"]
+    online_types = {"Online Only", "Omnichannel"}
+    online = df[df["customer_type"].isin(online_types)]
+    assert online["device_category"].notna().all()
+    assert online["device_platform"].notna().all()
+
+
+def test_customer_retail_walk_in_no_signup_date(dataframes):
+    """
+    Retail Walk-In customers should not have signup_date.
+    """
+    df = dataframes["customers"].copy()
+    walkin = df[df["customer_type"] == "Retail Walk-In"]
+    assert (
+        walkin["signup_date"].isna().all()
+    ), "Retail Walk-In customer has unexpected signup_date"

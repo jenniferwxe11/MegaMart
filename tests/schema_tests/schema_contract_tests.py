@@ -3,7 +3,7 @@ import json
 
 import pandas as pd
 
-from tests.schemas import TABLE_CONTRACTS
+from tests.schema_tests.schemas import TABLE_CONTRACTS
 
 TYPE_CHECKERS = {
     "string": lambda s: s.dropna().apply(lambda x: isinstance(x, str)).all(),
@@ -100,6 +100,13 @@ def test_primary_keys_unique(dataframes):
         assert not df.duplicated(
             subset=pk
         ).any(), f"{table} contains duplicate primary keys: {pk}"
+
+
+def test_unique_columns(dataframes):
+    for table, contract in TABLE_CONTRACTS.items():
+        for col in contract.get("unique_columns", []):
+            df = dataframes[table]
+            assert not df[df[col].notna()].duplicated(subset=[col]).any()
 
 
 def test_unique_combinations(dataframes):
