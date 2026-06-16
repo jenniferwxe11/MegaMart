@@ -4,6 +4,8 @@ from data_generation.config.campaigns_config import (
     CHANNEL_CONSENT_MAP,
     CONTROL_GROUP_PERCENTAGE,
     DIRECT_MESSAGE_CHANNELS,
+)
+from data_generation.config.generation_config import (
     MIN_CONTROL_SIZE,
     MIN_TREATMENT_SIZE,
 )
@@ -34,22 +36,16 @@ def assign_ab_groups(campaign, audience):
     """
     For A/B test campaigns, randomly assigns eligible customers to treatment and control groups.
     """
-    if campaign["is_ab_test"]:
-        # Split audience into treatment/control
-        treatment = audience.sample(
-            frac=(1 - CONTROL_GROUP_PERCENTAGE), random_state=42
-        )
-        control = audience.drop(treatment.index)
+    if not campaign["is_ab_test"]:
+        return audience, pd.DataFrame()
 
-        # Ensure statistically meaningful group sizes
-        if len(treatment) < MIN_TREATMENT_SIZE or len(control) < MIN_CONTROL_SIZE:
-            # Fallback to full treatment if sample is too small
-            campaign["is_ab_test"] = False
-            treatment = audience
-            control = pd.DataFrame()
+    if len(audience) < (MIN_TREATMENT_SIZE + MIN_CONTROL_SIZE):
+        empty = audience.iloc[0:0].copy()
+        return empty, empty
 
-    else:
-        # Non experimental campaigns: all users receive treatment
-        treatment = audience
-        control = pd.DataFrame()
+    seed = hash(campaign["campaign_id"]) % 2**32
+
+    treatment = audience.sample(frac=(1 - CONTROL_GROUP_PERCENTAGE), random_state=seed)
+    control = audience.drop(treatment.index)
+
     return treatment, control
