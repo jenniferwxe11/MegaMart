@@ -1,10 +1,12 @@
 import pytest
 
 from data_generation.data_retrieval import load_data
+from data_generation.run import generate_all_raw_data
 
 
 @pytest.fixture(scope="session")
 def dataframes():
+    generate_all_raw_data()
     return {
         "customers": load_data.load_customers(),
         "stores": load_data.load_stores(),
