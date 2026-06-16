@@ -198,6 +198,9 @@ def resolve_product_view(
             product_ids
         )
 
+    if product_id is not None:
+        category = product_category_map.get(product_id)
+
     product_name = product_name_map.get(product_id, None)
     stock_status = get_product_stock_status(ctx, store_id, product_id, timestamp)
 
