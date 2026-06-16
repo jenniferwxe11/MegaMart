@@ -1,6 +1,7 @@
 TABLE_CONTRACTS = {
     "customers": {
         "pk": ["customer_id"],
+        "unique_columms": ["email"],
         "required": ["customer_id", "customer_type"],
         "regex": {
             "customer_id": "^CUST[0-9]{3,}$",
@@ -432,7 +433,7 @@ TABLE_CONTRACTS = {
         },
     },
     "bundle_items": {
-        "test_unique_combinations": [
+        "unique_combinations": [
             ["bundle_id", "product_id"],
         ],
         "required": ["bundle_id", "product_id"],
@@ -550,6 +551,8 @@ TABLE_CONTRACTS = {
             "campaign_ids": ("campaigns", "campaign_id"),
             "promotion_ids": ("promotions", "promotion_id"),
             "bundle_ids": ("bundles", "bundle_id"),
+            "cart_content": ("products", "product_id"),
+            "purchased_items": ("products", "product_id"),
         },
         "bridge_unique_combinations": {
             "campaign_ids": ["clickstream_id", "campaign_id"],

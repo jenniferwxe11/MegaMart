@@ -1,0 +1,202 @@
+import ast
+
+import pandas as pd
+
+# --- CAMPAIGNS ---
+
+
+def test_campaign_dates(dataframes):
+    df = dataframes["campaigns"].copy()
+    assert (pd.to_datetime(df["start_date"]) <= pd.to_datetime(df["end_date"])).all()
+
+
+def test_campaign_status_aligned_with_dates(dataframes):
+    df = dataframes["campaigns"].copy()
+    assert (
+        (df["status"] != "Completed")
+        | (pd.to_datetime(df["end_date"]) <= pd.Timestamp.now())
+    ).all()
+
+
+# --- CAMPAIGN ASSIGNMENTS ---
+
+
+def test_campaign_ab_test_when_valid_has_control_and_treatment(dataframes):
+    """
+    A/B test campaigns must have both Treatment and Control assignment groups.
+    """
+    campaigns = dataframes["campaigns"].copy()
+    assignments = dataframes["campaign_assignments"].copy()
+    ab_campaigns = campaigns[campaigns["is_ab_test"]]["campaign_id"]
+    for camp_id in ab_campaigns:
+        campaign_assign = assignments[assignments["campaign_id"] == camp_id]
+
+        # Skip invalid experiments
+        if campaign_assign.empty:
+            continue
+
+        groups = set(campaign_assign["assignment_group"].unique())
+        assert (
+            "Treatment" in groups and "Control" in groups
+        ), f"A/B campaign {camp_id} missing Treatment or Control group"
+
+
+# --- CAMPAIGN EXPOSURE ---
+
+
+def test_campaign_channels_match_exposures(dataframes):
+    """
+    Every channel in campaign_exposures must be a channel listed for that campaign.
+    """
+    campaigns = dataframes["campaigns"].copy()
+    exposures = dataframes["campaign_exposures"].copy()
+    camp_channel_map = {}
+    for _, row in campaigns.iterrows():
+        channels = row["channels"]
+        if isinstance(channels, list):
+            camp_channel_map[row["campaign_id"]] = set(channels)
+        elif isinstance(channels, str):
+            try:
+                camp_channel_map[row["campaign_id"]] = set(ast.literal_eval(channels))
+            except Exception:
+                camp_channel_map[row["campaign_id"]] = {channels}
+
+    for _, row in exposures.iterrows():
+        camp_id = row["campaign_id"]
+        if camp_id in camp_channel_map:
+            assert (
+                row["channel"] in camp_channel_map[camp_id]
+            ), f"Channel '{row['channel']}' not in campaign {camp_id} channels"
+
+
+def test_campaign_exposure_assignment_group_consistent(dataframes):
+    """
+    A customer's assignment group for a given campaign must be consistent
+    across all channels (same customer can't be Treatment in Email and Control in Push).
+    """
+    df = dataframes["campaign_exposures"].copy()
+    grouped = df.groupby(["campaign_id", "customer_id"])["assignment_group"].nunique()
+    assert (
+        grouped == 1
+    ).all(), "Customer has inconsistent assignment groups within a campaign's exposure channels."
+
+
+def test_campaign_exposure_control_group_not_exposed(dataframes):
+    """
+    Control group members should not be exposed.
+    """
+    df = dataframes["campaign_exposures"].copy()
+    control = df[df["assignment_group"] == "Control"]
+    assert (~control["exposed"]).all(), "Control group members should not be exposed"
+
+
+def test_campaign_exposure_exposed_time(dataframes):
+    df = dataframes["campaign_exposures"].copy()
+    mask = df["exposed_time"].notna()
+    assert (pd.to_datetime(df.loc[mask, "exposed_time"]) <= pd.Timestamp.now()).all()
+    assert (df["exposed_time"].notna() | ~df["exposed"]).all()
+
+
+def test_campaign_exposure_exposed_time_within_campaign_dates(dataframes):
+    """
+    Exposure timestamps must fall within the campaign's active window.
+    """
+    campaigns = dataframes["campaigns"].copy()
+    exposures = dataframes["campaign_exposures"].copy()
+    merged = exposures.merge(
+        campaigns[["campaign_id", "start_date", "end_date"]],
+        on="campaign_id",
+        how="left",
+    )
+    mask = merged["exposed_time"].notna()
+    sub = merged[mask].copy()
+    assert (
+        pd.to_datetime(sub["exposed_time"]) >= pd.to_datetime(sub["start_date"])
+    ).all(), "Exposure time before campaign start date"
+    assert (
+        pd.to_datetime(sub["exposed_time"]) <= pd.to_datetime(sub["end_date"])
+    ).all(), "Exposure time after campaign end date"
+
+
+def test_campaign_exposure_opened(dataframes):
+    df = dataframes["campaign_exposures"].copy()
+    assert (~df["opened"] | df["exposed"]).all()
+
+
+def test_campaign_exposure_opened_time(dataframes):
+    df = dataframes["campaign_exposures"].copy()
+    mask_notna = df["opened_time"].notna()
+    assert (
+        pd.to_datetime(df.loc[mask_notna, "opened_time"]) <= pd.Timestamp.now()
+    ).all()
+    assert (df["opened_time"].notna() | ~df["opened"]).all()
+    mask_both = df["opened_time"].notna() & df["exposed_time"].notna()
+    assert (
+        pd.to_datetime(df.loc[mask_both, "opened_time"])
+        >= pd.to_datetime(df.loc[mask_both, "exposed_time"])
+    ).all()
+
+
+def test_campaign_exposure_opened_time_within_campaign_dates(dataframes):
+    """
+    Opened timestamps must fall within the campaign's active window.
+    """
+    campaigns = dataframes["campaigns"].copy()
+    exposures = dataframes["campaign_exposures"].copy()
+    merged = exposures.merge(
+        campaigns[["campaign_id", "start_date", "end_date"]],
+        on="campaign_id",
+        how="left",
+    )
+    mask = merged["opened_time"].notna()
+    sub = merged[mask].copy()
+    assert (
+        pd.to_datetime(sub["opened_time"]) >= pd.to_datetime(sub["start_date"])
+    ).all(), "Opened time before campaign start date"
+    assert (
+        pd.to_datetime(sub["opened_time"]) <= pd.to_datetime(sub["end_date"])
+    ).all(), "Opened time after campaign end date"
+
+
+def test_campaign_exposure_clicked(dataframes):
+    df = dataframes["campaign_exposures"].copy()
+    assert (
+        ~df["clicked"]
+        | df["opened"]
+        | df["channel"].isin(["Paid Advertisements", "In-App"])
+    ).all()
+
+
+def test_campaign_exposure_clicked_time(dataframes):
+    df = dataframes["campaign_exposures"].copy()
+    mask_notna = df["clicked_time"].notna()
+    assert (
+        pd.to_datetime(df.loc[mask_notna, "clicked_time"]) <= pd.Timestamp.now()
+    ).all()
+    assert (df["clicked_time"].notna() | ~df["clicked"]).all()
+    mask_both = df["clicked_time"].notna() & df["opened_time"].notna()
+    assert (
+        pd.to_datetime(df.loc[mask_both, "clicked_time"])
+        >= pd.to_datetime(df.loc[mask_both, "opened_time"])
+    ).all()
+
+
+def test_campaign_exposure_clicked_time_within_campaign_dates(dataframes):
+    """
+    Clicked timestamps must fall within the campaign's active window.
+    """
+    campaigns = dataframes["campaigns"].copy()
+    exposures = dataframes["campaign_exposures"].copy()
+    merged = exposures.merge(
+        campaigns[["campaign_id", "start_date", "end_date"]],
+        on="campaign_id",
+        how="left",
+    )
+    mask = merged["clicked_time"].notna()
+    sub = merged[mask].copy()
+    assert (
+        pd.to_datetime(sub["clicked_time"]) >= pd.to_datetime(sub["start_date"])
+    ).all(), "Clicked time before campaign start date"
+    assert (
+        pd.to_datetime(sub["clicked_time"]) <= pd.to_datetime(sub["end_date"])
+    ).all(), "Clicked time after campaign end date"
