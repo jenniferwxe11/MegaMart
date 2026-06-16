@@ -155,7 +155,10 @@ def stock_snapshots_generator(ctx: GenerationContext):
             (store_id, product_id), pd.DataFrame()
         )
 
-        for week_start_date in date_range(DATA_START_DATE, DATA_END_DATE):
+        for week_start_date in date_range(
+            DATA_START_DATE + timedelta(days=7),
+            DATA_END_DATE,
+        ):
             week_end_date = week_start_date + timedelta(days=6)
 
             # Filter out period outside product's active lifecycle

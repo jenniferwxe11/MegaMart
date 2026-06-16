@@ -8,10 +8,6 @@ class CampaignRule(TypedDict):
 
 AUDIENCE_PERCENTAGE = 1
 CONTROL_GROUP_PERCENTAGE = 0.5
-MIN_TREATMENT_SIZE = 2
-MIN_CONTROL_SIZE = 2
-# MIN_TREATMENT_SIZE = 10
-# MIN_CONTROL_SIZE = 10
 ADJECTIVES = ["Mega", "Hot", "Exclusive", "Limited-Time", "Weekly", "Flash", "VIP"]
 CAMPAIGN_NAME_SUFFIXES = ["Sale", "Deals", "Offer", "Promotions"]
 
