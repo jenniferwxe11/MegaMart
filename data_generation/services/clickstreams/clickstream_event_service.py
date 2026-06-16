@@ -96,8 +96,7 @@ def resolve_add_to_cart(
     Returns (product_id, category, product_name, updated_cart).
     """
     product_name_map = ctx.products.product_name_map
-
-    category = previous_category
+    product_category_map = ctx.products.product_category_map
 
     if product_id is None:
         # Add in stock product from previous product view into cart
@@ -114,6 +113,12 @@ def resolve_add_to_cart(
             product_id = get_random_in_stock_product_from_category(
                 ctx, previous_category, store_id, timestamp
             )
+
+    category = (
+        product_category_map.get(product_id)
+        if product_id is not None
+        else previous_category
+    )
 
     product_name = product_name_map.get(product_id, None)
     cart_content = cart_content.copy()
