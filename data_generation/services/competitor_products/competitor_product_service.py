@@ -1,5 +1,6 @@
 import random
 
+import pandas as pd
 from faker import Faker
 
 from data_generation.config.competitor_products_config import (
@@ -13,6 +14,7 @@ from data_generation.config.competitor_products_config import (
     NAME_PATTERNS,
     TERM_SWAPS,
 )
+from data_generation.config.constants import DATA_END_DATE, DATA_START_DATE
 from data_generation.config.products_config import (
     BRANDS,
     CATEGORIES,
@@ -383,15 +385,14 @@ def get_scrape_batches(ctx):
     Purpose:
     - Simulate periodic competitor monitoring process
     """
-    DATA_START_DATE = ctx.config.DATA_START_DATE
-    DATA_END_DATE = ctx.config.DATA_END_DATE
 
     scrape_batch_dates = []
     batch_count = random.randint(15, 30)
 
     for _ in range(batch_count):
         scrape_date = fake.date_time_between(
-            start_date=DATA_START_DATE, end_date=DATA_END_DATE
+            start_date=pd.Timestamp(DATA_START_DATE),
+            end_date=pd.Timestamp(DATA_END_DATE),
         )
         scrape_batch_dates.append(scrape_date)
 

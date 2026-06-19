@@ -4,6 +4,11 @@ from typing import Any
 
 import pandas as pd
 
+from data_generation.config.constants import (
+    DATA_END_DATE,
+    DATA_START_DATE,
+    SIMULATION_DATE,
+)
 from data_generation.config.product_lifecycles_config import (
     PRODUCT_LIFECYCLE,
     STATUS_CHAIN,
@@ -22,9 +27,6 @@ def product_lifecycles_generator(ctx: GenerationContext):
     # ---------------------------
 
     product_ids = ctx.products.product_ids
-    DATA_START_DATE = pd.Timestamp(ctx.config.DATA_START_DATE)
-    DATA_END_DATE = pd.Timestamp(ctx.config.DATA_END_DATE)
-    SIMULATION_DATE = pd.Timestamp(ctx.config.SIMULATION_DATE)
 
     # ---------------------------
     # Storage
@@ -38,14 +40,14 @@ def product_lifecycles_generator(ctx: GenerationContext):
     for product_id in product_ids:
 
         # Skew launch dates towards earlier in the window so most products are mature
-        launch_date = DATA_START_DATE + (DATA_END_DATE - DATA_START_DATE) * (
-            random.random() ** 2
-        )
+        launch_date = pd.Timestamp(DATA_START_DATE) + (
+            pd.Timestamp(DATA_END_DATE) - pd.Timestamp(DATA_START_DATE)
+        ) * (random.random() ** 2)
         # Strip time component
         launch_date = launch_date.normalize()
 
         # Seed status: products launched very recently start as New
-        if launch_date >= SIMULATION_DATE - timedelta(days=30):
+        if launch_date >= pd.Timestamp(SIMULATION_DATE) - timedelta(days=30):
             current_status = "New"
         else:
             current_status = random.choices(
@@ -73,7 +75,7 @@ def product_lifecycles_generator(ctx: GenerationContext):
             will_transition = (
                 next_status is not None
                 # Transition must happen within the data window
-                and version_end <= DATA_END_DATE
+                and version_end <= pd.Timestamp(DATA_END_DATE)
                 and random.random() < STATUS_TRANSITION_PROB.get(current_status, 0.0)
             )
 

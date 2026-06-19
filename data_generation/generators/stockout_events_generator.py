@@ -5,6 +5,7 @@ from typing import Any
 import pandas as pd
 from faker import Faker
 
+from data_generation.config.constants import DATA_END_DATE, DATA_START_DATE
 from data_generation.config.generation_config import LIMIT_STOCKOUT_EVENTS
 from data_generation.config.stocks_config import (
     BRAND_STOCKOUT_MULTIPLIER,
@@ -30,8 +31,6 @@ def stockout_events_generator(ctx: GenerationContext):
     # Load Data
     # ---------------------------
 
-    DATA_START_DATE = ctx.config.DATA_START_DATE
-    DATA_END_DATE = ctx.config.DATA_END_DATE
     stores_df = ctx.stores.stores_df
     products_df = ctx.products.products_df
 
@@ -113,7 +112,9 @@ def stockout_events_generator(ctx: GenerationContext):
         ):
             continue
 
-        for year in range(DATA_START_DATE.year, DATA_END_DATE.year + 1):
+        for year in range(
+            pd.Timestamp(DATA_START_DATE).year, pd.Timestamp(DATA_END_DATE).year + 1
+        ):
             # Filter out period outside product's active lifecycle
             if launch_date.year > year:
                 continue

@@ -4,6 +4,8 @@ from datetime import timedelta
 import pandas as pd
 from faker import Faker
 
+from data_generation.config.constants import DATA_END_DATE, DATA_START_DATE
+
 fake = Faker()
 
 
@@ -17,8 +19,6 @@ def bundle_lifecycle(
     """
     product_launch_map = ctx.product_lifecycles.product_launch_map
     product_discontinuation_map = ctx.product_lifecycles.product_discontinuation_map
-    DATA_START_DATE = ctx.config.DATA_START_DATE
-    DATA_END_DATE = ctx.config.DATA_END_DATE
 
     launch_dates = []
     discontinuation_dates = []
@@ -49,10 +49,10 @@ def bundle_lifecycle(
 
     # Fallback defaults
     if launch_date is None:
-        launch_date = DATA_START_DATE
+        launch_date = pd.Timestamp(DATA_START_DATE)
 
     if discontinuation_date is None:
-        discontinuation_date = DATA_END_DATE
+        discontinuation_date = pd.Timestamp(DATA_END_DATE)
 
     # ---------------------------------------------------------
     # Generate promotion window (30–120 days)

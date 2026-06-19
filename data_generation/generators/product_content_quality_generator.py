@@ -4,6 +4,7 @@ from typing import Any
 
 import pandas as pd
 
+from data_generation.config.constants import DATA_END_DATE
 from data_generation.config.generation_config import LIMIT_PRODUCT_CONTENT_QUALITY
 from data_generation.config.product_content_config import (
     ADVANCE_PROB,
@@ -94,7 +95,7 @@ def product_content_quality_generator(ctx: GenerationContext):
             next_date = current_date + timedelta(days=gap_days)
 
             # Don't exceed simulation window
-            if next_date > pd.Timestamp(ctx.config.DATA_END_DATE):
+            if next_date > pd.Timestamp(DATA_END_DATE):
                 break
 
             current_tier = TIERS[tier_idx + 1]
