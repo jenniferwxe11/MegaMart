@@ -179,7 +179,7 @@ def get_product_stock_status(ctx, store_id, product_id, timestamp):
         & (stock_snapshots_df["week_start_date"] <= timestamp)
     ]
     if stockout_row.empty:
-        return "In Stock"
+        return "Out of Stock"
 
     latest_row = stockout_row.sort_values("week_start_date", ascending=False).iloc[0]
     return latest_row["stock_status"]

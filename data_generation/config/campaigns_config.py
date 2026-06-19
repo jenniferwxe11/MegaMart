@@ -211,18 +211,25 @@ CHANNEL_CONSENT_MAP = {
     "Push Notifications": "push_notifications_opt_in",
 }
 
-
-DIRECT_MESSAGE_CHANNELS = {
+CHANNELS = [
     "Email",
     "SMS",
     "Push Notifications",
-}
-
-
-EXPOSURE_ONLY_CHANNELS = {
     "Paid Advertisements",
     "In-App",
-}
+]
+
+DIRECT_MESSAGE_CHANNELS = [
+    "Email",
+    "SMS",
+    "Push Notifications",
+]
+
+
+EXPOSURE_ONLY_CHANNELS = [
+    "Paid Advertisements",
+    "In-App",
+]
 
 
 DIRECT_MESSAGE_CHANNEL_RATE = {

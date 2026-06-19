@@ -60,7 +60,7 @@ def campaign_assignments_generator(ctx: GenerationContext):
 
         # --- Apply channel consent filter ---
         channels = campaign["channels"]
-        eligible_customers = apply_channel_filter(ctx, base_customers, channels)
+        eligible_customers = apply_channel_filter(base_customers, channels)
 
         # Skip campaign assignment if no eligible customers
         if eligible_customers.empty:

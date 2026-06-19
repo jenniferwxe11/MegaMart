@@ -4,6 +4,7 @@ from typing import Any
 
 import pandas as pd
 
+from data_generation.config.constants import DATA_END_DATE, DATA_START_DATE
 from data_generation.config.generation_config import (
     LIMIT_INVENTORY_CHANGE_EVENTS,
     LIMIT_STOCK_SNAPSHOTS,
@@ -34,9 +35,6 @@ def stock_snapshots_generator(ctx: GenerationContext):
     # ---------------------------
     # Load Data
     # ---------------------------
-
-    DATA_START_DATE = pd.Timestamp(ctx.config.DATA_START_DATE)
-    DATA_END_DATE = pd.Timestamp(ctx.config.DATA_END_DATE)
 
     stores_df = ctx.stores.stores_df
     products_df = ctx.products.products_df
@@ -108,9 +106,11 @@ def stock_snapshots_generator(ctx: GenerationContext):
 
         product_lifecycle_row = product_lifecycle_match.iloc[0]
 
-        launch_date = product_lifecycle_row.get("launch_date", DATA_START_DATE)
+        launch_date = product_lifecycle_row.get(
+            "launch_date", pd.Timestamp(DATA_START_DATE)
+        )
         discontinuation_date = product_lifecycle_row.get(
-            "discontinuation_date", DATA_END_DATE
+            "discontinuation_date", pd.Timestamp(DATA_END_DATE)
         )
         status = product_lifecycle_row.get("status", "Active")
 
@@ -135,14 +135,14 @@ def stock_snapshots_generator(ctx: GenerationContext):
         last_stock_band = None
         last_stock_status = None
 
-        key = (store_id, product_id, DATA_START_DATE)
+        key = (store_id, product_id, pd.Timestamp(DATA_START_DATE))
         if key not in seen_event_keys:
             # Emit the opening balance as the first event
             inventory_change_events.append(
                 {
                     "store_id": store_id,
                     "product_id": product_id,
-                    "event_timestamp": DATA_START_DATE,
+                    "event_timestamp": pd.Timestamp(DATA_START_DATE),
                     "delta": base_stock,
                     "reason": "Opening balance",
                     "stock_after": base_stock,
@@ -156,8 +156,8 @@ def stock_snapshots_generator(ctx: GenerationContext):
         )
 
         for week_start_date in date_range(
-            DATA_START_DATE + timedelta(days=7),
-            DATA_END_DATE,
+            pd.Timestamp(DATA_START_DATE) + timedelta(days=7),
+            pd.Timestamp(DATA_END_DATE),
         ):
             week_end_date = week_start_date + timedelta(days=6)
 

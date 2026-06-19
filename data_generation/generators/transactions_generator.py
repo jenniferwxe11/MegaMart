@@ -4,8 +4,8 @@ from collections import Counter
 from typing import Any
 
 import pandas as pd
-from faker import Faker
 
+from data_generation.config.constants import DATA_END_DATE, DATA_START_DATE
 from data_generation.config.generation_config import (
     LIMIT_TRANSACTION_ITEMS,
     NUM_TRANSACTIONS,
@@ -36,8 +36,6 @@ from data_generation.services.transactions.transaction_promotion_service import 
 )
 from data_generation.utils.io_utils import save
 
-fake = Faker()
-
 
 @register("transactions_generator")
 def transactions_generator(ctx: GenerationContext):
@@ -45,8 +43,6 @@ def transactions_generator(ctx: GenerationContext):
     # Load Data
     # ---------------------------
 
-    DATA_START_DATE = ctx.config.DATA_START_DATE
-    DATA_END_DATE = ctx.config.DATA_END_DATE
     customers_df = ctx.customers.customers_df
     customer_ids = ctx.customers.customer_ids
     customer_type_to_ids_map = ctx.customers.customer_type_to_ids_map
@@ -357,9 +353,7 @@ def transactions_generator(ctx: GenerationContext):
 
         # Simulate transaction timestamp with seasonality
         transaction_time = pd.Timestamp(
-            generate_timestamp(
-                ctx, pd.Timestamp(signup_date), pd.Timestamp(DATA_END_DATE)
-            )
+            generate_timestamp(pd.Timestamp(signup_date), pd.Timestamp(DATA_END_DATE))
         )
 
         payment_method = random.choices(

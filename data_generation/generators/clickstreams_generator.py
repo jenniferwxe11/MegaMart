@@ -21,6 +21,7 @@ from data_generation.config.clickstreams_config import (
     SESSION_MISSION_TARGET_RANGE,
     VALID_EVENT_TRANSITIONS,
 )
+from data_generation.config.constants import DATA_END_DATE
 from data_generation.config.generation_config import (
     LIMIT_CLICKSTREAM_EVENTS,
     NUM_CLICKSTREAM_SESSIONS,
@@ -85,7 +86,6 @@ def clickstreams_generator(ctx: GenerationContext):
     product_name_map = ctx.products.product_name_map
     product_category_map = ctx.products.product_category_map
     online_store_id = ctx.stores.online_store_id
-    DATA_END_DATE = ctx.config.DATA_END_DATE
     customers_df = ctx.customers.customers_df
 
     # Assumption: Clickstream tracking is only available for users with digital activity
@@ -120,7 +120,6 @@ def clickstreams_generator(ctx: GenerationContext):
 
         # --- First Session Initialisation ---
         current_time = generate_timestamp(
-            ctx,
             pd.Timestamp(signup_date),
             min(
                 pd.Timestamp(signup_date) + timedelta(days=FIRST_SESSION_WINDOW_DAYS),
@@ -140,7 +139,7 @@ def clickstreams_generator(ctx: GenerationContext):
         # ---------------------------
 
         session_index = 0
-        while pd.Timestamp(current_time) <= DATA_END_DATE:
+        while pd.Timestamp(current_time) <= pd.Timestamp(DATA_END_DATE):
 
             if (
                 total_sessions >= NUM_CLICKSTREAM_SESSIONS
@@ -658,7 +657,7 @@ def clickstreams_generator(ctx: GenerationContext):
                 )
 
                 # Applies behavioural biases (weekends, evenings, paydays)
-                current_time = generate_timestamp(ctx, current_time, window_end)
+                current_time = generate_timestamp(current_time, window_end)
                 current_time = current_time.replace(microsecond=0)
 
                 # Update persistent cart with changes made in session

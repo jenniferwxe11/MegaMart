@@ -14,7 +14,6 @@ from data_generation.config.bundles_config import (
 def calculate_bundle_pricing(
     ctx,
     bundle_type,
-    bundle_name,
     selected_products,
 ):
     """

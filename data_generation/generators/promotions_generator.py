@@ -6,6 +6,7 @@ from typing import Any
 import pandas as pd
 from faker import Faker
 
+from data_generation.config.constants import DATA_END_DATE, DATA_START_DATE
 from data_generation.config.generation_config import LIMIT_PROMOTIONS
 from data_generation.config.promotions_config import (
     MECHANIC_SCOPE_RULES,
@@ -36,9 +37,6 @@ def promotions_generator(ctx: GenerationContext):
     # ---------------------------
     # Load Data
     # ---------------------------
-
-    DATA_START_DATE = ctx.config.DATA_START_DATE
-    DATA_END_DATE = ctx.config.DATA_END_DATE
 
     assert ctx.bundles is not None
     bundle_full_df = ctx.bundles.bundle_full_df
@@ -127,7 +125,7 @@ def promotions_generator(ctx: GenerationContext):
                 )
 
             promo_start, promo_end = safe_date_window(
-                promo_start, promo_end, DATA_END_DATE
+                promo_start, promo_end, pd.Timestamp(DATA_END_DATE)
             )
 
             promotion_value = generate_promotion_value(
@@ -201,7 +199,7 @@ def promotions_generator(ctx: GenerationContext):
         b_start, b_end = safe_date_window(
             bundle_row["effective_start_date"],
             bundle_row["effective_end_date"],
-            DATA_END_DATE,
+            pd.Timestamp(DATA_END_DATE),
         )
 
         # Store Bundle Promotions
@@ -258,14 +256,15 @@ def promotions_generator(ctx: GenerationContext):
             promotion_target_id = category
             promo_start = pd.to_datetime(
                 fake.date_between(
-                    start_date=DATA_START_DATE, end_date=pd.Timestamp(DATA_END_DATE)
+                    start_date=pd.Timestamp(DATA_START_DATE),
+                    end_date=pd.Timestamp(DATA_END_DATE),
                 )
             )
 
             promo_end = pd.to_datetime(
                 min(
                     pd.Timestamp(promo_start + timedelta(days=random.randint(30, 120))),
-                    pd.Timestamp(DATA_END_DATE),
+                    pd.Timestamp(pd.Timestamp(DATA_END_DATE)),
                 )
             )
 

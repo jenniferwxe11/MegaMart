@@ -11,14 +11,12 @@ from data_generation.config.generation_config import (
 )
 
 
-def apply_channel_filter(ctx, base_customers, channels):
+def apply_channel_filter(base_customers, channels):
     """
     Determines eligible customers for a campaign based on channel-specific rules.
     - Direct messaging channels (Email/SMS/Push Notifications) requires consent
     - Exposure only channels (Paid Advertisement/In-App) do not require consent
     """
-    customers_df = ctx.customers.customers_df
-
     if any(channel in DIRECT_MESSAGE_CHANNELS for channel in channels):
         consent_columns = [
             CHANNEL_CONSENT_MAP.get(channel)
@@ -27,7 +25,7 @@ def apply_channel_filter(ctx, base_customers, channels):
         ]
 
         if consent_columns:
-            return customers_df[customers_df[consent_columns].any(axis=1)]
+            return base_customers[base_customers[consent_columns].any(axis=1)]
 
     return base_customers
 

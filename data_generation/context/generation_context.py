@@ -6,13 +6,6 @@ import pandas as pd
 
 
 @dataclass(frozen=True)
-class AppConfig:
-    DATA_START_DATE: pd.Timestamp
-    DATA_END_DATE: pd.Timestamp
-    SIMULATION_DATE: pd.Timestamp
-
-
-@dataclass(frozen=True)
 class RegionAreaContext:
     area_region_map: Dict[str, str]
     areas: List[str]
@@ -142,7 +135,6 @@ class ProductReviewContext:
 
 @dataclass
 class GenerationContext:
-    config: AppConfig
     region_areas: RegionAreaContext
     reference_data: ReferenceDataContext
     customers: CustomerContext
