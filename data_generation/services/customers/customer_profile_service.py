@@ -5,6 +5,10 @@ from datetime import date
 import pandas as pd
 from faker import Faker
 
+from data_generation.config.constants import (
+    DATA_END_DATE,
+    DATA_START_DATE,
+)
 from data_generation.config.customers_config import (
     DEVICE_CATEGORY,
     DEVICE_PLATFORM,
@@ -18,14 +22,13 @@ from data_generation.services.region_areas.region_area_service import (
 fake = Faker()
 
 
-def sample_signup_date(ctx):
+def sample_signup_date():
     """
     Samples user sign up date within simulation date range.
     """
-    DATA_START_DATE = pd.Timestamp(ctx.config.DATA_START_DATE)
-    DATA_END_DATE = pd.Timestamp(ctx.config.DATA_END_DATE)
-
-    year = random.randint(DATA_START_DATE.year, DATA_END_DATE.year)
+    year = random.randint(
+        pd.Timestamp(DATA_START_DATE).year, pd.Timestamp(DATA_END_DATE).year
+    )
     month = random.choices(
         list(SEASONAL_PEAK_MONTHS.keys()),
         weights=list(SEASONAL_PEAK_MONTHS.values()),
@@ -38,10 +41,10 @@ def sample_signup_date(ctx):
 
     sampled_date = date(year, month, day)
 
-    if pd.Timestamp(sampled_date) < DATA_START_DATE:
-        return DATA_START_DATE
-    if pd.Timestamp(sampled_date) > DATA_END_DATE:
-        return DATA_END_DATE
+    if pd.Timestamp(sampled_date) < pd.Timestamp(DATA_START_DATE):
+        return pd.Timestamp(DATA_START_DATE)
+    if pd.Timestamp(sampled_date) > pd.Timestamp(DATA_END_DATE):
+        return pd.Timestamp(DATA_END_DATE)
 
     return sampled_date
 
@@ -50,6 +53,7 @@ def generate_customer_profile(ctx, customer_type):
     """
     Generates a realistic customer profile based on the specified customer type.
     """
+
     # Initialize customer details
     name = None
     email = None
@@ -82,7 +86,7 @@ def generate_customer_profile(ctx, customer_type):
 
         if customer_type == "Retail Members":
             email = f"{fake.user_name()}@{fake.safe_domain_name()}"
-            signup_date = sample_signup_date(ctx) if random.random() < 0.97 else None
+            signup_date = sample_signup_date() if random.random() < 0.97 else None
             loyalty_points = 0
 
         # -----------------------------------------------------
@@ -100,7 +104,7 @@ def generate_customer_profile(ctx, customer_type):
             gender = random.choice(["Female", "Male"])
             dob = fake.date_of_birth(minimum_age=18, maximum_age=85)
             region, area = get_random_region_area(ctx)
-            signup_date = sample_signup_date(ctx) if random.random() < 0.97 else None
+            signup_date = sample_signup_date() if random.random() < 0.97 else None
 
             loyalty_points = 0
 
@@ -145,7 +149,7 @@ def generate_customer_profile(ctx, customer_type):
                 else None
             )
             region, area = get_random_region_area(ctx)
-            signup_date = sample_signup_date(ctx) if random.random() < 0.97 else None
+            signup_date = sample_signup_date() if random.random() < 0.97 else None
             loyalty_points = 0
 
             email_marketing_opt_in = random.choices(

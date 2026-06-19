@@ -13,9 +13,12 @@ from data_generation.config.campaigns_config import (
     CAMPAIGN_TYPE_NAMING,
     PRIMARY_SEGMENT_BY_CAMPAIGN,
 )
-from data_generation.config.constants import SEASONAL_DATES
+from data_generation.config.constants import (
+    DATA_END_DATE,
+    DATA_START_DATE,
+    SEASONAL_DATES,
+)
 from data_generation.config.generation_config import NUM_CAMPAIGNS
-from data_generation.context.generation_context import GenerationContext
 from data_generation.registry import register
 from data_generation.services.campaigns.campaign_service import (
     calculate_budget,
@@ -27,14 +30,7 @@ fake = Faker()
 
 
 @register("campaigns_generator")
-def campaigns_generator(ctx: GenerationContext):
-    # ---------------------------
-    # Load Data
-    # ---------------------------
-
-    DATA_START_DATE = ctx.config.DATA_START_DATE
-    DATA_END_DATE = ctx.config.DATA_END_DATE
-
+def campaigns_generator():
     # ---------------------------
     # Storage
     # ---------------------------

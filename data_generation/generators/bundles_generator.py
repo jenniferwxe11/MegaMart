@@ -74,7 +74,6 @@ def bundles_generator(ctx: GenerationContext):
         bundle_price, discount_value = calculate_bundle_pricing(
             ctx,
             bundle_type,
-            bundle_name,
             selected_products,
         )
 

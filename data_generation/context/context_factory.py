@@ -1,12 +1,6 @@
 import pandas as pd
 
-from data_generation.config.constants import (
-    DATA_END_DATE,
-    DATA_START_DATE,
-    SIMULATION_DATE,
-)
 from data_generation.context.generation_context import (
-    AppConfig,
     BundleContext,
     CampaignAssignmentContext,
     CampaignContext,
@@ -32,11 +26,6 @@ from data_generation.data_retrieval import data_lookup
 
 def build_base_context() -> GenerationContext:
     return GenerationContext(
-        config=AppConfig(
-            DATA_START_DATE=DATA_START_DATE,
-            DATA_END_DATE=DATA_END_DATE,
-            SIMULATION_DATE=SIMULATION_DATE,
-        ),
         region_areas=RegionAreaContext(
             area_region_map=data_lookup.get_area_region_map(),
             areas=data_lookup.get_areas(),

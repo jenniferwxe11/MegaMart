@@ -2,6 +2,7 @@ import random
 from datetime import datetime, timedelta
 
 import numpy as np
+import pandas as pd
 
 from data_generation.config.clickstreams_config import (
     DAY_WEIGHTS,
@@ -14,6 +15,7 @@ from data_generation.config.clickstreams_config import (
     SEASONAL_REACTIVATION_BOOST,
     SESSION_GAP_SCALE_BY_SEGMENT,
 )
+from data_generation.config.constants import DATA_END_DATE, DATA_START_DATE
 from data_generation.services.clickstreams.clickstream_lookup_service import (
     get_active_campaigns,
 )
@@ -28,7 +30,7 @@ from data_generation.utils.date_time_utils import (
 # --------------------------------
 
 
-def generate_timestamp(ctx, start_date, end_date):
+def generate_timestamp(start_date, end_date):
     """
     Generates a realistic session timestamp within a given date range.
 
@@ -38,12 +40,9 @@ def generate_timestamp(ctx, start_date, end_date):
     Assumption:
     - User activity is time dependent and follows predictable temporal patterns
     """
-    DATA_END_DATE = ctx.config.DATA_END_DATE
-    DATA_START_DATE = ctx.config.DATA_START_DATE
-
     # Define the start and end date range
-    start = max(DATA_START_DATE, start_date)
-    end = min(DATA_END_DATE, end_date)
+    start = max(pd.Timestamp(DATA_START_DATE), start_date)
+    end = min(pd.Timestamp(DATA_END_DATE), end_date)
 
     if start > end:
         end = start

@@ -1,3 +1,4 @@
+import inspect
 import os
 import random
 import traceback
@@ -27,6 +28,10 @@ os.makedirs(RAW_DIR, exist_ok=True)
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
+
+
+def accepts_ctx(fn):
+    return len(inspect.signature(fn).parameters) == 1
 
 
 def run_generation():
@@ -59,7 +64,10 @@ def run_generation():
             if fn is None:
                 raise ValueError(f"{generator_name} not registered")
 
-            fn(ctx)
+            if accepts_ctx(fn):
+                fn(ctx)
+            else:
+                fn()
 
             refresh_context(ctx, generator_name)
 
