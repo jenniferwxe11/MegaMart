@@ -46,7 +46,24 @@ def sample_signup_date():
     if pd.Timestamp(sampled_date) > pd.Timestamp(DATA_END_DATE):
         return pd.Timestamp(DATA_END_DATE)
 
-    return sampled_date
+    return pd.Timestamp(sampled_date)
+
+
+def generate_dob(signup_date):
+    if signup_date is None:
+        return None
+
+    latest = signup_date - pd.DateOffset(years=18)
+    earliest = signup_date - pd.DateOffset(years=85)
+
+    return (
+        fake.date_between(
+            start_date=earliest.to_pydatetime().date(),
+            end_date=latest.to_pydatetime().date(),
+        )
+        if random.random() < 0.9
+        else None
+    )
 
 
 def generate_customer_profile(ctx, customer_type):
@@ -102,9 +119,9 @@ def generate_customer_profile(ctx, customer_type):
             name = first_name + " " + last_name
             email = f"{first_name}.{last_name}@{fake.safe_domain_name()}".lower()
             gender = random.choice(["Female", "Male"])
-            dob = fake.date_of_birth(minimum_age=18, maximum_age=85)
             region, area = get_random_region_area(ctx)
             signup_date = sample_signup_date() if random.random() < 0.97 else None
+            dob = generate_dob(signup_date)
 
             loyalty_points = 0
 
@@ -143,13 +160,9 @@ def generate_customer_profile(ctx, customer_type):
             name = first_name + " " + last_name
             email = f"{first_name}.{last_name}@{fake.safe_domain_name()}".lower()
             gender = random.choice(["Female", "Male"])
-            dob = (
-                fake.date_of_birth(minimum_age=18, maximum_age=85)
-                if random.random() < 0.9
-                else None
-            )
             region, area = get_random_region_area(ctx)
             signup_date = sample_signup_date() if random.random() < 0.97 else None
+            dob = generate_dob(signup_date)
             loyalty_points = 0
 
             email_marketing_opt_in = random.choices(
