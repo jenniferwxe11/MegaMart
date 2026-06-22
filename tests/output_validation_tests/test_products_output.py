@@ -24,22 +24,26 @@ def test_product_lifecycle_launch_date_not_in_future(dataframes):
     assert (pd.to_datetime(df["launch_date"]) <= pd.Timestamp.now()).all()
 
 
-def test_product_lifecycle_discontinuation_date(dataframes):
+def test_product_lifecycle_discontinuation_date_after_launch_date(dataframes):
     df = dataframes["product_lifecycles"].copy()
     mask = df["discontinuation_date"].notna()
     assert (
         pd.to_datetime(df.loc[mask, "discontinuation_date"])
         >= pd.to_datetime(df.loc[mask, "launch_date"])
     ).all()
+
+
+def test_product_lifecycle_discontinued_has_discontinuation_date(dataframes):
+    df = dataframes["product_lifecycles"].copy()
     assert (df["discontinuation_date"].notna() | (df["status"] != "Discontinued")).all()
 
 
-def test_product_lifecycle_valid_from(dataframes):
+def test_product_lifecycle_valid_from_after_launch_date(dataframes):
     df = dataframes["product_lifecycles"].copy()
     assert (pd.to_datetime(df["valid_from"]) >= pd.to_datetime(df["launch_date"])).all()
 
 
-def test_product_lifecycle_valid_to(dataframes):
+def test_product_lifecycle_valid_to_after_valid_from(dataframes):
     df = dataframes["product_lifecycles"].copy()
     mask = df["valid_to"].notna()
     assert (
@@ -48,7 +52,7 @@ def test_product_lifecycle_valid_to(dataframes):
     ).all()
 
 
-def test_product_lifecycle_is_current(dataframes):
+def test_product_lifecycle_is_current_no_valid_to(dataframes):
     df = dataframes["product_lifecycles"].copy()
     assert (~df["is_current"] | df["valid_to"].isna()).all()
 

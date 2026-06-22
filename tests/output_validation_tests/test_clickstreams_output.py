@@ -69,11 +69,10 @@ def test_clickstream_product_name_valid(dataframes):
             ), f"Missing product_name for product_id={pid}"
 
 
-def test_clickstream_product_category_consistency(dataframes):
+def test_clickstream_product_category_consistency(dataframes, product_ctx):
     df = dataframes["clickstreams"].copy()
-    products = dataframes["products"]
 
-    product_category_map = dict(zip(products["product_id"], products["category"]))
+    product_category_map = product_ctx.products.product_category_map
 
     for r in df.to_dict("records"):
         pid = r["product_id"]
@@ -233,8 +232,6 @@ def test_clickstream_event_search_view(dataframes):
     df = dataframes["clickstreams"].copy()
     for r in df.to_dict("records"):
         if r["event_type"] == "Search View":
-            assert pd.notna(r["product_id"]) or r["product_id"] != ""
-            assert pd.notna(r["category"]) or r["category"] != ""
             assert pd.notna(r["page"]) and "search" in r["page"]
 
 
@@ -250,8 +247,6 @@ def test_clickstream_event_home_view(dataframes):
     df = dataframes["clickstreams"].copy()
     for r in df.to_dict("records"):
         if r["event_type"] == "Home View":
-            assert pd.notna(r["product_id"]) or r["product_id"] != ""
-            assert pd.notna(r["category"]) or r["category"] != ""
             assert pd.notna(r["page"]) and "home" in r["page"]
 
 
@@ -259,8 +254,6 @@ def test_clickstream_event_cart_view(dataframes):
     df = dataframes["clickstreams"].copy()
     for r in df.to_dict("records"):
         if r["event_type"] == "Cart View":
-            assert pd.notna(r["product_id"]) or r["product_id"] != ""
-            assert pd.notna(r["category"]) or r["category"] != ""
             assert pd.notna(r["page"]) and "cart" in r["page"]
 
 
