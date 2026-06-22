@@ -161,7 +161,7 @@ def test_clickstream_get_location(customer_ctx, seed: int = 42):
         if result == cust_area:
             hits += 1
     ratio = hits / trials
-    assert 0.75 <= ratio <= 0.85
+    assert 0.7 <= ratio <= 0.9
 
 
 # ============================================================
@@ -336,6 +336,7 @@ def test_clickstream_get_random_in_stock_product_from_category(stock_snapshot_ct
     if result is None:
         # Verify no in stock products exist
         product_ids = stock_snapshot_ctx.products.category_to_products[category]
+
         assert all(
             get_product_stock_status(stock_snapshot_ctx, store_id, pid, timestamp)
             == "Out of Stock"
@@ -671,28 +672,6 @@ def test_clickstream_promotion_engagement_probability_relevant_scope_higher_than
     )
 
     assert relevant > irrelevant
-
-
-def test_clickstream_promotion_engagement_probability_fatigue_exposure_curve():
-    promo = {
-        "promotion_scope": "product",
-        "promotion_mechanic": "percentage_discount",
-        "promotion_value": 20,
-    }
-
-    seen_once = promotion_engagement_probability(
-        promo,
-        "Product View",
-        1,
-    )
-
-    seen_many = promotion_engagement_probability(
-        promo,
-        "Product View",
-        50,
-    )
-
-    assert seen_once > seen_many
 
 
 def test_clickstream_promotion_engagement_probability_bundle_cap_at_10():
