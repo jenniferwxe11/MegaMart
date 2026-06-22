@@ -8,7 +8,7 @@ IN_STOCK_STATUS = (
     "Low Stock",
     "Limited Stock",
     "In Stock",
-    "Overstock",
+    "Overstocked",
 )
 
 RETURN_PROB_BY_SEGMENT = {

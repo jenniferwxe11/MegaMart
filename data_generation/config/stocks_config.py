@@ -227,12 +227,6 @@ STOCK_STATUSES = {
     "101+": "Overstocked",
 }
 
-IN_STOCK_STATUS = [
-    "Limited Stock",
-    "Low Stock",
-    "In Stock",
-]
-
 
 EVENT_STOCK_DROP_RATES = {
     "Black Friday": (0.4, 0.65),
