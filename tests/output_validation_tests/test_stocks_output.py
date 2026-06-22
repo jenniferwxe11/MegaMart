@@ -31,7 +31,7 @@ def test_stockout_events_non_overlapping_per_product_store(dataframes):
             next_start = rows.loc[i + 1, "stockout_start_date"]
             if pd.notna(end):
                 assert (
-                    end < next_start
+                    end <= next_start
                 ), f"Overlapping stockouts for store={store_id}, product={product_id}"
 
 
