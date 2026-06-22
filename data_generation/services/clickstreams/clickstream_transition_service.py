@@ -368,7 +368,7 @@ def get_base_transition_probability(
 def apply_mission_bias(
     event_transition_probability: TransitionMatrix,
     mission_choice: str,
-    previous_event_type: str,
+    previous_event_type: str | None,
     progress: float,
 ) -> TransitionMatrix:
     """

@@ -167,8 +167,10 @@ def get_product_stock_status(ctx, store_id, product_id, timestamp):
     - Uses latest weekly snapshot before timestamp
 
     Returns:
+    - "Overstocked"
     - "In Stock"
     - "Low Stock"
+    - "Limited Stock"
     - "Out of Stock"
     """
     stock_snapshots_df = ctx.stock_snapshots.stock_snapshots_df

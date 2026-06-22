@@ -234,8 +234,9 @@ mdurl==0.1.2
     # via markdown-it-py
 more-itertools==10.8.0
     # via dbt-semantic-interfaces
-msgpack==1.2.0
+msgpack==1.2.1
     # via
+    #   -r requirements.in
     #   cachecontrol
     #   mashumaro
 nbformat==5.10.4

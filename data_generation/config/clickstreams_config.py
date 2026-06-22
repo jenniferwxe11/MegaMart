@@ -8,9 +8,8 @@ IN_STOCK_STATUS = (
     "Low Stock",
     "Limited Stock",
     "In Stock",
-    "Overstock",
-    "Unknown",
-)  # to do
+    "Overstocked",
+)
 
 RETURN_PROB_BY_SEGMENT = {
     "New Customers": 0.7,  # Many new users try once/twice, some come back
