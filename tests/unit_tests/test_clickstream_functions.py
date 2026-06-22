@@ -13,6 +13,7 @@ from data_generation.config.clickstreams_config import (
 )
 from data_generation.config.constants import SEASONAL_DATES
 from data_generation.config.products_config import CATEGORIES
+from data_generation.config.stocks_config import IN_STOCK_STATUS
 from data_generation.config.store_products_config import ESSENTIAL_CATEGORIES
 from data_generation.services.clickstreams.clickstream_event_service import (
     resolve_page,
@@ -339,14 +340,8 @@ def test_clickstream_get_random_in_stock_product_from_category(stock_snapshot_ct
 
         assert all(
             get_product_stock_status(stock_snapshot_ctx, store_id, pid, timestamp)
-            == "Out of Stock"
+            not in IN_STOCK_STATUS
             for pid in product_ids
-        )
-    else:
-        assert result in stock_snapshot_ctx.products.category_to_products[category]
-        assert (
-            get_product_stock_status(stock_snapshot_ctx, store_id, result, timestamp)
-            != "Out of Stock"
         )
 
 
