@@ -28,6 +28,15 @@ def test_customer_signup_date_not_in_future(dataframes):
     ).all()
 
 
+def test_customer_at_least_18_at_signup(dataframes):
+    df = dataframes["customers"].copy()
+    signup_date = pd.to_datetime(df["signup_date"], errors="coerce")
+    dob = pd.to_datetime(df["dob"], errors="coerce")
+    minimum_allowed_dob = signup_date - pd.DateOffset(years=18)
+
+    assert (signup_date.isna() | dob.isna() | (dob <= minimum_allowed_dob)).all()
+
+
 def test_customer_online_omnichannel_customers_have_email(dataframes):
     """
     Online Only and Omnichannel customers should have an email address.

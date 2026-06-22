@@ -1,7 +1,88 @@
 import pytest
 
+from data_generation.context.context_factory import build_base_context
+from data_generation.context.context_updater import refresh_context
 from data_generation.data_retrieval import load_data
 from data_generation.run import generate_all_raw_data
+
+
+@pytest.fixture(scope="session")
+def ctx():
+    generate_all_raw_data()
+    return build_base_context()
+
+
+@pytest.fixture(scope="session")
+def customer_ctx(ctx):
+    refresh_context(ctx, "customers_generator")
+    return ctx
+
+
+@pytest.fixture(scope="session")
+def store_ctx(ctx):
+    refresh_context(ctx, "stores_generator")
+    return ctx
+
+
+@pytest.fixture(scope="session")
+def customer_store_ctx(ctx):
+    refresh_context(ctx, "stores_generator")
+    refresh_context(ctx, "customers_generator")
+    return ctx
+
+
+@pytest.fixture(scope="session")
+def product_ctx(ctx):
+    refresh_context(ctx, "products_generator")
+    return ctx
+
+
+@pytest.fixture(scope="session")
+def product_lifecycle_ctx(ctx):
+    refresh_context(ctx, "products_generator")
+    refresh_context(ctx, "product_lifecycles_generator")
+    return ctx
+
+
+@pytest.fixture(scope="session")
+def campaign_ctx(ctx):
+    refresh_context(ctx, "campaigns_generator")
+    return ctx
+
+
+@pytest.fixture(scope="session")
+def campaign_assignment_ctx(ctx):
+    refresh_context(ctx, "campaigns_generator")
+    refresh_context(ctx, "campaign_assignments_generator")
+    return ctx
+
+
+@pytest.fixture(scope="session")
+def bundle_ctx(ctx):
+    refresh_context(ctx, "products_generator")
+    refresh_context(ctx, "bundles_generator")
+    return ctx
+
+
+@pytest.fixture(scope="session")
+def promotion_ctx(ctx):
+    refresh_context(ctx, "products_generator")
+    refresh_context(ctx, "bundles_generator")
+    refresh_context(ctx, "product_lifecycles_generator")
+    refresh_context(ctx, "campaigns_generator")
+    refresh_context(ctx, "promotions_generator")
+    return ctx
+
+
+@pytest.fixture(scope="session")
+def stock_snapshot_ctx(ctx):
+    refresh_context(ctx, "stores_generator")
+    refresh_context(ctx, "products_generator")
+    refresh_context(ctx, "store_catalogues_generator")
+    refresh_context(ctx, "product_lifecycles_generator")
+    refresh_context(ctx, "stockout_events_generator")
+    refresh_context(ctx, "stock_snapshots_generator")
+    return ctx
 
 
 @pytest.fixture(scope="session")

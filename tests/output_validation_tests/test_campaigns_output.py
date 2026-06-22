@@ -90,10 +90,14 @@ def test_campaign_exposure_control_group_not_exposed(dataframes):
     assert (~control["exposed"]).all(), "Control group members should not be exposed"
 
 
-def test_campaign_exposure_exposed_time(dataframes):
+def test_campaign_exposure_exposed_time_not_in_future(dataframes):
     df = dataframes["campaign_exposures"].copy()
     mask = df["exposed_time"].notna()
     assert (pd.to_datetime(df.loc[mask, "exposed_time"]) <= pd.Timestamp.now()).all()
+
+
+def test_campaign_exposure_exposed_have_exposed_time(dataframes):
+    df = dataframes["campaign_exposures"].copy()
     assert (df["exposed_time"].notna() | ~df["exposed"]).all()
 
 
@@ -123,13 +127,21 @@ def test_campaign_exposure_opened(dataframes):
     assert (~df["opened"] | df["exposed"]).all()
 
 
-def test_campaign_exposure_opened_time(dataframes):
+def test_campaign_exposure_opened_time_not_in_future(dataframes):
     df = dataframes["campaign_exposures"].copy()
     mask_notna = df["opened_time"].notna()
     assert (
         pd.to_datetime(df.loc[mask_notna, "opened_time"]) <= pd.Timestamp.now()
     ).all()
+
+
+def test_campaign_exposure_opened_have_opened_time(dataframes):
+    df = dataframes["campaign_exposures"].copy()
     assert (df["opened_time"].notna() | ~df["opened"]).all()
+
+
+def test_campaign_exposure_opened_time_after_exposed_time(dataframes):
+    df = dataframes["campaign_exposures"].copy()
     mask_both = df["opened_time"].notna() & df["exposed_time"].notna()
     assert (
         pd.to_datetime(df.loc[mask_both, "opened_time"])
@@ -167,13 +179,21 @@ def test_campaign_exposure_clicked(dataframes):
     ).all()
 
 
-def test_campaign_exposure_clicked_time(dataframes):
+def test_campaign_exposure_clicked_time_not_in_future(dataframes):
     df = dataframes["campaign_exposures"].copy()
     mask_notna = df["clicked_time"].notna()
     assert (
         pd.to_datetime(df.loc[mask_notna, "clicked_time"]) <= pd.Timestamp.now()
     ).all()
+
+
+def test_campaign_exposure_clicked_have_clicked_time(dataframes):
+    df = dataframes["campaign_exposures"].copy()
     assert (df["clicked_time"].notna() | ~df["clicked"]).all()
+
+
+def test_campaign_exposure_clicked_time_after_opened_time(dataframes):
+    df = dataframes["campaign_exposures"].copy()
     mask_both = df["clicked_time"].notna() & df["opened_time"].notna()
     assert (
         pd.to_datetime(df.loc[mask_both, "clicked_time"])

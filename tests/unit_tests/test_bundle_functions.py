@@ -1,0 +1,199 @@
+import random
+
+import pandas as pd
+
+from data_generation.config.bundles_config import BUNDLE_DEFINITIONS
+from data_generation.services.bundles.bundle_lifecycle_service import bundle_lifecycle
+from data_generation.services.bundles.bundle_pricing_service import (
+    calculate_bundle_pricing,
+    phase_prices,
+    split_window,
+)
+from data_generation.services.bundles.bundle_selection_service import (
+    select_products_for_bundle,
+)
+from tests.unit_tests.helpers import (
+    _build_bundle_lifecycle,
+    _build_bundle_pricing_inputs,
+    _build_bundle_products_dict,
+    _build_category,
+)
+
+# ============================================================
+# calculate_bundle_pricing()
+# ============================================================
+
+
+def test_bundle_price_covers_cost(product_ctx):
+    for bundle_type in BUNDLE_DEFINITIONS:
+        selected_products = _build_bundle_products_dict(product_ctx)
+
+        total_cost = round(
+            sum(
+                product_ctx.products.product_cost_map[pid] * qty
+                for pid, qty in selected_products
+            ),
+            2,
+        )
+
+        bundle_price, discount_value = calculate_bundle_pricing(
+            product_ctx,
+            bundle_type,
+            selected_products,
+        )
+
+        assert bundle_price >= total_cost
+        assert discount_value <= bundle_price
+
+
+# ============================================================
+# split_window()
+# ============================================================
+
+
+def test_bundle_split_window_non_overlapping():
+    scenario = _build_bundle_lifecycle()
+    phases = split_window(scenario["start"], scenario["end"])
+    for i in range(len(phases) - 1):
+        assert phases[i][1] < phases[i + 1][0]
+
+
+def test_bundle_phases_covers_full_window():
+    scenario = _build_bundle_lifecycle()
+    phases = split_window(scenario["start"], scenario["end"])
+    assert phases[0][0] == scenario["start"]
+    assert phases[-1][1] == scenario["end"]
+
+
+def test_bundle_launch_always_first():
+    scenario = _build_bundle_lifecycle()
+    phases = split_window(scenario["start"], scenario["end"])
+    assert phases[0][2] == "LAUNCH"
+
+
+# ============================================================
+# phase_prices()
+# ============================================================
+
+
+def test_bundle_prices_never_increase_across_phases():
+    """
+    LAUNCH >= PROMO >= EOL
+    """
+    scenario = _build_bundle_pricing_inputs()
+    results = phase_prices(
+        scenario["base_price"],
+        scenario["base_discount"],
+        scenario["phases"],
+    )
+    prices = [r[0] for r in results]
+    assert all(prices[i] >= prices[i + 1] for i in range(len(prices) - 1))
+
+
+def test_bundle_discounts_never_decrease_across_phases():
+    scenario = _build_bundle_pricing_inputs()
+    results = phase_prices(
+        scenario["base_price"],
+        scenario["base_discount"],
+        scenario["phases"],
+    )
+    discounts = [r[1] for r in results]
+    assert all(discounts[i] <= discounts[i + 1] for i in range(len(discounts) - 1))
+
+
+def test_bundle_phase_discount_less_than_phase_price():
+    scenario = _build_bundle_pricing_inputs()
+    results = phase_prices(
+        scenario["base_price"],
+        scenario["base_discount"],
+        scenario["phases"],
+    )
+    for price, discount in results:
+        assert discount < price
+
+
+# ============================================================
+# bundle_lifecycle()
+# ============================================================
+
+
+def test_bundle_lifecycle_properties(product_ctx):
+    selected_products = _build_bundle_products_dict(product_ctx)
+    start, end = bundle_lifecycle(product_ctx, selected_products)
+    launch_map = product_ctx.product_lifecycles.product_launch_map
+    discontinuation_map = product_ctx.product_lifecycles.product_discontinuation_map
+
+    launches = [
+        launch_map[pid]
+        for pid, _ in selected_products
+        if pid in launch_map and not pd.isna(launch_map[pid])
+    ]
+
+    discontinuations = [
+        discontinuation_map[pid]
+        for pid, _ in selected_products
+        if pid in discontinuation_map and not pd.isna(discontinuation_map[pid])
+    ]
+
+    if launches:
+        assert start >= max(launches)
+
+    if discontinuations:
+        assert end <= min(discontinuations)
+
+    assert start <= end
+    assert (end - start).days <= 120
+
+
+# ============================================================
+# select_products_for_bundle()
+# ============================================================
+
+
+def test_bundle_select_products_for_set_bundle(product_ctx, seed: int = 42):
+    rng = random.Random(seed)
+    n = 2
+
+    category1, category2 = _build_category(product_ctx, n)
+    buy_quantity = rng.randint(1, 3)
+
+    selected_products, selected_categories = select_products_for_bundle(
+        product_ctx,
+        "Set",
+        [category1, category2],
+        buy_quantity,
+    )
+
+    assert selected_categories[0] in [category1, category2]
+    assert len(selected_products) == n
+    for pid, qty in selected_products:
+        assert (
+            pid in product_ctx.products.category_to_products[category1]
+            or pid in product_ctx.products.category_to_products[category2]
+        )
+        assert qty > 0
+
+
+def test_bundle_select_products_for_non_set_bundle(product_ctx, seed: int = 42):
+    rng = random.Random(seed)
+    n = 1
+
+    for bundle_type in BUNDLE_DEFINITIONS:
+        if bundle_type == "Set":
+            continue
+
+        (category,) = _build_category(product_ctx, n)
+        buy_quantity = rng.randint(1, 3)
+
+        selected_products, selected_categories = select_products_for_bundle(
+            product_ctx,
+            bundle_type,
+            [category],
+            buy_quantity,
+        )
+
+        assert selected_categories == [category]
+        assert len(selected_products) == n
+        for pid, qty in selected_products:
+            assert pid in product_ctx.products.category_to_products[category]
+            assert qty > 0
