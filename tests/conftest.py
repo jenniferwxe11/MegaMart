@@ -8,8 +8,8 @@ from data_generation.run import generate_all_raw_data
 
 @pytest.fixture(scope="session")
 def ctx():
-    ctx = build_base_context()
-    return ctx
+    generate_all_raw_data()
+    return build_base_context()
 
 
 @pytest.fixture(scope="session")
