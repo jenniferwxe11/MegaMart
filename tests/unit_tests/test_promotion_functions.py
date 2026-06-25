@@ -276,9 +276,9 @@ def test_check_promotion_eligibility_treatment_sees_global_and_treatment_promoti
     Treatment customer should see both promos linked to their treatment campaign
     and from global (campaign_id=None)
     """
-    monkeypatch.patch(
+    monkeypatch.setattr(
         "data_generation.services.clickstreams.clickstream_lookup_service.get_active_promotions",
-        return_value=[
+        lambda *args, **kwargs: [
             {"promotion_id": "PROMO001", "campaign_id": None},
             {"promotion_id": "PROMO002", "campaign_id": "CAMP001"},
             {"promotion_id": "PROMO003", "campaign_id": "CAMP002"},
@@ -310,9 +310,9 @@ def test_check_promotion_eligibility_control_sees_global_promotions(
     """
     Control only customer should see only global promotions.
     """
-    monkeypatch.patch(
+    monkeypatch.setattr(
         "data_generation.services.clickstreams.clickstream_lookup_service.get_active_promotions",
-        return_value=[
+        lambda *args, **kwargs: [
             {"promotion_id": "PROMO001", "campaign_id": None},
             {"promotion_id": "PROMO002", "campaign_id": "CAMP001"},
         ],
@@ -337,9 +337,9 @@ def test_check_promotion_eligibility_no_campaigns_sees_global_promotions(
     """
     No active campaigns → only global promotions (campaign_id=None) returned.
     """
-    monkeypatch.patch(
+    monkeypatch.setattr(
         "data_generation.services.clickstreams.clickstream_lookup_service.get_active_promotions",
-        return_value=[
+        lambda *args, **kwargs: [
             {"promotion_id": "PROMO001", "campaign_id": None},
             {"promotion_id": "PROMO002", "campaign_id": "CAMP001"},
         ],
