@@ -6,25 +6,24 @@ import pandas as pd
 import pytest
 
 from data_generation.config.clickstreams_config import (
-    IN_STOCK_STATUS,
     MISSION_SCROLL_BIAS,
     PROMOTION_TYPE_MULTIPLIER,
     TIME_ON_PAGE,
     VALID_EVENT_TRANSITIONS,
 )
-from data_generation.config.constants import SEASONAL_DATES
-from data_generation.config.products_config import CATEGORIES
+from data_generation.config.constants import (
+    DATA_END_DATE,
+    DATA_START_DATE,
+    SEASONAL_DATES,
+)
+from data_generation.config.products_config import CATEGORIES, CATEGORY_AFFINITY
 from data_generation.config.store_products_config import ESSENTIAL_CATEGORIES
 from data_generation.services.clickstreams.clickstream_event_service import (
+    resolve_category_view,
     resolve_page,
     resolve_scroll_and_time,
 )
 from data_generation.services.clickstreams.clickstream_lookup_service import (
-    get_active_campaigns,
-    get_active_promotions,
-    get_location,
-    get_product_stock_status,
-    get_random_in_stock_product_from_category,
     get_random_product_from_category,
     get_random_product_from_search_term,
     get_search_term,
@@ -36,7 +35,9 @@ from data_generation.services.clickstreams.clickstream_session_service import (
     determine_purchase_alpha_beta,
     generate_activity_multiplier,
     generate_scroll_depth,
+    generate_timestamp,
     sample_inactive_gap,
+    sample_session_gap,
 )
 from data_generation.services.clickstreams.clickstream_transition_service import (
     apply_mission_bias,
@@ -49,7 +50,7 @@ from data_generation.services.clickstreams.clickstream_transition_service import
     promotion_engagement_probability,
     promotion_perception_accuracy,
 )
-from tests.unit_tests.helpers import (
+from tests.helpers import (
     _build_category,
     _build_customer_segment,
     _build_datetime,
@@ -147,27 +148,85 @@ def test_clickstream_resolve_page_priority_category_over_search():
 
 
 # ============================================================
-# get_location()
+# resolve_category_view()
 # ============================================================
 
 
-def test_clickstream_get_location(customer_ctx, seed: int = 42):
-    df = customer_ctx.customers.customers_df
-    customer = df[pd.notna(df["area"])].sample(n=1, random_state=seed).iloc[0]
-    customer_id = customer["customer_id"]
-    cust_area = customer["area"]
-    hits, trials = 0, 100
-    for _ in range(trials):
-        result = get_location(customer_ctx, customer_id)
-        if result == cust_area:
-            hits += 1
-    ratio = hits / trials
-    assert 0.7 <= ratio <= 0.9
+def test_clickstream_session_flow_resolve_category_view_returns_valid_category():
+    """
+    Integration contract: resolve_category_view() must return a string
+    that matches one of the known product categories.
+    """
+    customer_segment = _build_customer_segment()
+    for _ in range(20):
+        cat = resolve_category_view(
+            previous_category=None,
+            customer_segment=customer_segment,
+            session_affinity_categories=set(),
+        )
+        assert (
+            cat in CATEGORIES
+        ), f"resolve_category_view() returned unknown category {cat!r}"
+
+
+def test_clickstream_session_flow_resolve_category_view_affinity_category_bias_with_previous_category():
+    """
+    Integration contract: when a previous_category with known affinity
+    relationships exists, the returned category should frequently be
+    within the affinity cluster (~70% of the time).
+    """
+    # Find a category that has affinity relationships
+    seeded_category = None
+    affinity_set = set()
+    for cat, affinities in CATEGORY_AFFINITY.items():
+        if affinities:
+            seeded_category = cat
+            affinity_set = {cat} | set(affinities)
+            break
+
+    if seeded_category is None:
+        pytest.skip("No categories with affinity relationships in config")
+
+    customer_segment = _build_customer_segment()
+
+    hits = sum(
+        1
+        for _ in range(100)
+        if resolve_category_view(
+            previous_category=seeded_category,
+            customer_segment=customer_segment,
+            session_affinity_categories=affinity_set,
+        )
+        in affinity_set
+    )
+    assert hits >= 55, (
+        f"Expected affinity category hit rate >= 55%, got {hits}% "
+        f"for seeded category {seeded_category!r}"
+    )
+
+
+def test_clickstream_session_flow_resolve_category_view_no_previous_category_still_returns_valid_category():
+    """
+    Integration contract: with no prior browsing context the function
+    must still return a valid category (segment-based fallback).
+    """
+    customer_segment = _build_customer_segment()
+    cat = resolve_category_view(
+        previous_category=None,
+        customer_segment=customer_segment,
+        session_affinity_categories=set(),
+    )
+    assert cat in CATEGORIES, (
+        f"resolve_category_view() returned unknown category {cat!r} "
+        f"for segment {customer_segment!r}"
+    )
 
 
 # ============================================================
 # get_search_term()
 # ============================================================
+# UNIT: only reads ctx.reference_data.search_terms — a static list,
+# not a generated DataFrame.
 
 
 def test_clickstream_get_search_term(ctx):
@@ -203,8 +262,39 @@ def test_clickstream_slugify_empty_string():
 
 
 # ============================================================
+# generate_timestamp()
+# ============================================================
+
+
+def test_clickstream_generate_timestamp_within_range():
+    """
+    Generated timestamp must fall within the
+    configured DATA_START_DATE / DATA_END_DATE window.
+    """
+    start = pd.Timestamp(DATA_START_DATE)
+    end = pd.Timestamp(DATA_END_DATE)
+
+    for _ in range(20):
+        ts = generate_timestamp(start, end)
+        assert pd.Timestamp(ts) >= start
+        assert pd.Timestamp(ts) <= end
+
+
+def test_timestamp_respects_narrow_window():
+    """
+    When the window is a single day, the
+    timestamp must fall on that day.
+    """
+    day = pd.Timestamp(DATA_START_DATE)
+    ts = generate_timestamp(day, day)
+    assert pd.Timestamp(ts).date() == day.date()
+
+
+# ============================================================
 # get_random_product_from_search_term()
 # ============================================================
+# UNIT: reads ctx.products.products_df (via product_ctx).
+# The logic under test is string matching — not cross table joins.
 
 
 def test_clickstream_get_random_product_from_search_term(product_ctx, seed: int = 42):
@@ -237,70 +327,10 @@ def test_clickstream_get_segment_category():
 
 
 # ============================================================
-# get_product_stock_status()
-# ============================================================
-
-
-def test_clickstream_get_product_stock_status_gets_latest_status(stock_snapshot_ctx):
-    df = stock_snapshot_ctx.stock_snapshots.stock_snapshots_df
-    row = df.iloc[0]
-    store_id = row["store_id"]
-    product_id = row["product_id"]
-    matching_rows = df[(df["store_id"] == store_id) & (df["product_id"] == product_id)]
-    timestamp = matching_rows["week_start_date"].max()
-    expected = (
-        matching_rows[matching_rows["week_start_date"] <= timestamp]
-        .sort_values("week_start_date", ascending=False)
-        .iloc[0]["stock_status"]
-    )
-    result = get_product_stock_status(
-        stock_snapshot_ctx,
-        store_id,
-        product_id,
-        timestamp,
-    )
-    assert result == expected
-
-
-def test_clickstream_get_product_stock_status_no_matching_snapshot(stock_snapshot_ctx):
-    # Pick IDs that do not exist in dataset
-    store_id = "NON_EXISTENT_STORE"
-    product_id = "NON_EXISTENT_PRODUCT"
-    timestamp = _build_datetime()
-
-    result = get_product_stock_status(
-        stock_snapshot_ctx,
-        store_id,
-        product_id,
-        timestamp,
-    )
-
-    assert result == "Out of Stock"
-
-
-def test_clickstream_get_product_stock_status_before_first_snapshot(stock_snapshot_ctx):
-    df = stock_snapshot_ctx.stock_snapshots.stock_snapshots_df
-    row = df.iloc[0]
-    store_id = row["store_id"]
-    product_id = row["product_id"]
-    matching_rows = df[(df["store_id"] == store_id) & (df["product_id"] == product_id)]
-
-    # Choose a timestamp before all snapshots
-    timestamp = matching_rows["week_start_date"].min() - pd.Timedelta(days=1)
-
-    result = get_product_stock_status(
-        stock_snapshot_ctx,
-        store_id,
-        product_id,
-        timestamp,
-    )
-
-    assert result == "Out of Stock"
-
-
-# ============================================================
 # get_random_product_from_category()
 # ============================================================
+# UNIT: reads ctx.products.category_to_products (built from products_df).
+# The logic is a dict lookup + random choice — no multi table wiring.
 
 
 def test_clickstream_get_random_product_from_category(product_ctx, seed: int = 42):
@@ -314,104 +344,6 @@ def test_clickstream_get_random_product_from_category_empty(product_ctx):
     category = "NON_EXISTENT_CATEGORY"
     result = get_random_product_from_category(product_ctx, category)
     assert result is None
-
-
-# ============================================================
-# get_random_in_stock_product_from_category()
-# ============================================================
-
-
-def test_clickstream_get_random_in_stock_product_from_category(stock_snapshot_ctx):
-    df = stock_snapshot_ctx.stock_snapshots.stock_snapshots_df
-    row = df.iloc[0]
-    store_id = row["store_id"]
-    product_id = row["product_id"]
-    timestamp = row["week_start_date"]
-    category = stock_snapshot_ctx.products.products_df[
-        stock_snapshot_ctx.products.products_df["product_id"] == product_id
-    ].iloc[0]["category"]
-    result = get_random_in_stock_product_from_category(
-        stock_snapshot_ctx, category, store_id, timestamp
-    )
-
-    if result is None:
-        # Verify no in stock products exist
-        product_ids = stock_snapshot_ctx.products.category_to_products[category]
-
-        assert all(
-            get_product_stock_status(stock_snapshot_ctx, store_id, pid, timestamp)
-            not in IN_STOCK_STATUS
-            for pid in product_ids
-        )
-    else:
-        assert result in stock_snapshot_ctx.products.category_to_products[category]
-        assert (
-            get_product_stock_status(stock_snapshot_ctx, store_id, result, timestamp)
-            in IN_STOCK_STATUS
-        )
-
-
-# ============================================================
-# get_active_campaigns()
-# ============================================================
-
-
-def test_clickstream_get_active_campaigns(campaign_assignment_ctx):
-    camp_assign_df = (
-        campaign_assignment_ctx.campaign_assignments.campaign_assignments_df
-    )
-    campaign_df = campaign_assignment_ctx.campaigns.campaigns_df
-
-    # Pick one valid row
-    row = camp_assign_df.iloc[0]
-    customer_id = row["customer_id"]
-    session_start_time = row["eligible_at"]
-
-    # Expected result computed from merged logic
-    merged = camp_assign_df[camp_assign_df["customer_id"] == customer_id].merge(
-        campaign_df, on="campaign_id", how="left"
-    )
-    expected = merged[
-        (merged["start_date"] <= session_start_time)
-        & (merged["end_date"] >= session_start_time)
-    ].drop_duplicates(subset=["customer_id", "campaign_id"])
-
-    result = get_active_campaigns(
-        campaign_assignment_ctx, customer_id, session_start_time
-    )
-
-    if expected.empty:
-        assert result is None
-    else:
-        assert result is not None
-        pd.testing.assert_frame_equal(
-            result.sort_values(["customer_id", "campaign_id"]).reset_index(drop=True),
-            expected.sort_values(["customer_id", "campaign_id"]).reset_index(drop=True),
-        )
-
-
-# ============================================================
-# get_active_promotions()
-# ============================================================
-
-
-def test_clickstream_get_active_promotions(promotion_ctx):
-    promotions_df = promotion_ctx.promotions.promotions_df
-
-    # Pick one valid row
-    row = promotions_df.iloc[0]
-    timestamp = row["effective_start_date"]
-
-    expected_df = promotions_df[
-        (promotions_df["effective_start_date"] <= timestamp)
-        & (promotions_df["effective_end_date"] >= timestamp)
-    ].drop_duplicates(subset=["promotion_id"])
-    expected = expected_df.to_dict("records")
-
-    result = get_active_promotions(promotion_ctx, timestamp)
-
-    assert len(result) == len(expected)
-    assert {r["promotion_id"] for r in result} == {e["promotion_id"] for e in expected}
 
 
 # ============================================================
@@ -496,6 +428,66 @@ def test_clickstream_generate_activity_multiplier():
 
 
 # ============================================================
+# sample_session_gap()
+# ============================================================
+
+
+def test_clickstream_sample_session_gap_is_positive():
+    """
+    Gap between sessions must always be positive.
+    """
+    current_time = pd.Timestamp(DATA_START_DATE) + pd.Timedelta(days=30)
+    last_active = current_time - pd.Timedelta(hours=5)
+
+    customer_segment = _build_customer_segment()
+    gap = sample_session_gap(
+        customer_segment=customer_segment,
+        cart_content=[],
+        activity_multiplier=3,
+        current_time=current_time,
+        last_active_time=last_active,
+    )
+
+    assert gap > 0, f"Got non positive session gap {gap} "
+
+
+def test_clickstream_sample_session_gap_cart_content_reduces_gap():
+    """
+    A customer with items in their cart should
+    return sooner (smaller gap) than one with an empty cart.
+    """
+    current_time = pd.Timestamp(DATA_START_DATE) + pd.Timedelta(days=30)
+    last_active = current_time - pd.Timedelta(hours=5)
+    customer_segment = _build_customer_segment()
+
+    gaps_empty = [
+        sample_session_gap(
+            customer_segment=customer_segment,
+            cart_content=[],
+            activity_multiplier=3,
+            current_time=current_time,
+            last_active_time=last_active,
+        )
+        for _ in range(200)
+    ]
+
+    gaps_cart = [
+        sample_session_gap(
+            customer_segment=customer_segment,
+            cart_content=["PROD001", "PROD002"],
+            activity_multiplier=3,
+            current_time=current_time,
+            last_active_time=last_active,
+        )
+        for _ in range(200)
+    ]
+
+    assert sum(gaps_cart) < sum(
+        gaps_empty
+    ), "Cart content should reduce session gap (urgency to return)"
+
+
+# ============================================================
 # sample_inactive_gap()
 # ============================================================
 
@@ -530,32 +522,52 @@ def test_clickstream_sample_inactive_gap_segment_ordering():
 # ============================================================
 
 
-def test_clickstream_compute_campaign_timing_boost(campaign_assignment_ctx):
-    df = campaign_assignment_ctx.campaigns.campaigns_df
-
-    # Pick one valid row
-    row = df.iloc[0]
-    current_time = row["start_date"]
-
-    active_campaigns = df[
-        (df["start_date"] <= current_time) & (df["end_date"] >= current_time)
-    ].drop_duplicates(subset=["campaign_id"])
-
-    result = compute_campaign_timing_boost(active_campaigns, current_time)
-    assert isinstance(result, float)
-    assert 0.8 <= result <= 1.5
-
-
 def test_clickstream_campaign_timing_boost_none():
     current_time = _build_datetime()
     result = compute_campaign_timing_boost(None, current_time)
     assert result == 1.0
 
 
-def test_clickstream_campaign_timing_boost_empty():
+def test_clickstream_compute_campaign_timing_boost_empty():
     current_time = _build_datetime()
     result = compute_campaign_timing_boost(pd.DataFrame(), current_time)
     assert result == 1.0
+
+
+def test_clickstream_compute_campaign_timing_boost_early():
+    """
+    Progress < 0.2 → boost should be 1.3.
+    """
+    start = pd.Timestamp("2024-01-01")
+    end = pd.Timestamp("2024-04-01")
+    current_time = pd.Timestamp("2024-01-05")  # ~1% through campaign
+    campaigns = pd.DataFrame([{"start_date": start, "end_date": end}])
+    result = compute_campaign_timing_boost(campaigns, current_time)
+    assert result == 1.3
+
+
+def test_clickstream_compute_campaign_timing_boost_peak():
+    """
+    Progress 0.2-0.8 → boost should be 1.5.
+    """
+    start = pd.Timestamp("2024-01-01")
+    end = pd.Timestamp("2024-04-01")
+    current_time = pd.Timestamp("2024-02-15")  # ~50% through campaign
+    campaigns = pd.DataFrame([{"start_date": start, "end_date": end}])
+    result = compute_campaign_timing_boost(campaigns, current_time)
+    assert result == 1.5
+
+
+def test_clickstream_compute_campaign_timing_boost_late():
+    """
+    Progress > 0.8 → boost should be 0.8 (fatigue).
+    """
+    start = pd.Timestamp("2024-01-01")
+    end = pd.Timestamp("2024-04-01")
+    current_time = pd.Timestamp("2024-03-28")  # ~95% through campaign
+    campaigns = pd.DataFrame([{"start_date": start, "end_date": end}])
+    result = compute_campaign_timing_boost(campaigns, current_time)
+    assert result == 0.8
 
 
 # ============================================================
@@ -594,9 +606,9 @@ def test_clickstream_apply_seasonal_uplift_season_increases_target_transitions()
         progress=0.5,
     )
 
-    assert result["Product View"]["Add to Cart"] >= 1.0
-    assert result["Cart View"]["Checkout Start"] >= 1.0
-    assert result["Checkout Start"]["Payment Attempt"] >= 1.0
+    assert result["Product View"]["Add to Cart"] > 1.0
+    assert result["Cart View"]["Checkout Start"] > 1.0
+    assert result["Checkout Start"]["Payment Attempt"] > 1.0
 
 
 def test_clickstream_apply_seasonal_uplift_evening_increases_target_transitions():
@@ -610,9 +622,9 @@ def test_clickstream_apply_seasonal_uplift_evening_increases_target_transitions(
         progress=0.5,
     )
 
-    assert result["Product View"]["Add to Cart"] >= 1.0
-    assert result["Cart View"]["Checkout Start"] >= 1.0
-    assert result["Checkout Start"]["Payment Attempt"] >= 1.0
+    assert result["Product View"]["Add to Cart"] > 1.0
+    assert result["Cart View"]["Checkout Start"] > 1.0
+    assert result["Checkout Start"]["Payment Attempt"] > 1.0
 
 
 def test_clickstream_apply_seasonal_uplift_payday_increases_target_transitions():
@@ -626,9 +638,9 @@ def test_clickstream_apply_seasonal_uplift_payday_increases_target_transitions()
         progress=0.5,
     )
 
-    assert result["Product View"]["Add to Cart"] >= 1.0
-    assert result["Cart View"]["Checkout Start"] >= 1.0
-    assert result["Checkout Start"]["Payment Attempt"] >= 1.0
+    assert result["Product View"]["Add to Cart"] > 1.0
+    assert result["Cart View"]["Checkout Start"] > 1.0
+    assert result["Checkout Start"]["Payment Attempt"] > 1.0
 
 
 def test_clickstream_apply_seasonal_uplift_weekend_increases_target_transitions():
@@ -643,9 +655,9 @@ def test_clickstream_apply_seasonal_uplift_weekend_increases_target_transitions(
         progress=0.5,
     )
 
-    assert result["Product View"]["Add to Cart"] >= 1.0
-    assert result["Cart View"]["Checkout Start"] >= 1.0
-    assert result["Checkout Start"]["Payment Attempt"] >= 1.0
+    assert result["Product View"]["Add to Cart"] > 1.0
+    assert result["Cart View"]["Checkout Start"] > 1.0
+    assert result["Checkout Start"]["Payment Attempt"] > 1.0
 
 
 # ============================================================
@@ -683,9 +695,9 @@ def test_clickstream_promotion_engagement_probability_bundle_cap_at_10():
     }
 
     result = promotion_engagement_probability(
-        promo,
-        "Product View",
-        1,
+        promo=promo,
+        event_type="Product View",
+        times_seen=1,
     )
 
     assert result <= 10
@@ -699,9 +711,9 @@ def test_clickstream_promotion_engagement_probability_dollar_discount_cap_at_5()
     }
 
     result = promotion_engagement_probability(
-        promo,
-        "Product View",
-        1,
+        promo=promo,
+        event_type="Product View",
+        times_seen=1,
     )
 
     assert result <= 5
@@ -715,9 +727,9 @@ def test_clickstream_promotion_engagement_probability_unknown_mechanic_handling(
     }
 
     result = promotion_engagement_probability(
-        promo,
-        "Product View",
-        1,
+        promo=promo,
+        event_type="Product View",
+        times_seen=1,
     )
 
     assert 0 <= result <= 0.9
@@ -729,12 +741,11 @@ def test_clickstream_promotion_engagement_probability_unknown_mechanic_handling(
 
 
 def test_clickstream_promotion_perception_accuracy():
-    dollar_promo = {"promotion_mechanic": "dollar_discount"}
-    percentage_promo = {"promotion_mechanic": "percentage_discount"}
-    bundle_promo = {"promotion_mechanic": "bundle"}
-    dollar = promotion_perception_accuracy(dollar_promo)
-    percentage = promotion_perception_accuracy(percentage_promo)
-    bundle = promotion_perception_accuracy(bundle_promo)
+    dollar = promotion_perception_accuracy({"promotion_mechanic": "dollar_discount"})
+    percentage = promotion_perception_accuracy(
+        {"promotion_mechanic": "percentage_discount"}
+    )
+    bundle = promotion_perception_accuracy({"promotion_mechanic": "bundle"})
     assert percentage > dollar > bundle
 
 
@@ -854,6 +865,9 @@ def test_clickstream_apply_promotion_uplift_multiple_promotions_increase_uplift(
 # ============================================================
 # apply_stock_status_uplift()
 # ============================================================
+# UNIT: monkeypatches get_product_stock_status so real stock data
+# is never read. stock_snapshot_ctx is passed only because the
+# function signature requires ctx — the patched function ignores it.
 
 
 def test_clickstream_apply_stock_status_uplift_out_of_stock(
@@ -872,14 +886,13 @@ def test_clickstream_apply_stock_status_uplift_out_of_stock(
             "Search View": 1.0,
         }
     }
-    timestamp = _build_datetime()
 
     result = apply_stock_status_uplift(
         stock_snapshot_ctx,
         transition_probability,
-        "STOR001",
-        "PROD001",
-        timestamp,
+        store_id="STOR001",
+        product_id="PROD001",
+        timestamp=_build_datetime(),
     )
 
     assert "Add to Cart" not in result["Product View"]
@@ -902,14 +915,13 @@ def test_clickstream_apply_stock_status_uplift_low_stock(
             "Home View": 1.0,
         }
     }
-    timestamp = _build_datetime()
 
     result = apply_stock_status_uplift(
         stock_snapshot_ctx,
         transition_probability,
-        "STOR001",
-        "PROD001",
-        timestamp,
+        store_id="STOR001",
+        product_id="PROD001",
+        timestamp=_build_datetime(),
     )
 
     assert result["Product View"]["Add to Cart"] == 1.2
@@ -929,14 +941,13 @@ def test_clickstream_apply_stock_status_uplift_in_stock(
             "Add to Cart": 1.0,
         }
     }
-    timestamp = _build_datetime()
 
     result = apply_stock_status_uplift(
         stock_snapshot_ctx,
         transition_probability,
-        "STOR001",
-        "PROD001",
-        timestamp,
+        store_id="STOR001",
+        product_id="PROD001",
+        timestamp=_build_datetime(),
     )
 
     assert result["Product View"]["Add to Cart"] == 1.1
@@ -948,14 +959,13 @@ def test_clickstream_apply_stock_status_uplift_no_product_id(stock_snapshot_ctx)
             "Add to Cart": 1.0,
         }
     }
-    timestamp = _build_datetime()
 
     result = apply_stock_status_uplift(
         stock_snapshot_ctx,
         base,
-        "STOR001",
-        None,
-        timestamp,
+        store_id="STOR001",
+        product_id=None,
+        timestamp=_build_datetime(),
     )
 
     assert result == base
@@ -1029,7 +1039,6 @@ def test_clickstream_get_base_transition_probability(
     customer_segment, has_treatment, expected
 ):
     transition_probability = _base_transition_probability()
-
     result = get_base_transition_probability(
         transition_probability=transition_probability,
         customer_segment=customer_segment,
@@ -1050,7 +1059,6 @@ def test_clickstream_apply_mission_bias_no_previous_event_type(seed: int = 42):
     transition_probability = _base_transition_probability()
     rng = random.Random(seed)
     mission_choice = rng.choice(list(MISSION_SCROLL_BIAS.keys()))
-
     result = apply_mission_bias(
         event_transition_probability=transition_probability,
         mission_choice=mission_choice,
@@ -1063,7 +1071,6 @@ def test_clickstream_apply_mission_bias_no_previous_event_type(seed: int = 42):
 
 def test_clickstream_apply_mission_bias_unknown_mission():
     transition_probability = _base_transition_probability()
-
     result = apply_mission_bias(
         event_transition_probability=transition_probability,
         mission_choice="UNKNOWN_MISSION",
@@ -1078,7 +1085,6 @@ def test_clickstream_apply_mission_bias_previous_event_not_found(seed: int = 42)
     transition_probability = _base_transition_probability()
     rng = random.Random(seed)
     mission_choice = rng.choice(list(MISSION_SCROLL_BIAS.keys()))
-
     result = apply_mission_bias(
         event_transition_probability=transition_probability,
         mission_choice=mission_choice,
@@ -1093,7 +1099,6 @@ def test_clickstream_apply_mission_bias_applies_multiplier(seed: int = 42):
     transition_probability = _base_transition_probability()
     rng = random.Random(seed)
     mission_choice = rng.choice(list(MISSION_SCROLL_BIAS.keys()))
-
     result = apply_mission_bias(
         event_transition_probability=transition_probability,
         mission_choice=mission_choice,
@@ -1137,7 +1142,6 @@ def test_clickstream_apply_mission_bias_checkout_progress_scaling(seed: int = 42
 
 def test_clickstream_apply_purchase_progress_bias_missing_previous_event():
     base = _base_transition_probability()
-
     result = apply_purchase_progress_bias(
         base,
         previous_event_type=None,
@@ -1152,7 +1156,6 @@ def test_clickstream_apply_purchase_progress_bias_missing_previous_event():
 def test_clickstream_apply_purchase_progress_bias_early_stage_add_to_cart_streak_encourage_browsing():
     base = _base_transition_probability()
     previous_event_type = "Product View"
-
     result = apply_purchase_progress_bias(
         base,
         previous_event_type,
@@ -1168,7 +1171,6 @@ def test_clickstream_apply_purchase_progress_bias_early_stage_add_to_cart_streak
 def test_clickstream_apply_purchase_progress_bias_early_stage_add_to_cart_streak_discourage_checkout():
     base = _base_transition_probability()
     previous_event_type = "Cart View"
-
     result = apply_purchase_progress_bias(
         base,
         previous_event_type,

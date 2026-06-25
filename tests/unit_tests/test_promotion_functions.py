@@ -8,10 +8,13 @@ from data_generation.config.campaigns_config import (
 )
 from data_generation.config.constants import DATA_END_DATE
 from data_generation.config.promotions_config import (
-    BUNDLE_CAMPAIGN_COMPATIBILITY,
     CAMPAIGN_PROMOTION_STRATEGY,
     CATEGORY_PROMOTION_PROB,
     CHANNEL_PROMOTION_COMPATIBILITY,
+    PROMOTION_TYPE_PROB,
+)
+from data_generation.services.clickstreams.clickstream_lookup_service import (
+    check_promotion_eligibility,
 )
 from data_generation.services.promotions.promotion_service import (
     generate_discount_code,
@@ -19,20 +22,17 @@ from data_generation.services.promotions.promotion_service import (
     generate_promotion_value,
     get_min_spend,
     safe_date_window,
-    select_active_product_in_timeframe,
-    select_bundle_for_campaign,
     select_category,
     select_product_in_category,
     select_promotion_mechanics,
 )
-from tests.unit_tests.helpers import (
+from tests.helpers import (
     _build_bundle,
+    _build_campaign,
     _build_category,
     _build_customer_segment,
     _build_date_range,
-    _build_datetime_range,
-    _build_promotion_value,
-    _build_promotion_variables,
+    _build_datetime,
 )
 
 # ============================================================
@@ -100,16 +100,14 @@ def test_promotion_select_category_returns_valid(seed: int = 42):
     campaign_type = rng.choice(list(CAMPAIGN_PROMOTION_STRATEGY.keys()))
     target_segment = _build_customer_segment()
     seasonal_pool: list[str] = []
+    season: str | None = None
 
     if campaign_type == "Seasonal":
         campaign_categories = CAMPAIGN_PEAK_CATEGORIES[campaign_type]
-        season: str | None = None
 
         if isinstance(campaign_categories, dict):
             season = rng.choice(list(campaign_categories.keys()))
             seasonal_pool = campaign_categories.get(season, [])
-        else:
-            season = None
 
     fallback_pool = list(CATEGORY_PROMOTION_PROB.keys())
 
@@ -125,6 +123,8 @@ def test_promotion_select_category_returns_valid(seed: int = 42):
 # ============================================================
 # select_product_in_category()
 # ============================================================
+# UNIT: reads only products_df (single table, no lifecycle join).
+# product_ctx is the lightest ctx fixture.
 
 
 def test_promotion_select_product_in_category_valid(product_ctx):
@@ -135,111 +135,47 @@ def test_promotion_select_product_in_category_valid(product_ctx):
 
 
 # ============================================================
-# select_active_product_in_timeframe()
-# ============================================================
-
-
-def test_promotion_select_active_product_in_timeframe(product_lifecycle_ctx):
-    category = _build_category(product_lifecycle_ctx, 1)[0]
-    start, end = _build_datetime_range()
-
-    pid = select_active_product_in_timeframe(
-        product_lifecycle_ctx,
-        category,
-        start,
-        end,
-    )
-
-    if pid is not None:
-        df = product_lifecycle_ctx.product_lifecycles.product_with_lifecycle_df
-        row = df[df["product_id"] == pid].iloc[0]
-
-        assert row["category"] == category
-        assert pd.notna(row["launch_date"]) and row["launch_date"] <= start
-        assert (
-            pd.isna(row["discontinuation_date"]) or row["discontinuation_date"] >= end
-        )
-
-
-# ============================================================
-# select_bundle_for_campaign()
-# ============================================================
-
-
-def test_promotion_select_bundle_for_campaign(bundle_ctx, seed: int = 42):
-    rng = random.Random(seed)
-    start, end = _build_datetime_range()
-    campaign_type = rng.choice(list(CAMPAIGN_PROMOTION_STRATEGY.keys()))
-
-    bundle = select_bundle_for_campaign(
-        bundle_ctx,
-        campaign_type,
-        start,
-        end,
-    )
-
-    if bundle is None:
-        return
-
-    df = bundle_ctx.bundles.bundle_full_df
-
-    # Bundle exists in dataset
-    matched = df[df["bundle_pricing_id"] == bundle["bundle_pricing_id"]]
-    assert not matched.empty, "Returned bundle_pricing_id not found in source data"
-
-    row = matched.iloc[0]
-
-    # Return variable structure validation
-    assert "bundle_pricing_id" in bundle
-    assert "bundle_price" in bundle
-    assert "discount_value" in bundle
-    assert "categories" in bundle
-
-    # Bundle type campaign compatibility
-    allowed_types = BUNDLE_CAMPAIGN_COMPATIBILITY.get(campaign_type, [])
-    assert row["bundle_type"] in allowed_types
-
-    # Timeframe correctness
-    assert row["effective_start_date"] <= start
-    assert row["effective_end_date"] >= end
-
-    # Data integrity (returned == source)
-    assert bundle["bundle_pricing_id"] == row["bundle_pricing_id"]
-    assert bundle["bundle_price"] == row["bundle_price"]
-    assert bundle["discount_value"] == row["discount_value"]
-    assert bundle["categories"] == row["categories"]
-
-
-# ============================================================
 # generate_promotion_value()
 # ============================================================
+# UNIT: reads products_df for price lookups. Logic under test is
+# the discount calculation, not lifecycle or bundle validity.
 
 
-def test_promotion_generate_promotion_value(bundle_ctx, seed: int = 42):
+def test_promotion_generate_promotion_value_percentage_discount(
+    bundle_ctx, seed: int = 42
+):
     rng = random.Random(seed)
-    category = _build_category(bundle_ctx, 1)[0]
-    campaign_type = rng.choice(list(CAMPAIGN_PROMOTION_STRATEGY.keys()))
     bundle = _build_bundle(bundle_ctx)
-    promotion_mechanic, promotion_scope, promotion_target_id, category = (
-        _build_promotion_variables(bundle_ctx)
-    )
 
     value = generate_promotion_value(
         bundle_ctx,
-        promotion_mechanic,
-        promotion_scope,
-        promotion_target_id,
-        category,
-        campaign_type,
-        bundle,
+        promotion_mechanic="percentage_discount",
+        promotion_scope="category",
+        promotion_target_id="Beverages",
+        category="Beverages",
+        campaign_type=rng.choice(list(CAMPAIGN_PROMOTION_STRATEGY.keys())),
+        bundle=bundle,
     )
 
-    if promotion_mechanic == "percentage_discount":
-        assert 0 <= value <= 40
-    elif promotion_mechanic == "free_shipping":
-        assert value == 0.0
-    else:
-        assert value >= 0 and isinstance(value, (int, float))
+    assert 0 <= value <= 40
+    assert isinstance(value, (int, float))
+
+
+def test_promotion_generate_promotion_value_free_shipping(bundle_ctx):
+    bundle = _build_bundle(bundle_ctx)
+
+    value = generate_promotion_value(
+        bundle_ctx,
+        promotion_mechanic="free_shipping",
+        promotion_scope="cart",
+        promotion_target_id=None,
+        category=None,
+        campaign_type="Retention",
+        bundle=bundle,
+    )
+
+    assert value == 0.0
+    assert isinstance(value, (int, float))
 
 
 # ============================================================
@@ -247,25 +183,12 @@ def test_promotion_generate_promotion_value(bundle_ctx, seed: int = 42):
 # ============================================================
 
 
-def test_promotion_generate_promotion_name_returns_string(bundle_ctx, seed: int = 42):
-    rng = random.Random(seed)
-    campaign_type = rng.choice(list(CAMPAIGN_PROMOTION_STRATEGY.keys()))
-    promotion_mechanic, promotion_scope, _, category = _build_promotion_variables(
-        bundle_ctx
-    )
-    campaign_categories = CAMPAIGN_PEAK_CATEGORIES[campaign_type]
-    season: str | None = None
-
-    if isinstance(campaign_categories, dict):
-        season = rng.choice(list(campaign_categories.keys()))
-    else:
-        season = None
-
+def test_promotion_generate_promotion_name_returns_string():
     name = generate_promotion_name(
-        promotion_mechanic,
-        promotion_scope,
-        category,
-        season,
+        promotion_mechanic="dollar_discount",
+        promotion_scope="product",
+        category="PROD001",
+        season="Black Friday",
     )
 
     assert isinstance(name, str)
@@ -277,21 +200,13 @@ def test_promotion_generate_promotion_name_returns_string(bundle_ctx, seed: int 
 # ============================================================
 
 
-def test_promotion_get_min_spend(bundle_ctx, seed: int = 42):
-    rng = random.Random(seed)
-    campaign_type = rng.choice(list(CAMPAIGN_PROMOTION_STRATEGY.keys()))
-    promotion_mechanic, promotion_scope, promotion_target_id, category = (
-        _build_promotion_variables(bundle_ctx)
-    )
-    promotion_value = _build_promotion_value(
-        bundle_ctx, promotion_mechanic, promotion_scope, promotion_target_id, category
-    )
+def test_promotion_get_min_spend():
     val = get_min_spend(
-        promotion_mechanic,
-        promotion_scope,
-        promotion_value,
-        category,
-        campaign_type,
+        promotion_mechanic="percentage_discount",
+        promotion_scope="product",
+        promotion_value=10,
+        category="Beverages",
+        campaign_type="Seasonal",
     )
 
     assert val is None or val >= 0
@@ -300,20 +215,17 @@ def test_promotion_get_min_spend(bundle_ctx, seed: int = 42):
 # ============================================================
 # generate_discount_code()
 # ============================================================
+# UNIT: pure string assembly. Uses campaign_ctx only to get a
+# real campaign_id string — no DataFrame traversal.
 
 
-def test_promotion_generate_discount_code_structure(
-    campaign_ctx, bundle_ctx, seed: int = 42
-):
+def test_promotion_generate_discount_code_structure(campaign_ctx, seed: int = 42):
     rng = random.Random(seed)
-    promotion_mechanic, promotion_scope, promotion_target_id, category = (
-        _build_promotion_variables(bundle_ctx)
-    )
-    promotion_value = _build_promotion_value(
-        bundle_ctx, promotion_mechanic, promotion_scope, promotion_target_id, category
-    )
-    df = campaign_ctx.campaigns.campaigns_df
-    campaign_id = df.iloc[rng.randrange(len(df))]["campaign_id"]
+    promotion_mechanic = rng.choice(list(PROMOTION_TYPE_PROB.keys()))
+    promotion_scope = rng.choice(["cart", "category", "product"])
+    promotion_target_id = "Beverages"
+    promotion_value = rng.randint(5, 10)
+    campaign_id = _build_campaign(campaign_ctx)["campaign_id"]
     code = generate_discount_code(
         promotion_mechanic,
         promotion_scope,
@@ -346,3 +258,95 @@ def test_promotion_generate_discount_code_structure(
             all(not p.isdigit() for p in parts[2:])
             or promotion_mechanic == "free_shipping"
         )
+
+
+# ============================================================
+# check_promotion_eligibility()
+# ============================================================
+# UNIT: the filtering logic is what's under test. We mock
+# get_active_promotions so no real promotions_df is read.
+# promotion_ctx is passed only because the function signature
+# requires ctx — the mock intercepts before ctx is used.
+
+
+def test_check_promotion_eligibility_treatment_sees_global_and_treatment_promotions(
+    mocker, promotion_ctx
+):
+    """
+    Treatment customer should see both promos linked to their treatment campaign
+    and from global (campaign_id=None)
+    """
+    mocker.patch(
+        "data_generation.services.clickstreams.clickstream_lookup_service.get_active_promotions",
+        return_value=[
+            {"promotion_id": "PROMO001", "campaign_id": None},
+            {"promotion_id": "PROMO002", "campaign_id": "CAMP001"},
+            {"promotion_id": "PROMO003", "campaign_id": "CAMP002"},
+        ],
+    )
+
+    timestamp = _build_datetime()
+    active_campaigns = pd.DataFrame(
+        [
+            {"campaign_id": "CAMP001", "assignment_group": "Treatment"},
+            {"campaign_id": "CAMP002", "assignment_group": "Control"},
+        ]
+    )
+
+    result = check_promotion_eligibility(promotion_ctx, timestamp, active_campaigns)
+
+    # Treatment sees: PROMO001 (global) + PROMO002 (CAMP001 = treatment)
+    # NOT PROMO003 (CAMP002 = control only)
+    assert len(result) == 2
+    ids = {p["promotion_id"] for p in result}
+    assert "PROMO001" in ids
+    assert "PROMO002" in ids
+    assert "PROMO003" not in ids
+
+
+def test_check_promotion_eligibility_control_sees_global_promotions(
+    mocker, promotion_ctx
+):
+    """
+    Control only customer should see only global promotions.
+    """
+    mocker.patch(
+        "data_generation.services.clickstreams.clickstream_lookup_service.get_active_promotions",
+        return_value=[
+            {"promotion_id": "PROMO001", "campaign_id": None},
+            {"promotion_id": "PROMO002", "campaign_id": "CAMP001"},
+        ],
+    )
+
+    timestamp = _build_datetime()
+    active_campaigns = pd.DataFrame(
+        [
+            {"campaign_id": "CAMP001", "assignment_group": "Control"},
+        ]
+    )
+
+    result = check_promotion_eligibility(promotion_ctx, timestamp, active_campaigns)
+
+    assert len(result) == 1
+    assert result[0]["promotion_id"] == "PROMO001"
+
+
+def test_check_promotion_eligibility_no_campaigns_sees_global_promotions(
+    mocker, promotion_ctx
+):
+    """
+    No active campaigns → only global promotions (campaign_id=None) returned.
+    """
+    mocker.patch(
+        "data_generation.services.clickstreams.clickstream_lookup_service.get_active_promotions",
+        return_value=[
+            {"promotion_id": "PROMO001", "campaign_id": None},
+            {"promotion_id": "PROMO002", "campaign_id": "CAMP001"},
+        ],
+    )
+
+    timestamp = _build_datetime()
+    result = check_promotion_eligibility(promotion_ctx, timestamp, None)
+
+    assert len(result) == 1
+    assert result[0]["promotion_id"] == "PROMO001"

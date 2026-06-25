@@ -10,26 +10,19 @@ from data_generation.config.promotions_config import (
 from data_generation.services.transactions.transaction_cart_service import (
     sample_products,
 )
-from data_generation.services.transactions.transaction_lookup_service import (
-    get_active_bundle_pricing,
-    get_shipping_fee,
-    get_store,
-)
 from data_generation.services.transactions.transaction_promotion_service import (
     is_bundle_valid,
     is_overlap,
     is_promotion_viable,
-    opt_for_delivery,
     select_shipping_promo,
     should_use_promo,
 )
-from tests.unit_tests.helpers import (
+from tests.helpers import (
     _build_bundle,
     _build_category,
-    _build_customer,
+    _build_category_product_id,
     _build_customer_segment,
     _build_insufficient_quantity_bundle_cart,
-    _build_product,
     _build_promotion,
     _build_valid_bundle_cart,
 )
@@ -40,11 +33,13 @@ fake = Faker()
 # ============================================================
 # sample_products()
 # ============================================================
+# UNIT: needs product_ctx only to resolve category→product_ids.
+# The selection logic (affinity clustering) is what we are testing.
 
 
 def test_transaction_sample_products(product_ctx):
     (category,) = _build_category(product_ctx, 1)
-    product_id = _build_product(product_ctx, category)
+    product_id = _build_category_product_id(product_ctx, category)
     affinity_categories = set(CATEGORY_AFFINITY.get(category, []))
     affinity_categories.add(category)
 
@@ -61,97 +56,11 @@ def test_transaction_sample_products(product_ctx):
 
 
 # ============================================================
-# get_store()
-# ============================================================
-
-
-def test_transaction_get_store(customer_store_ctx):
-    customer = _build_customer(customer_store_ctx)
-    customer_id = customer["customer_id"]
-    cust_area = customer["area"]
-    result = get_store(customer_store_ctx, customer_id)
-    stores_df = customer_store_ctx.stores.stores_df
-    candidates = stores_df[stores_df["area"] == cust_area]["store_id"].tolist()
-
-    if candidates:
-        assert result in candidates
-    else:
-        assert result in customer_store_ctx.stores.retail_store_ids
-
-
-# ============================================================
-# get_shipping_fee()
-# ============================================================
-
-
-def test_transaction_get_shipping_fee(customer_store_ctx, seed: int = 42):
-    rng = random.Random(seed)
-    customer = _build_customer(customer_store_ctx)
-    customer_id = customer["customer_id"]
-    store_id = rng.choice(customer_store_ctx.stores.store_ids)
-    result = get_shipping_fee(customer_store_ctx, store_id, customer_id)
-
-    cust_area = customer["area"]
-    cust_region = customer["region"]
-    store_area = customer_store_ctx.stores.store_area_map[store_id]
-    store_region = customer_store_ctx.stores.store_region_map[store_id]
-    online_store_id = customer_store_ctx.stores.online_store_id
-
-    # Recompute base fee deterministically
-    if store_id == online_store_id:
-        base_fee = 8
-    else:
-        base_fee = 4
-
-    if cust_region != store_region:
-        base_fee += 8
-    elif cust_area != store_area:
-        base_fee += 4
-
-    assert base_fee <= result <= base_fee + 2
-
-
-# ============================================================
-# get_active_bundle_pricing()
-# ============================================================
-
-
-def test_transaction_get_active_bundle_pricing(bundle_ctx):
-    bundle = _build_bundle(bundle_ctx)
-    bundle_id = bundle["bundle_id"]
-    df = bundle_ctx.bundles.bundle_pricings_df
-    row = df[df["bundle_id"] == bundle_id].sample(1).iloc[0]
-    transaction_date = row["effective_start_date"]
-
-    result = get_active_bundle_pricing(bundle_ctx, bundle_id, transaction_date)
-    if result is None:
-        # Ensure truly no valid rows exist
-        valid = df[
-            (df["bundle_id"] == bundle_id)
-            & (df["effective_start_date"] <= transaction_date)
-            & (df["effective_end_date"] >= transaction_date)
-        ]
-        assert valid.empty
-        return
-
-    # Invariant checks
-    assert result["bundle_id"] == bundle_id
-    assert result["effective_start_date"] <= transaction_date
-    assert result["effective_end_date"] >= transaction_date
-
-    # Ensure it is actually the "best" row
-    valid = df[
-        (df["bundle_id"] == bundle_id)
-        & (df["effective_start_date"] <= transaction_date)
-        & (df["effective_end_date"] >= transaction_date)
-    ]
-    assert not valid.empty
-    assert result["effective_start_date"] == valid["effective_start_date"].max()
-
-
-# ============================================================
 # is_bundle_valid()
 # ============================================================
+# UNIT: bundle_dict is the only ctx field read. We use the bundle_ctx
+# fixture purely to resolve a real bundle_id → required items dict,
+# then test the cart-matching logic in isolation.
 
 
 def test_transaction_is_bundle_valid_returns_true(bundle_ctx):
@@ -216,6 +125,10 @@ def test_transaction_select_shipping_promo_has_eligible_free_shipping():
 # ============================================================
 # is_overlap()
 # ============================================================
+# UNIT: only bundle_dict is read from ctx.  All scope logic is tested
+# with plain dicts. Bundle-vs-product and bundle-vs-bundle cases use
+# bundle_ctx to resolve real bundle contents — the function logic is
+# what is under test, not the data itself.
 
 
 def test_transaction_is_overlap_product_product_overlap(bundle_ctx):
@@ -312,123 +225,15 @@ def test_transaction_should_use_promo(seed: int = 42):
 
 
 # ============================================================
-# opt_for_delivery()
-# ============================================================
-
-
-def test_transaction_opt_for_delivery(
-    customer_store_ctx, promotion_ctx, seed: int = 42
-):
-    rng = random.Random(seed)
-    customer_id = rng.choice(customer_store_ctx.customers.customer_ids)
-    store_id = rng.choice(customer_store_ctx.stores.store_ids)
-    df = promotion_ctx.promotions.promotions_df
-    shipping_promo = (
-        df[df["promotion_mechanic"] == "free_shipping"]
-        .sample(n=1, random_state=seed)
-        .iloc[0]
-    )
-    shipping_promo = shipping_promo.to_dict() if shipping_promo is not None else None
-    cart_subtotal = rng.randint(10, 500)
-    result = opt_for_delivery(
-        customer_store_ctx, customer_id, store_id, shipping_promo, cart_subtotal
-    )
-    assert isinstance(result, bool)
-    assert result <= 85.0
-
-
-def test_transaction_opt_for_delivery_free_shipping_increase_opt_in_rate(
-    customer_store_ctx, promotion_ctx, seed: int = 42
-):
-    rng = random.Random(seed)
-    customer_id = rng.choice(customer_store_ctx.customers.customer_ids)
-    store_id = rng.choice(customer_store_ctx.stores.store_ids)
-    df = promotion_ctx.promotions.promotions_df
-    shipping_promo = (
-        df[df["promotion_mechanic"] == "free_shipping"]
-        .sample(n=1, random_state=seed)
-        .iloc[0]
-    )
-    shipping_promo = shipping_promo.to_dict() if shipping_promo is not None else None
-    cart_subtotal = rng.randint(10, 500)
-    result_no_free_shipping = sum(
-        opt_for_delivery(customer_store_ctx, customer_id, store_id, None, cart_subtotal)
-        for _ in range(100)
-    )
-    result_has_free_shipping = sum(
-        opt_for_delivery(
-            customer_store_ctx, customer_id, store_id, shipping_promo, cart_subtotal
-        )
-        for _ in range(100)
-    )
-    assert result_no_free_shipping < result_has_free_shipping
-
-
-def test_transaction_opt_for_delivery_high_cart_value_increase_opt_in_rate(
-    customer_store_ctx, promotion_ctx, seed: int = 42
-):
-    rng = random.Random(seed)
-    customer_id = rng.choice(customer_store_ctx.customers.customer_ids)
-    store_id = rng.choice(customer_store_ctx.stores.store_ids)
-    df = promotion_ctx.promotions.promotions_df
-    shipping_promo = (
-        df[df["promotion_mechanic"] == "free_shipping"]
-        .sample(n=1, random_state=seed)
-        .iloc[0]
-    )
-    shipping_promo = shipping_promo.to_dict() if shipping_promo is not None else None
-    result_low_cart_value = sum(
-        opt_for_delivery(customer_store_ctx, customer_id, store_id, shipping_promo, 20)
-        for _ in range(100)
-    )
-    result_high_cart_value = sum(
-        opt_for_delivery(customer_store_ctx, customer_id, store_id, shipping_promo, 200)
-        for _ in range(100)
-    )
-    assert result_low_cart_value < result_high_cart_value
-
-
-def test_transaction_opt_for_delivery_cross_region_increase_opt_in_rate(
-    customer_store_ctx, promotion_ctx, seed: int = 42
-):
-    customer = {
-        "customer_id": "CUST001",
-        "region": "Central",
-    }
-    customer_id = customer["customer_id"]
-    cust_region = customer["region"]
-    df = customer_store_ctx.stores.stores_df
-    store_1 = df[df["region"] == cust_region].sample(n=1, random_state=seed).iloc[0]
-    store_2 = df[df["region"] != cust_region].sample(n=1, random_state=seed).iloc[0]
-    df = promotion_ctx.promotions.promotions_df
-    shipping_promo = (
-        df[df["promotion_mechanic"] == "free_shipping"]
-        .sample(n=1, random_state=seed)
-        .iloc[0]
-    )
-    shipping_promo = shipping_promo.to_dict() if shipping_promo is not None else None
-    result_same_region = sum(
-        opt_for_delivery(
-            customer_store_ctx, customer_id, store_1["store_id"], shipping_promo, 20
-        )
-        for _ in range(100)
-    )
-    result_cross_region = sum(
-        opt_for_delivery(
-            customer_store_ctx, customer_id, store_2["store_id"], shipping_promo, 200
-        )
-        for _ in range(100)
-    )
-    assert result_same_region < result_cross_region
-
-
-# ============================================================
 # is_promotion_viable()
 # ============================================================
 
 
-def test_transaction_is_promotion_viable_empty_items(promotion_ctx):
-    promotion = _build_promotion(promotion_ctx)
+def test_transaction_is_promotion_viable_empty_items(promotion_ctx, seed: int = 42):
+    # UNIT: promotion_ctx used only to get a realistic promo dict shape;
+    # the function itself does not read ctx.
+    rng = random.Random(seed)
+    promotion = _build_promotion(promotion_ctx, rng)
     result = is_promotion_viable(promotion, [])
     assert not result
 

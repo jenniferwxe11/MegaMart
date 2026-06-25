@@ -1,9 +1,6 @@
 import random
 
-import pandas as pd
-
 from data_generation.config.bundles_config import BUNDLE_DEFINITIONS
-from data_generation.services.bundles.bundle_lifecycle_service import bundle_lifecycle
 from data_generation.services.bundles.bundle_pricing_service import (
     calculate_bundle_pricing,
     phase_prices,
@@ -12,7 +9,7 @@ from data_generation.services.bundles.bundle_pricing_service import (
 from data_generation.services.bundles.bundle_selection_service import (
     select_products_for_bundle,
 )
-from tests.unit_tests.helpers import (
+from tests.helpers import (
     _build_bundle_lifecycle,
     _build_bundle_pricing_inputs,
     _build_bundle_products_dict,
@@ -22,6 +19,9 @@ from tests.unit_tests.helpers import (
 # ============================================================
 # calculate_bundle_pricing()
 # ============================================================
+# UNIT: selected_products is a plain list of (pid, qty) tuples.
+# product_price_map and product_cost_map are the only ctx reads,
+# which we satisfy by passing product_ctx (lightweight fixture).
 
 
 def test_bundle_price_covers_cost(product_ctx):
@@ -113,41 +113,11 @@ def test_bundle_phase_discount_less_than_phase_price():
 
 
 # ============================================================
-# bundle_lifecycle()
-# ============================================================
-
-
-def test_bundle_lifecycle_properties(product_ctx):
-    selected_products = _build_bundle_products_dict(product_ctx)
-    start, end = bundle_lifecycle(product_ctx, selected_products)
-    launch_map = product_ctx.product_lifecycles.product_launch_map
-    discontinuation_map = product_ctx.product_lifecycles.product_discontinuation_map
-
-    launches = [
-        launch_map[pid]
-        for pid, _ in selected_products
-        if pid in launch_map and not pd.isna(launch_map[pid])
-    ]
-
-    discontinuations = [
-        discontinuation_map[pid]
-        for pid, _ in selected_products
-        if pid in discontinuation_map and not pd.isna(discontinuation_map[pid])
-    ]
-
-    if launches:
-        assert start >= max(launches)
-
-    if discontinuations:
-        assert end <= min(discontinuations)
-
-    assert start <= end
-    assert (end - start).days <= 120
-
-
-# ============================================================
 # select_products_for_bundle()
 # ============================================================
+# UNIT: the only ctx usage is products_df, which is available from
+# the lightweight product_ctx fixture. We are testing the selection
+# logic in isolation — not how lifecycle or pricing interacts with it.
 
 
 def test_bundle_select_products_for_set_bundle(product_ctx, seed: int = 42):
