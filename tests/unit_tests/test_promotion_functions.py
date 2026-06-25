@@ -270,13 +270,13 @@ def test_promotion_generate_discount_code_structure(campaign_ctx, seed: int = 42
 
 
 def test_check_promotion_eligibility_treatment_sees_global_and_treatment_promotions(
-    mocker, promotion_ctx
+    monkeypatch, promotion_ctx
 ):
     """
     Treatment customer should see both promos linked to their treatment campaign
     and from global (campaign_id=None)
     """
-    mocker.patch(
+    monkeypatch.patch(
         "data_generation.services.clickstreams.clickstream_lookup_service.get_active_promotions",
         return_value=[
             {"promotion_id": "PROMO001", "campaign_id": None},
@@ -305,12 +305,12 @@ def test_check_promotion_eligibility_treatment_sees_global_and_treatment_promoti
 
 
 def test_check_promotion_eligibility_control_sees_global_promotions(
-    mocker, promotion_ctx
+    monkeypatch, promotion_ctx
 ):
     """
     Control only customer should see only global promotions.
     """
-    mocker.patch(
+    monkeypatch.patch(
         "data_generation.services.clickstreams.clickstream_lookup_service.get_active_promotions",
         return_value=[
             {"promotion_id": "PROMO001", "campaign_id": None},
@@ -332,12 +332,12 @@ def test_check_promotion_eligibility_control_sees_global_promotions(
 
 
 def test_check_promotion_eligibility_no_campaigns_sees_global_promotions(
-    mocker, promotion_ctx
+    monkeypatch, promotion_ctx
 ):
     """
     No active campaigns → only global promotions (campaign_id=None) returned.
     """
-    mocker.patch(
+    monkeypatch.patch(
         "data_generation.services.clickstreams.clickstream_lookup_service.get_active_promotions",
         return_value=[
             {"promotion_id": "PROMO001", "campaign_id": None},
