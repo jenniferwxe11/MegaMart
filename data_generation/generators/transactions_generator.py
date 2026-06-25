@@ -237,9 +237,8 @@ def transactions_generator(ctx: GenerationContext):
             item_subtotal = round(unit_price * quantity, 2)
 
             # Prevent over allocation
-            item_discount = round(
-                min(final_allocation.get(product_id, 0), item_subtotal), 2
-            )
+            allocated_discount = final_allocation.get(product_id, 0) or 0
+            item_discount = round(min(allocated_discount, item_subtotal), 2)
 
             final_item_price = round(max(0.0, item_subtotal - item_discount), 2)
 
@@ -260,17 +259,6 @@ def transactions_generator(ctx: GenerationContext):
 
         # --- Reconcile Totals ---
         items_total = sum(item["final_item_price"] for item in local_transaction_items)
-
-        ground_truth = cart_subtotal - total_discount
-        drift = ground_truth - items_total
-
-        if local_transaction_items and abs(drift) > 0:
-            last = local_transaction_items[-1]
-            last["final_item_price"] = round(last["final_item_price"] + drift, 2)
-
-        # Recompute after drift correction
-        items_total = sum(item["final_item_price"] for item in local_transaction_items)
-
         transaction_total = items_total + shipping_fee - shipping_discount
 
         diff = abs(
@@ -472,9 +460,8 @@ def transactions_generator(ctx: GenerationContext):
             item_subtotal = round(unit_price * quantity, 2)
 
             # Prevent over allocation
-            item_discount = round(
-                min(final_allocation.get(product_id, 0), item_subtotal), 2
-            )
+            allocated_discount = final_allocation.get(product_id, 0) or 0
+            item_discount = round(min(allocated_discount, item_subtotal), 2)
 
             final_item_price = round(max(0.0, item_subtotal - item_discount), 2)
 
@@ -495,17 +482,6 @@ def transactions_generator(ctx: GenerationContext):
 
         # --- Reconcile Totals ---
         items_total = sum(item["final_item_price"] for item in local_transaction_items)
-
-        ground_truth = cart_subtotal - total_discount
-        drift = ground_truth - items_total
-
-        if local_transaction_items and abs(drift) > 0:
-            last = local_transaction_items[-1]
-            last["final_item_price"] = round(last["final_item_price"] + drift, 2)
-
-        # Recompute after drift correction
-        items_total = sum(item["final_item_price"] for item in local_transaction_items)
-
         transaction_total = items_total + shipping_fee - shipping_discount
 
         diff = abs(

@@ -75,14 +75,22 @@ def get_search_term(ctx):
     if random.random() < 0.2:
         return fake.word().lower().replace(" ", "+")
     search_term = random.choice(SEARCH_TERMS)
-    words = search_term.split()
+    words = [w for w in search_term.split() if w != "&"]
+
+    if not words:
+        return fake.word().lower()
+
     term_length = random.randint(1, min(2, len(words)))
     start_index = random.randint(0, len(words) - term_length)
-    return (
-        " ".join(words[start_index : start_index + term_length])
-        .replace(" ", "+")
-        .replace("&", "")
-    )
+
+    result = " ".join(words[start_index : start_index + term_length])
+
+    result = result.replace("&", "").replace(" ", "+")
+
+    if not result:
+        return fake.word().lower()
+
+    return result
 
 
 def slugify(text):

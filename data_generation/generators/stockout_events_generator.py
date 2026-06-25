@@ -19,7 +19,6 @@ from data_generation.config.stocks_config import (
 )
 from data_generation.context.generation_context import GenerationContext
 from data_generation.registry import register
-from data_generation.utils.date_time_utils import overlapping_dates
 from data_generation.utils.io_utils import save
 
 fake = Faker()
@@ -142,7 +141,8 @@ def stockout_events_generator(ctx: GenerationContext):
             num_yearly_stockouts = int(base_events * intensity)
             num_yearly_stockouts = max(1, min(num_yearly_stockouts, 30))
 
-            existing_stockout_windows: list[tuple[pd.Timestamp, pd.Timestamp]] = []
+            # existing_stockout_windows: list[tuple[pd.Timestamp, pd.Timestamp]] = []
+            last_end = None
 
             # Generate multiple non overlapping stockout windows
             for _ in range(num_yearly_stockouts):
@@ -168,34 +168,35 @@ def stockout_events_generator(ctx: GenerationContext):
                         )
 
                     # Prevent unrealistic clustering of stockout windows
-                    for _ in range(10):
-                        stockout_start_date = fake.date_between(
-                            start_date=max(launch_date, pd.Timestamp(date(year, 1, 1))),
+                    min_start = max(launch_date, pd.Timestamp(date(year, 1, 1)))
+                    min_start = pd.Timestamp(min_start)
+
+                    if last_end is not None:
+                        min_start = max(min_start, last_end + pd.Timedelta(days=1))
+
+                    if min_start.date() > date(year, 12, 31):
+                        break
+
+                    stockout_start_date = pd.Timestamp(
+                        fake.date_between(
+                            start_date=min_start,
                             end_date=date(year, 12, 31),
                         )
-                        stockout_end_date = stockout_start_date + timedelta(
-                            days=stockout_duration_days
-                        )
+                    )
+                    stockout_end_date = stockout_start_date + timedelta(
+                        days=stockout_duration_days
+                    )
+                    last_end = pd.Timestamp(stockout_end_date)
 
-                        if not overlapping_dates(
-                            existing_stockout_windows,
-                            stockout_start_date,
-                            stockout_end_date,
-                        ):
-                            existing_stockout_windows.append(
-                                (stockout_start_date, stockout_end_date)
-                            )
-
-                            # Store Stockout Record
-                            stockout_events.append(
-                                {
-                                    "store_id": store_id,
-                                    "product_id": product_id,
-                                    "stockout_start_date": stockout_start_date,
-                                    "stockout_end_date": stockout_end_date,
-                                }
-                            )
-                            break
+                    # Store Stockout Record
+                    stockout_events.append(
+                        {
+                            "store_id": store_id,
+                            "product_id": product_id,
+                            "stockout_start_date": stockout_start_date,
+                            "stockout_end_date": stockout_end_date,
+                        }
+                    )
 
     # ---------------------------
     # Export to CSV
