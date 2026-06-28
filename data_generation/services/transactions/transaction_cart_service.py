@@ -5,10 +5,10 @@ import pandas as pd
 
 from data_generation.config.clickstreams_config import (
     SEGMENT_MISSION_BIAS,
-    SESSION_MISSION_TARGET_RANGE,
 )
 from data_generation.config.products_config import CATEGORY_AFFINITY
 from data_generation.config.store_products_config import ESSENTIAL_CATEGORIES
+from data_generation.config.transactions_config import SESSION_MISSION_TARGET_RANGE
 
 # --------------------------------
 # Generate Items in Cart Functions

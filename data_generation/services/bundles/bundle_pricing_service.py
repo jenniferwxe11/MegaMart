@@ -38,7 +38,7 @@ def calculate_bundle_pricing(
 
     if bundle_type == "Buy One, Get One":
         bundle_price = max(total_price / 2, total_cost)
-        discount_value = round(total_price - bundle_price, 2)
+        discount_value = total_price - bundle_price
 
     # ---------------------------------------------------------
     # Set Bundles
@@ -48,7 +48,7 @@ def calculate_bundle_pricing(
         # Apply controlled discount (10–20%) to preserve margin
         discount_multiplier = random.uniform(0.85, 0.95)
         bundle_price = max(total_price * discount_multiplier, total_cost)
-        discount_value = round(total_price - bundle_price, 2)
+        discount_value = total_price - bundle_price
 
     # ---------------------------------------------------------
     # 2 For X
@@ -57,8 +57,8 @@ def calculate_bundle_pricing(
     elif bundle_type == "2 For X":
         # Apply moderate discount (15–30%) for value-driven bundles
         discount_multiplier = random.uniform(0.8, 0.9)
-        bundle_price = round(max(total_price * discount_multiplier, total_cost), 1)
-        discount_value = round(total_price - bundle_price, 2)
+        bundle_price = max(total_price * discount_multiplier, total_cost)
+        discount_value = total_price - bundle_price
 
     # ---------------------------------------------------------
     # Buy N Save X
@@ -67,8 +67,8 @@ def calculate_bundle_pricing(
     elif bundle_type == "Buy N Save X":
         # Apply aggressive discount (15–25%) for high-incentive promotions
         capped_discount = total_price * random.uniform(0.15, 0.25)
-        bundle_price = round(max(total_price - capped_discount, total_cost), 2)
-        discount_value = round(total_price - bundle_price, 2)
+        bundle_price = max(total_price - capped_discount, total_cost)
+        discount_value = total_price - bundle_price
 
     else:
         raise ValueError(f"Unknown bundle type: {bundle_type}")

@@ -191,7 +191,6 @@ def apply_promotion_uplift(
         - Product View → Add to Cart: impulsive, highly promotion-sensitive
         - Cart View → Checkout Start: more rational, moderate sensitivity
         - Cart View → Remove from Cart: friction-driven, inverse sensitivity to promotions and highly affected by fatigue
-
     """
     if not selected_promotions:
         return transition_probability
@@ -234,8 +233,8 @@ def apply_promotion_uplift(
         checkout_multiplier *= 0.4 + 0.6 * progress
 
         # --- Behavioural Fatigue ---
-        times_seen = seen_promotions.get(promotion_id, 0)
-        type_seen = seen_promo_types.get(promo_type, 0)
+        times_seen = max(0, seen_promotions.get(promotion_id, 0) - 1)
+        type_seen = max(0, seen_promo_types.get(promo_type, 0) - 1)
 
         fatigue = math.exp(-0.25 * times_seen) * math.exp(-0.1 * type_seen)
 

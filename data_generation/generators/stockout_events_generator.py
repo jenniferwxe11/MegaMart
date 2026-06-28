@@ -1,5 +1,5 @@
 import random
-from datetime import date, timedelta
+from datetime import date
 from typing import Any
 
 import pandas as pd
@@ -167,26 +167,39 @@ def stockout_events_generator(ctx: GenerationContext):
                             min_duration * (2 if is_year_of_discontinuation else 1),
                         )
 
-                    # Prevent unrealistic clustering of stockout windows
-                    min_start = max(launch_date, pd.Timestamp(date(year, 1, 1)))
-                    min_start = pd.Timestamp(min_start)
-
+                    # Lower bound: respect both lifecycle start and previous window end
+                    min_start = pd.Timestamp(
+                        max(launch_date, pd.Timestamp(date(year, 1, 1)))
+                    )
                     if last_end is not None:
                         min_start = max(min_start, last_end + pd.Timedelta(days=1))
 
-                    if min_start.date() > date(year, 12, 31):
+                    # Upper bound: end of year, but also cap at DATA_END_DATE
+                    max_start = pd.Timestamp(
+                        min(date(year, 12, 31), pd.Timestamp(DATA_END_DATE).date())
+                    )
+
+                    # No room left in this year
+                    if min_start > max_start:
+                        break
+
+                    # Ensure there's room for at least the minimum duration
+                    latest_viable_start = max_start - pd.Timedelta(days=min_duration)
+                    if min_start > latest_viable_start:
                         break
 
                     stockout_start_date = pd.Timestamp(
                         fake.date_between(
-                            start_date=min_start,
-                            end_date=date(year, 12, 31),
+                            start_date=min_start.date(),
+                            end_date=latest_viable_start.date(),
                         )
                     )
-                    stockout_end_date = stockout_start_date + timedelta(
-                        days=stockout_duration_days
+                    year_end = pd.Timestamp(date(year, 12, 31))
+                    stockout_end_date = min(
+                        stockout_start_date + pd.Timedelta(days=stockout_duration_days),
+                        year_end,
                     )
-                    last_end = pd.Timestamp(stockout_end_date)
+                    last_end = stockout_end_date
 
                     # Store Stockout Record
                     stockout_events.append(
