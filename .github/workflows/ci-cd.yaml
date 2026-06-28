@@ -122,6 +122,10 @@ jobs:
       - name: Scan for secrets (gitleaks)
         run: gitleaks detect --source . --exit-code 2 --redact
 
+      - name: Generate raw data
+        run: |
+          python -m data_generation.generation_runner
+
       - name: Run tests (smart selection)
         run: |
           FILES="${{ steps.changes.outputs.all_changed_files }}"

@@ -109,7 +109,7 @@ def clickstreams_generator(ctx: GenerationContext):
 
         if (
             total_sessions >= NUM_CLICKSTREAM_SESSIONS
-            and total_events >= LIMIT_CLICKSTREAM_EVENTS
+            or total_events >= LIMIT_CLICKSTREAM_EVENTS
         ):
             break
 
@@ -532,6 +532,10 @@ def clickstreams_generator(ctx: GenerationContext):
                     selected_promotions,
                     pending_events,
                 )
+
+                # Deduplicate lists
+                promotion_ids = list(dict.fromkeys(promotion_ids or []))
+                bundle_ids = list(dict.fromkeys(bundle_ids or []))
 
                 # --- Record Event Flow ---
                 events.append(event_type)

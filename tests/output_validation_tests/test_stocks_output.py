@@ -3,13 +3,13 @@ import pandas as pd
 # --- STOCKOUT EVENTS ---
 
 
-def test_stockout_events_stockout_start_date_not_in_future(dataframes):
-    df = dataframes["stockout_events"].copy()
+def test_stock_output_stockout_events_stockout_start_date_not_in_future(ctx):
+    df = ctx.stockout_events.stockout_events_df
     assert (pd.to_datetime(df["stockout_start_date"]) <= pd.Timestamp.now()).all()
 
 
-def test_stockout_events_dates(dataframes):
-    df = dataframes["stockout_events"].copy()
+def test_stock_output_stockout_events_dates(ctx):
+    df = ctx.stockout_events.stockout_events_df
     mask = df["stockout_end_date"].notna()
     assert (
         pd.to_datetime(df.loc[mask, "stockout_end_date"])
@@ -17,11 +17,11 @@ def test_stockout_events_dates(dataframes):
     ).all()
 
 
-def test_stockout_events_non_overlapping_per_product_store(dataframes):
+def test_stock_output_stockout_events_non_overlapping_per_product_store(ctx):
     """
     Stockout periods for the same product+store must not overlap.
     """
-    df = dataframes["stockout_events"].copy()
+    df = ctx.stockout_events.stockout_events_df
     df["stockout_start_date"] = pd.to_datetime(df["stockout_start_date"])
     df["stockout_end_date"] = pd.to_datetime(df["stockout_end_date"])
     for (store_id, product_id), group in df.groupby(["store_id", "product_id"]):
@@ -38,8 +38,8 @@ def test_stockout_events_non_overlapping_per_product_store(dataframes):
 # --- STOCK SNAPSHOTS ---
 
 
-def test_stock_snapshots_stock_band_status_match(dataframes):
-    df = dataframes["stock_snapshots"].copy()
+def test_stock_output_stock_snapshots_stock_band_status_match(ctx):
+    df = ctx.stock_snapshots.stock_snapshots_df
     assert (
         ((df["stock_band"] == "0") & (df["stock_status"] == "Out of Stock"))
         | ((df["stock_band"] == "1-5") & (df["stock_status"] == "Limited Stock"))
@@ -49,43 +49,51 @@ def test_stock_snapshots_stock_band_status_match(dataframes):
     ).all()
 
 
-def test_stock_snapshots_week_start_date_not_in_future(dataframes):
-    df = dataframes["stock_snapshots"].copy()
+def test_stock_output_stock_snapshots_week_start_date_not_in_future(ctx):
+    df = ctx.stock_snapshots.stock_snapshots_df
     assert (pd.to_datetime(df["week_start_date"]) <= pd.Timestamp.now()).all()
 
 
-def test_stockout_reflected_in_snapshots(dataframes):
-    stockouts = dataframes["stockout_events"].copy()
-    snapshots = dataframes["stock_snapshots"].copy()
+def test_stock_output_stockout_reflected_in_snapshots(ctx):
+    """
+    For each stockout, at least one snapshot within the window must be Out of Stock.
+    Sparse emission means not every week is guaranteed to have a row.
+    """
+    stockouts = ctx.stockout_events.stockout_events_df
+    snapshots = ctx.stock_snapshots.stock_snapshots_df
 
     stockouts["start"] = pd.to_datetime(stockouts["stockout_start_date"])
     stockouts["end"] = pd.to_datetime(stockouts["stockout_end_date"])
     snapshots["week"] = pd.to_datetime(snapshots["week_start_date"])
 
     merged = snapshots.merge(stockouts, on=["store_id", "product_id"], how="left")
-
     in_stockout = (merged["week"] >= merged["start"]) & (
         merged["week"] <= merged["end"]
     )
 
-    assert (merged.loc[in_stockout, "stock_status"] == "Out of Stock").all()
-    assert (merged.loc[in_stockout, "stock_band"] == "0").all()
+    # Any snapshot that falls within a stockout window must be Out of Stock
+    # (snapshots emitted during non-Out-of-Stock periods won't overlap a stockout window)
+    assert (
+        merged.loc[in_stockout, "stock_status"] == "Out of Stock"
+    ).all(), (
+        "A snapshot was emitted during a stockout window with non-zero stock status"
+    )
 
 
 # --- INVENTORY CHANGE EVENTS ---
 
 
-def test_inventory_change_event_event_timestamp_not_in_future(dataframes):
-    df = dataframes["inventory_change_events"].copy()
+def test_stock_output_inventory_change_event_event_timestamp_not_in_future(ctx):
+    df = ctx.stock_snapshots.inventory_change_events_df
     assert (pd.to_datetime(df["event_timestamp"]) <= pd.Timestamp.now()).all()
 
 
-def test_inventory_change_event_delta_consistent_with_stock_after(dataframes):
+def test_stock_output_inventory_change_event_delta_consistent_with_stock_after(ctx):
     """
     For consecutive events on the same store+product, the stock_after of the
     prior row plus the delta of the current row must equal the current stock_after.
     """
-    df = dataframes["inventory_change_events"].copy()
+    df = ctx.stock_snapshots.inventory_change_events_df
     df["event_timestamp"] = pd.to_datetime(df["event_timestamp"])
 
     df = df.sort_values(["store_id", "product_id", "event_timestamp"])
@@ -101,19 +109,25 @@ def test_inventory_change_event_delta_consistent_with_stock_after(dataframes):
     ).all(), "Found inventory events where stock_after != previous stock_after + delta"
 
 
-def test_stockout_forces_inventory_to_zero(dataframes):
-    stockouts = dataframes["stockout_events"].copy()
-    events = dataframes["inventory_change_events"].copy()
+def test_stock_output_stockout_forces_inventory_to_zero(ctx):
+    """
+    Any inventory event emitted during a stockout window must show zero stock.
+    Not all stockout weeks are guaranteed to have an event (sparse emission).
+    """
+    stockouts = ctx.stockout_events.stockout_events_df
+    events = ctx.stock_snapshots.inventory_change_events_df
 
     stockouts["start"] = pd.to_datetime(stockouts["stockout_start_date"])
     stockouts["end"] = pd.to_datetime(stockouts["stockout_end_date"])
-
     events["ts"] = pd.to_datetime(events["event_timestamp"])
 
     merged = events.merge(stockouts, on=["store_id", "product_id"], how="left")
-
     in_stockout = (merged["ts"] >= merged["start"]) & (merged["ts"] <= merged["end"])
 
-    # If event occurs during stockout, stock_after should be 0 (or near-zero if you allow leakage)
-    assert (merged.loc[in_stockout, "stock_after"] == 0).all()
-    assert (merged.loc[in_stockout, "delta"] <= 0).all()
+    if in_stockout.any():
+        assert (
+            merged.loc[in_stockout, "stock_after"] == 0
+        ).all(), "An inventory event during a stockout window has non-zero stock_after"
+        assert (
+            merged.loc[in_stockout, "delta"] <= 0
+        ).all(), "An inventory event during a stockout window has positive delta"

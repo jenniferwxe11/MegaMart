@@ -3,29 +3,29 @@ import pandas as pd
 # --- PROMOTIONS ---
 
 
-def test_promotion_dates(dataframes):
-    df = dataframes["promotions"].copy()
+def test_promotion_output_dates(ctx):
+    df = ctx.promotions.promotions_df
     assert (
         pd.to_datetime(df["effective_start_date"])
         <= pd.to_datetime(df["effective_end_date"])
     ).all()
 
 
-def test_promotion_percentage_discount_at_most_100(dataframes):
+def test_promotion_output_percentage_discount_at_most_100(ctx):
     """
     Percentage discounts should not exceed 100%.
     """
-    df = dataframes["promotions"]
+    df = ctx.promotions.promotions_df
     pct = df[df["promotion_mechanic"] == "percentage_discount"]
     assert (pct["promotion_value"] <= 100).all()
 
 
-def test_promotion_bundle_scope_has_bundle_target(dataframes):
+def test_promotion_output_bundle_scope_has_bundle_target(ctx):
     """
     Bundle promotions must reference a valid bundle_id as their target.
     """
-    promotions = dataframes["promotions"].copy()
-    bundles = dataframes["bundles"].copy()
+    promotions = ctx.promotions.promotions_df
+    bundles = ctx.bundles.bundles_df
     valid_bundles = set(bundles["bundle_id"].unique())
     bundle_promos = promotions[promotions["promotion_mechanic"] == "bundle"]
     for _, row in bundle_promos.iterrows():
@@ -34,12 +34,12 @@ def test_promotion_bundle_scope_has_bundle_target(dataframes):
         ), f"Promotion {row['promotion_id']} references unknown bundle {row['promotion_target_id']}"
 
 
-def test_promotion_product_scope_has_product_target(dataframes):
+def test_promotion_output_product_scope_has_product_target(ctx):
     """
     Product scoped promotions must reference a valid product_id as their target.
     """
-    promotions = dataframes["promotions"].copy()
-    products = dataframes["products"].copy()
+    promotions = ctx.promotions.promotions_df
+    products = ctx.products.products_df
     valid_pids = set(products["product_id"].unique())
     product_promos = promotions[promotions["promotion_scope"] == "product"]
     for _, row in product_promos.iterrows():

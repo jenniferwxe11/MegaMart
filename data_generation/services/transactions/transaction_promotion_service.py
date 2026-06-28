@@ -348,6 +348,15 @@ def apply_cart_level_discount(
 
     promo = promo_row.iloc[0]
 
+    # --- Date Validation ---
+    transaction_time = pd.Timestamp(transaction_time)
+
+    if (
+        transaction_time < promo["effective_start_date"]
+        or transaction_time > promo["effective_end_date"]
+    ):
+        return 0, {}
+
     # --- Scope Validation ---
     if promo["promotion_scope"] == "product":
         eligible_items = [
@@ -407,12 +416,29 @@ def apply_cart_level_discount(
     allocation = {}
 
     if discount > 0 and eligible_subtotal > 0:
-        for item in eligible_items:
+
+        rounded_discount = round(discount, 2)
+
+        allocated = 0
+
+        for item in eligible_items[:-1]:
             item_total = item["price"] * item["quantity"]
             share = item_total / eligible_subtotal
-            allocation[item["product_id"]] = (
-                allocation.get(item["product_id"], 0) + discount * share
-            )
+
+            value = round(rounded_discount * share, 2)
+
+            allocation[item["product_id"]] = value
+            allocated += value
+
+        # Give the remaining cents to the last item
+        last = eligible_items[-1]
+
+        allocation[last["product_id"]] = round(
+            rounded_discount - allocated,
+            2,
+        )
+
+        discount = rounded_discount
 
     return discount, allocation
 
