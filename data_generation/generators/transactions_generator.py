@@ -179,6 +179,14 @@ def transactions_generator(ctx: GenerationContext):
                 promo["promotion_id"],
                 timestamp,
             )
+
+            allocated = round(sum(allocation.values()), 2)
+            assert round(discount, 2) == allocated, (
+                f"{promo['promotion_id']} "
+                f"discount={discount:.4f}, "
+                f"allocated={allocated:.4f}"
+            )
+
             total_discount += discount
 
             # Store item level discount allocation
@@ -197,6 +205,8 @@ def transactions_generator(ctx: GenerationContext):
                     continue
 
                 final_allocation[k] = final_allocation.get(k, 0) + v
+
+        total_discount = round(total_discount, 2)
 
         # Guard: remove invalid discounts
         if total_discount <= 0:
@@ -237,9 +247,8 @@ def transactions_generator(ctx: GenerationContext):
             item_subtotal = round(unit_price * quantity, 2)
 
             # Prevent over allocation
-            item_discount = round(
-                min(final_allocation.get(product_id, 0), item_subtotal), 2
-            )
+            allocated_discount = final_allocation.get(product_id, 0) or 0
+            item_discount = round(min(allocated_discount, item_subtotal), 2)
 
             final_item_price = round(max(0.0, item_subtotal - item_discount), 2)
 
@@ -259,28 +268,49 @@ def transactions_generator(ctx: GenerationContext):
             )
 
         # --- Reconcile Totals ---
-        items_total = sum(item["final_item_price"] for item in local_transaction_items)
-
-        ground_truth = cart_subtotal - total_discount
-        drift = ground_truth - items_total
-
-        if local_transaction_items and abs(drift) > 0:
-            last = local_transaction_items[-1]
-            last["final_item_price"] = round(last["final_item_price"] + drift, 2)
-
-        # Recompute after drift correction
-        items_total = sum(item["final_item_price"] for item in local_transaction_items)
-
-        transaction_total = items_total + shipping_fee - shipping_discount
-
-        diff = abs(
-            (cart_subtotal - total_discount + shipping_fee - shipping_discount)
-            - (items_total + shipping_fee - shipping_discount)
+        items_total = round(
+            sum(item["final_item_price"] for item in local_transaction_items),
+            2,
         )
 
-        if diff > 0.01:
-            print("MISMATCH:", diff)
-            print("transaction_id:", transaction_id)
+        cart_subtotal = round(cart_subtotal, 2)
+        shipping_fee = round(shipping_fee, 2)
+        shipping_discount = round(shipping_discount, 2)
+
+        transaction_total = round(
+            cart_subtotal - total_discount + shipping_fee - shipping_discount,
+            2,
+        )
+
+        expected_total = round(
+            items_total + shipping_fee - shipping_discount,
+            2,
+        )
+
+        diff = abs(transaction_total - expected_total)
+
+        assert (
+            diff <= 0.05
+        ), f"""
+        Transaction {transaction_id} reconciliation failed
+
+        cart_subtotal      = {cart_subtotal}
+        total_discount     = {total_discount}
+        shipping_fee       = {shipping_fee}
+        shipping_discount  = {shipping_discount}
+
+        transaction_total  = {transaction_total}
+        items_total        = {items_total}
+        expected_items     = {items_total + shipping_fee - shipping_discount}
+
+        diff               = {diff}
+
+        allocations:
+        {promotion_allocations}
+
+        items:
+        {local_transaction_items}
+        """
 
         basket_size = sum(item["quantity"] for item in cart_items)
         num_unique_items = len(cart_items)
@@ -408,6 +438,14 @@ def transactions_generator(ctx: GenerationContext):
                 promo["promotion_id"],
                 transaction_time,
             )
+
+            allocated = round(sum(allocation.values()), 2)
+            assert round(discount, 2) == allocated, (
+                f"{promo['promotion_id']} "
+                f"discount={discount:.4f}, "
+                f"allocated={allocated:.4f}"
+            )
+
             total_discount += discount
 
             # Store item level discount allocation
@@ -426,6 +464,8 @@ def transactions_generator(ctx: GenerationContext):
                     continue
 
                 final_allocation[k] = final_allocation.get(k, 0) + v
+
+        total_discount = round(total_discount, 2)
 
         # Guard: remove invalid discounts
         if total_discount <= 0:
@@ -472,9 +512,8 @@ def transactions_generator(ctx: GenerationContext):
             item_subtotal = round(unit_price * quantity, 2)
 
             # Prevent over allocation
-            item_discount = round(
-                min(final_allocation.get(product_id, 0), item_subtotal), 2
-            )
+            allocated_discount = final_allocation.get(product_id, 0) or 0
+            item_discount = round(min(allocated_discount, item_subtotal), 2)
 
             final_item_price = round(max(0.0, item_subtotal - item_discount), 2)
 
@@ -494,28 +533,49 @@ def transactions_generator(ctx: GenerationContext):
             )
 
         # --- Reconcile Totals ---
-        items_total = sum(item["final_item_price"] for item in local_transaction_items)
-
-        ground_truth = cart_subtotal - total_discount
-        drift = ground_truth - items_total
-
-        if local_transaction_items and abs(drift) > 0:
-            last = local_transaction_items[-1]
-            last["final_item_price"] = round(last["final_item_price"] + drift, 2)
-
-        # Recompute after drift correction
-        items_total = sum(item["final_item_price"] for item in local_transaction_items)
-
-        transaction_total = items_total + shipping_fee - shipping_discount
-
-        diff = abs(
-            (cart_subtotal - total_discount + shipping_fee - shipping_discount)
-            - (items_total + shipping_fee - shipping_discount)
+        items_total = round(
+            sum(item["final_item_price"] for item in local_transaction_items),
+            2,
         )
 
-        if diff > 0.01:
-            print("MISMATCH:", diff)
-            print("transaction_id:", transaction_id)
+        cart_subtotal = round(cart_subtotal, 2)
+        shipping_fee = round(shipping_fee, 2)
+        shipping_discount = round(shipping_discount, 2)
+
+        transaction_total = round(
+            cart_subtotal - total_discount + shipping_fee - shipping_discount,
+            2,
+        )
+
+        expected_total = round(
+            items_total + shipping_fee - shipping_discount,
+            2,
+        )
+
+        diff = abs(transaction_total - expected_total)
+
+        assert (
+            diff <= 0.05
+        ), f"""
+        Transaction {transaction_id} reconciliation failed
+
+        cart_subtotal      = {cart_subtotal}
+        total_discount     = {total_discount}
+        shipping_fee       = {shipping_fee}
+        shipping_discount  = {shipping_discount}
+
+        transaction_total  = {transaction_total}
+        items_total        = {items_total}
+        expected_items     = {items_total + shipping_fee - shipping_discount}
+
+        diff               = {diff}
+
+        allocations:
+        {promotion_allocations}
+
+        items:
+        {local_transaction_items}
+        """
 
         basket_size = sum(item["quantity"] for item in cart_items)
         num_unique_items = len(cart_items)

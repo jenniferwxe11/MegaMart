@@ -84,6 +84,7 @@ def build_base_context() -> GenerationContext:
         ),
         stock_snapshots=StockSnapshotContext(
             stock_snapshots_df=pd.DataFrame(),
+            inventory_change_events_df=pd.DataFrame(),
         ),
         competitor_products=CompetitorProductContext(
             competitor_products_df=pd.DataFrame(),

@@ -138,9 +138,11 @@ def refresh_context(ctx, generator_name):
     elif generator_name == "stock_snapshots_generator":
 
         stock_snapshots_df = load_data.load_stock_snapshots()
+        inventory_change_events_df = load_data.load_inventory_change_events()
 
         ctx.stock_snapshots = StockSnapshotContext(
-            stock_snapshots_df=stock_snapshots_df
+            stock_snapshots_df=stock_snapshots_df,
+            inventory_change_events_df=inventory_change_events_df,
         )
 
     # =========================================================

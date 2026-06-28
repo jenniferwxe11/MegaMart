@@ -6,6 +6,13 @@ class PaymentMethodConfig(TypedDict):
     weights: list[float]
 
 
+SESSION_MISSION_TARGET_RANGE = {
+    "Quick Top Up": (1, 5),
+    "Regular Buy": (6, 15),
+    "Bulk Buy": (16, 40),
+    "Browsing": (1, 2),
+}
+
 CUSTOMER_TYPE_DISTRIBUTION = {
     "Omnichannel": 0.2,
     "Retail Members": 0.25,

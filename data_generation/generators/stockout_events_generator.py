@@ -1,5 +1,5 @@
 import random
-from datetime import date, timedelta
+from datetime import date
 from typing import Any
 
 import pandas as pd
@@ -19,7 +19,6 @@ from data_generation.config.stocks_config import (
 )
 from data_generation.context.generation_context import GenerationContext
 from data_generation.registry import register
-from data_generation.utils.date_time_utils import overlapping_dates
 from data_generation.utils.io_utils import save
 
 fake = Faker()
@@ -142,7 +141,8 @@ def stockout_events_generator(ctx: GenerationContext):
             num_yearly_stockouts = int(base_events * intensity)
             num_yearly_stockouts = max(1, min(num_yearly_stockouts, 30))
 
-            existing_stockout_windows: list[tuple[pd.Timestamp, pd.Timestamp]] = []
+            # existing_stockout_windows: list[tuple[pd.Timestamp, pd.Timestamp]] = []
+            last_end = None
 
             # Generate multiple non overlapping stockout windows
             for _ in range(num_yearly_stockouts):
@@ -167,35 +167,49 @@ def stockout_events_generator(ctx: GenerationContext):
                             min_duration * (2 if is_year_of_discontinuation else 1),
                         )
 
-                    # Prevent unrealistic clustering of stockout windows
-                    for _ in range(10):
-                        stockout_start_date = fake.date_between(
-                            start_date=max(launch_date, pd.Timestamp(date(year, 1, 1))),
-                            end_date=date(year, 12, 31),
-                        )
-                        stockout_end_date = stockout_start_date + timedelta(
-                            days=stockout_duration_days
-                        )
+                    # Lower bound: respect both lifecycle start and previous window end
+                    min_start = pd.Timestamp(
+                        max(launch_date, pd.Timestamp(date(year, 1, 1)))
+                    )
+                    if last_end is not None:
+                        min_start = max(min_start, last_end + pd.Timedelta(days=1))
 
-                        if not overlapping_dates(
-                            existing_stockout_windows,
-                            stockout_start_date,
-                            stockout_end_date,
-                        ):
-                            existing_stockout_windows.append(
-                                (stockout_start_date, stockout_end_date)
-                            )
+                    # Upper bound: end of year, but also cap at DATA_END_DATE
+                    max_start = pd.Timestamp(
+                        min(date(year, 12, 31), pd.Timestamp(DATA_END_DATE).date())
+                    )
 
-                            # Store Stockout Record
-                            stockout_events.append(
-                                {
-                                    "store_id": store_id,
-                                    "product_id": product_id,
-                                    "stockout_start_date": stockout_start_date,
-                                    "stockout_end_date": stockout_end_date,
-                                }
-                            )
-                            break
+                    # No room left in this year
+                    if min_start > max_start:
+                        break
+
+                    # Ensure there's room for at least the minimum duration
+                    latest_viable_start = max_start - pd.Timedelta(days=min_duration)
+                    if min_start > latest_viable_start:
+                        break
+
+                    stockout_start_date = pd.Timestamp(
+                        fake.date_between(
+                            start_date=min_start.date(),
+                            end_date=latest_viable_start.date(),
+                        )
+                    )
+                    year_end = pd.Timestamp(date(year, 12, 31))
+                    stockout_end_date = min(
+                        stockout_start_date + pd.Timedelta(days=stockout_duration_days),
+                        year_end,
+                    )
+                    last_end = stockout_end_date
+
+                    # Store Stockout Record
+                    stockout_events.append(
+                        {
+                            "store_id": store_id,
+                            "product_id": product_id,
+                            "stockout_start_date": stockout_start_date,
+                            "stockout_end_date": stockout_end_date,
+                        }
+                    )
 
     # ---------------------------
     # Export to CSV

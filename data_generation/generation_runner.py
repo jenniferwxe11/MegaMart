@@ -19,9 +19,6 @@ from data_generation.registry import REGISTRY
 # ─────────────────────────────────────────────────────────────────────────────
 
 fake = Faker()
-fake.seed_instance(42)
-random.seed(42)
-np.random.seed(42)
 
 os.makedirs(RAW_DIR, exist_ok=True)
 
@@ -35,6 +32,9 @@ def accepts_ctx(fn):
 
 
 def run_generation():
+    fake.seed_instance(42)
+    random.seed(42)
+    np.random.seed(42)
 
     print("=" * 60)
     print(" MegaMart Data Generator (DAG MODE)")

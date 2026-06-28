@@ -1,6 +1,7 @@
 import random
 
 import numpy as np
+import pandas as pd
 
 from data_generation.config.clickstreams_config import (
     EVENT_PAGE_MAPPING,
@@ -46,7 +47,12 @@ def resolve_scroll_and_time(event_type: str, mission_choice: str) -> tuple:
     return scroll_depth, time_on_page
 
 
-def resolve_page(event_type: str, product_id, category: str, search_term: str) -> str:
+def resolve_page(
+    event_type: str,
+    product_id: str | None,
+    category: str | None,
+    search_term: str | None,
+) -> str:
     """
     Maps event type + context to a URL page string.
     """
@@ -65,7 +71,7 @@ def resolve_page(event_type: str, product_id, category: str, search_term: str) -
 
 def resolve_remove_from_cart(
     ctx,
-    cart_content: list,
+    cart_content: list[str],
 ) -> tuple:
     """
     Picks a product to remove.
@@ -84,8 +90,8 @@ def resolve_remove_from_cart(
 
 def resolve_add_to_cart(
     ctx,
-    product_id,
-    previous_product_id,
+    product_id: str | None,
+    previous_product_id: str | None,
     previous_category: str,
     cart_content: list,
     store_id: str,
@@ -128,16 +134,16 @@ def resolve_add_to_cart(
 
 def resolve_product_view(
     ctx,
-    product_id,
+    product_id: str | None,
     previous_event_type: str,
     previous_category: str,
-    previous_product_id,
-    previous_search_term: str,
+    previous_product_id: str | None,
+    previous_search_term: str | None,
     cart_content: list,
     customer_segment: str,
     session_affinity_categories: set,
     store_id: str,
-    timestamp,
+    timestamp: pd.Timestamp,
 ) -> tuple:
     """
     Resolves which product and category to show on Product View.
@@ -213,7 +219,7 @@ def resolve_product_view(
 
 
 def resolve_category_view(
-    previous_category: str,
+    previous_category: str | None,
     customer_segment: str,
     session_affinity_categories: set,
 ) -> str:
