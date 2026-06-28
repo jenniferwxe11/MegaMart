@@ -49,7 +49,7 @@ def _is_list_of_dicts(x):
     return isinstance(x, list) and all(isinstance(i, dict) for i in x)
 
 
-def test_column_types(dataframes):
+def test_schema_contracts_column_types(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         type_rules = contract.get("types", {})
         df = dataframes[table]
@@ -63,7 +63,7 @@ def test_column_types(dataframes):
             )
 
 
-def test_date_columns(dataframes):
+def test_schema_contracts_date_columns(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         for col in contract.get("date_columns", []):
 
@@ -76,7 +76,7 @@ def test_date_columns(dataframes):
             ), f"{table}.{col} contains invalid dates"
 
 
-def test_datetime_columns(dataframes):
+def test_schema_contracts_datetime_columns(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         df = dataframes[table]
 
@@ -89,7 +89,7 @@ def test_datetime_columns(dataframes):
             ), f"{table}.{col} contains invalid datetime values"
 
 
-def test_primary_keys_unique(dataframes):
+def test_schema_contracts_primary_keys_unique(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         pk = contract.get("pk")
 
@@ -102,14 +102,14 @@ def test_primary_keys_unique(dataframes):
         ).any(), f"{table} contains duplicate primary keys: {pk}"
 
 
-def test_unique_columns(dataframes):
+def test_schema_contracts_unique_columns(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         for col in contract.get("unique_columns", []):
             df = dataframes[table]
             assert not df[df[col].notna()].duplicated(subset=[col]).any()
 
 
-def test_unique_combinations(dataframes):
+def test_schema_contracts_unique_combinations(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         for cols in contract.get("unique_combinations", []):
             df = dataframes[table]
@@ -120,7 +120,7 @@ def test_unique_combinations(dataframes):
             ), f"{table} has duplicate combinations for {cols}"
 
 
-def test_bridge_unique_combinations(dataframes):
+def test_schema_contracts_bridge_unique_combinations(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         bridge_rules = contract.get("bridge_unique_combinations", {})
 
@@ -153,7 +153,7 @@ def test_bridge_unique_combinations(dataframes):
             )
 
 
-def test_foreign_keys_valid(dataframes):
+def test_schema_contracts_foreign_keys_valid(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         if "fk" not in contract:
             continue
@@ -164,7 +164,7 @@ def test_foreign_keys_valid(dataframes):
             assert df[col].dropna().isin(dataframes[ref_table][ref_col]).all()
 
 
-def test_list_foreign_keys(dataframes):
+def test_schema_contracts_list_foreign_keys(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         rules = contract.get("list_fk", {})
         df = dataframes[table]
@@ -191,12 +191,12 @@ def test_list_foreign_keys(dataframes):
             )
 
 
-def test_required_columns_exist(dataframes):
+def test_schema_contracts_required_columns_exist(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         assert all(c in dataframes[table].columns for c in contract["required"])
 
 
-def test_accepted_values(dataframes):
+def test_schema_contracts_accepted_values(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         df = dataframes[table]
 
@@ -208,7 +208,7 @@ def test_accepted_values(dataframes):
             ), f"{table}.{col} contains invalid values. Allowed: {allowed}"
 
 
-def test_regex_columns(dataframes):
+def test_schema_contracts_regex_columns(dataframes):
     for table, contract in TABLE_CONTRACTS.items():
         rules = contract.get("regex", {})
         df = dataframes[table]
@@ -222,7 +222,7 @@ def test_regex_columns(dataframes):
             assert series.astype(str).str.fullmatch(pattern).all()
 
 
-def test_list_dict_foreign_keys(dataframes):
+def test_schema_contracts_list_dict_foreign_keys(dataframes):
     """
     Check that IDs nested inside list[dict] columns reference valid rows.
     """
@@ -257,7 +257,7 @@ def test_list_dict_foreign_keys(dataframes):
             )
 
 
-def test_list_dict_bridge_unique(dataframes):
+def test_schema_contracts_list_dict_bridge_unique(dataframes):
     """
     Check that (parent_id, nested_id) combinations are unique within list[dict] columns.
     """
