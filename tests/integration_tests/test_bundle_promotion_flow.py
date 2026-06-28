@@ -1,7 +1,6 @@
 import random
 
 import pandas as pd
-import pytest
 
 from data_generation.config.promotions_config import (
     BUNDLE_CAMPAIGN_COMPATIBILITY,
@@ -18,7 +17,6 @@ from tests.helpers import (
     _build_datetime_range,
 )
 
-pytestmark = pytest.mark.skip(reason="Temporarily disabled")
 # ============================================================
 # bundle_lifecycle()
 # ============================================================
