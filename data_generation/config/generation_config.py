@@ -1,5 +1,5 @@
-DEV_MODE = False
-TEST_MODE = True
+DEV_MODE = True
+TEST_MODE = False
 
 if DEV_MODE:
     NUM_CUSTOMERS = 50
