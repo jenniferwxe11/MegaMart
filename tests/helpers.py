@@ -223,7 +223,7 @@ def _build_cart_items_for_promotion(ctx, promotion, rng):
             {
                 "product_id": target,
                 "price": price,
-                "quantity": 1,
+                "quantity": rng.randint(2, 3),
                 "category": ctx.products.product_category_map.get(target),
             }
         ]
@@ -241,19 +241,24 @@ def _build_cart_items_for_promotion(ctx, promotion, rng):
         counter = Counter()
 
         if min_spend == 0:
-            pid = rng.choice(pids)
-            price = product_price_map.get(pid)
-            if price is None:
-                return None
+            num_items = min(rng.randint(2, 3), len(pids))
+            chosen = rng.sample(pids, num_items)
+            cart_items = []
+            for pid in chosen:
+                price = product_price_map.get(pid)
+                if price is None:
+                    continue
 
-            return [
-                {
-                    "product_id": pid,
-                    "price": price,
-                    "quantity": 1,
-                    "category": ctx.products.product_category_map.get(pid),
-                }
-            ]
+                cart_items.append(
+                    {
+                        "product_id": pid,
+                        "price": price,
+                        "quantity": rng.randint(1, 3),
+                        "category": ctx.products.product_category_map.get(pid),
+                    }
+                )
+
+            return cart_items if len(cart_items) >= 2 else None
 
         else:
             # Prevent infinite loop
@@ -320,7 +325,17 @@ def _build_cart_items_for_promotion(ctx, promotion, rng):
         cart_subtotal = 0.0
         counter = Counter()
 
-        # Prevent infinite loop
+        num_items = rng.randint(2, 4)
+        chosen = rng.sample(pids, min(num_items, len(pids)))
+        for pid in chosen:
+            price = product_price_map.get(pid)
+            if price is None:
+                continue
+            qty = rng.randint(1, 3)
+            counter[pid] += qty
+            cart_subtotal += price * qty
+
+        # Top up only if min_spend not yet met
         i = 0
         while cart_subtotal < min_spend and i < 100:
             pid = rng.choice(pids)
@@ -334,6 +349,7 @@ def _build_cart_items_for_promotion(ctx, promotion, rng):
             cart_subtotal += price * qty
             i += 1
 
+        # Build from counter
         cart_items = [
             {
                 "product_id": pid,
@@ -344,9 +360,29 @@ def _build_cart_items_for_promotion(ctx, promotion, rng):
             for pid, qty in counter.items()
         ]
 
-        if not cart_items:
-            return None
-
-        return cart_items
+        return cart_items if len(cart_items) >= 2 else None
 
     return None
+
+
+def _build_two_compatible_promotions(ctx, rng, max_attempts=100):
+    for _ in range(max_attempts):
+        promo1 = _build_promotion(ctx, rng)
+        promo2 = _build_promotion(ctx, rng)
+
+        if promo1["promotion_id"] == promo2["promotion_id"]:
+            continue
+
+        start = max(
+            promo1["effective_start_date"],
+            promo2["effective_start_date"],
+        )
+        end = min(
+            promo1["effective_end_date"],
+            promo2["effective_end_date"],
+        )
+
+        if start <= end:
+            return promo1, promo2
+
+    return None, None
