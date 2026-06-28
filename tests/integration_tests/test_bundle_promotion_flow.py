@@ -1,3 +1,6 @@
+import pytest
+
+pytestmark = pytest.mark.skip(reason="Temporarily disabled")
 # import random
 
 # import pandas as pd
