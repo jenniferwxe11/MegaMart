@@ -28,25 +28,26 @@ from tests.helpers import (
 )
 
 fake = Faker()
+fake.seed_instance(42)
 
 
 # ============================================================
 # sample_products()
 # ============================================================
-# UNIT: needs product_ctx only to resolve category→product_ids.
+# UNIT: needs ctx only to resolve category→product_ids.
 # The selection logic (affinity clustering) is what we are testing.
 
 
-def test_transaction_sample_products(product_ctx):
-    (category,) = _build_category(product_ctx, 1)
-    product_id = _build_category_product_id(product_ctx, category)
+def test_transaction_functions_sample_products(ctx):
+    (category,) = _build_category(ctx, 1)
+    product_id = _build_category_product_id(ctx, category)
     affinity_categories = set(CATEGORY_AFFINITY.get(category, []))
     affinity_categories.add(category)
 
-    result = sample_products(product_ctx, [product_id], 10)
+    result = sample_products(ctx, [product_id], 10)
     assert len(result) == 10
 
-    product_category_map = product_ctx.products.product_category_map
+    product_category_map = ctx.products.product_category_map
     for pid in result:
         assert pid in product_category_map
         pid_category = product_category_map.get(pid)
@@ -58,30 +59,30 @@ def test_transaction_sample_products(product_ctx):
 # ============================================================
 # is_bundle_valid()
 # ============================================================
-# UNIT: bundle_dict is the only ctx field read. We use the bundle_ctx
+# UNIT: bundle_dict is the only ctx field read. We use the ctx
 # fixture purely to resolve a real bundle_id → required items dict,
 # then test the cart-matching logic in isolation.
 
 
-def test_transaction_is_bundle_valid_returns_true(bundle_ctx):
-    bundle = _build_bundle(bundle_ctx)
+def test_transaction_functions_is_bundle_valid_returns_true(ctx):
+    bundle = _build_bundle(ctx)
     bundle_id = bundle["bundle_id"]
 
     # Add bundle items into cart
-    cart_items = _build_valid_bundle_cart(bundle_ctx, bundle_id)
+    cart_items = _build_valid_bundle_cart(ctx, bundle_id)
 
-    result = is_bundle_valid(bundle_ctx, bundle_id, cart_items)
+    result = is_bundle_valid(ctx, bundle_id, cart_items)
     assert result
 
 
-def test_transaction_is_bundle_valid_returns_false(bundle_ctx):
-    bundle = _build_bundle(bundle_ctx)
+def test_transaction_functions_is_bundle_valid_returns_false(ctx):
+    bundle = _build_bundle(ctx)
     bundle_id = bundle["bundle_id"]
 
     # Add bundle items into cart with insufficient quantity
-    cart_items = _build_insufficient_quantity_bundle_cart(bundle_ctx, bundle_id)
+    cart_items = _build_insufficient_quantity_bundle_cart(ctx, bundle_id)
 
-    result = is_bundle_valid(bundle_ctx, bundle_id, cart_items)
+    result = is_bundle_valid(ctx, bundle_id, cart_items)
     assert not result
 
 
@@ -90,24 +91,24 @@ def test_transaction_is_bundle_valid_returns_false(bundle_ctx):
 # ============================================================
 
 
-def test_transaction_select_shipping_promo_empty_promotions():
+def test_transaction_functions_select_shipping_promo_empty_promotions():
     result = select_shipping_promo([], 100)
     assert result is None
 
 
-def test_transaction_select_shipping_promo_no_free_shipping():
+def test_transaction_functions_select_shipping_promo_no_free_shipping():
     promotions = [{"promotion_mechanic": "dollar_discount"}]
     result = select_shipping_promo(promotions, 100)
     assert result is None
 
 
-def test_transaction_select_shipping_promo_no_eligible_free_shipping():
+def test_transaction_functions_select_shipping_promo_no_eligible_free_shipping():
     promotions = [{"promotion_mechanic": "free_shipping", "min_spend": 200}]
     result = select_shipping_promo(promotions, 100)
     assert result is None
 
 
-def test_transaction_select_shipping_promo_has_eligible_free_shipping():
+def test_transaction_functions_select_shipping_promo_has_eligible_free_shipping():
     promotions = [
         {"promotion_mechanic": "free_shipping", "min_spend": 50},
         {"promotion_mechanic": "free_shipping", "min_spend": 30},
@@ -127,88 +128,90 @@ def test_transaction_select_shipping_promo_has_eligible_free_shipping():
 # ============================================================
 # UNIT: only bundle_dict is read from ctx.  All scope logic is tested
 # with plain dicts. Bundle-vs-product and bundle-vs-bundle cases use
-# bundle_ctx to resolve real bundle contents — the function logic is
+# ctx to resolve real bundle contents — the function logic is
 # what is under test, not the data itself.
 
 
-def test_transaction_is_overlap_product_product_overlap(bundle_ctx):
+def test_transaction_functions_is_overlap_product_product_overlap(ctx):
     promo_a = {"promotion_scope": "product", "promotion_target_id": "PROD001"}
     promo_b = {"promotion_scope": "product", "promotion_target_id": "PROD001"}
-    assert is_overlap(bundle_ctx, promo_a, promo_b, [])
+    assert is_overlap(ctx, promo_a, promo_b, [])
 
 
-def test_transaction_is_overlap_product_product_no_overlap(bundle_ctx):
+def test_transaction_functions_is_overlap_product_product_no_overlap(ctx):
     promo_a = {"promotion_scope": "product", "promotion_target_id": "PROD001"}
     promo_b = {"promotion_scope": "product", "promotion_target_id": "PROD002"}
-    assert not is_overlap(bundle_ctx, promo_a, promo_b, [])
+    assert not is_overlap(ctx, promo_a, promo_b, [])
 
 
-def test_transaction_is_overlap_category_category_overlap(bundle_ctx):
+def test_transaction_functions_is_overlap_category_category_overlap(ctx):
     promo_a = {"promotion_scope": "category", "promotion_target_id": "CATEGORY_A"}
     promo_b = {"promotion_scope": "category", "promotion_target_id": "CATEGORY_A"}
-    assert is_overlap(bundle_ctx, promo_a, promo_b, [])
+    assert is_overlap(ctx, promo_a, promo_b, [])
 
 
-def test_transaction_is_overlap_category_category_no_overlap(bundle_ctx):
+def test_transaction_functions_is_overlap_category_category_no_overlap(ctx):
     promo_a = {"promotion_scope": "category", "promotion_target_id": "CATEGORY_A"}
     promo_b = {"promotion_scope": "category", "promotion_target_id": "CATEGORY_B"}
-    assert not is_overlap(bundle_ctx, promo_a, promo_b, [])
+    assert not is_overlap(ctx, promo_a, promo_b, [])
 
 
-def test_transaction_is_overlap_product_category_overlap(bundle_ctx):
+def test_transaction_functions_is_overlap_product_category_overlap(ctx):
     promo_a = {"promotion_scope": "product", "promotion_target_id": "PROD001"}
     promo_b = {"promotion_scope": "category", "promotion_target_id": "CATEGORY_A"}
     cart_items = [{"product_id": "PROD001", "category": "CATEGORY_A"}]
-    assert is_overlap(bundle_ctx, promo_a, promo_b, cart_items)
+    assert is_overlap(ctx, promo_a, promo_b, cart_items)
 
 
-def test_transaction_is_overlap_product_category_no_overlap(bundle_ctx):
+def test_transaction_functions_is_overlap_product_category_no_overlap(ctx):
     promo_a = {"promotion_scope": "product", "promotion_target_id": "PROD001"}
     promo_b = {"promotion_scope": "category", "promotion_target_id": "CATEGORY_B"}
     cart_items = [{"product_id": "PROD001", "category": "CATEGORY_A"}]
-    assert not is_overlap(bundle_ctx, promo_a, promo_b, cart_items)
+    assert not is_overlap(ctx, promo_a, promo_b, cart_items)
 
 
-def test_transaction_is_overlap_bundle_product_overlap(bundle_ctx, seed: int = 42):
+def test_transaction_functions_is_overlap_bundle_product_overlap(ctx, seed: int = 42):
     rng = random.Random(seed)
-    bundle_dict = bundle_ctx.bundles.bundle_dict
+    bundle_dict = ctx.bundles.bundle_dict
     bundle_id = rng.choice(list(bundle_dict))
     bundle_items = bundle_dict[bundle_id]
     product_id = rng.choice(list(bundle_items))
     promo_a = {"promotion_scope": "bundle", "promotion_target_id": bundle_id}
     promo_b = {"promotion_scope": "product", "promotion_target_id": product_id}
-    assert is_overlap(bundle_ctx, promo_a, promo_b, [])
+    assert is_overlap(ctx, promo_a, promo_b, [])
 
 
-def test_transaction_is_overlap_bundle_product_no_overlap(bundle_ctx, seed: int = 42):
+def test_transaction_functions_is_overlap_bundle_product_no_overlap(
+    ctx, seed: int = 42
+):
     rng = random.Random(seed)
-    bundle_dict = bundle_ctx.bundles.bundle_dict
+    bundle_dict = ctx.bundles.bundle_dict
     bundle_id = rng.choice(list(bundle_dict))
     bundle_items = bundle_dict[bundle_id]
     bundle_product_ids = set(bundle_items)
-    all_product_ids = set(bundle_ctx.products.product_ids)
+    all_product_ids = set(ctx.products.product_ids)
     non_bundle_products_ids = list(all_product_ids - bundle_product_ids)
     product_id = rng.choice(non_bundle_products_ids)
     promo_a = {"promotion_scope": "bundle", "promotion_target_id": bundle_id}
     promo_b = {"promotion_scope": "product", "promotion_target_id": product_id}
-    assert not is_overlap(bundle_ctx, promo_a, promo_b, [])
+    assert not is_overlap(ctx, promo_a, promo_b, [])
 
 
-def test_transaction_is_overlap_bundle_bundle_overlap(bundle_ctx):
-    bundle = _build_bundle(bundle_ctx)
+def test_transaction_functions_is_overlap_bundle_bundle_overlap(ctx):
+    bundle = _build_bundle(ctx)
     b1 = b2 = bundle["bundle_id"]
     promo_a = {"promotion_scope": "bundle", "promotion_target_id": b1}
     promo_b = {"promotion_scope": "bundle", "promotion_target_id": b2}
-    assert is_overlap(bundle_ctx, promo_a, promo_b, [])
+    assert is_overlap(ctx, promo_a, promo_b, [])
 
 
-def test_transaction_is_overlap_bundle_bundle_no_overlap(bundle_ctx):
-    bundle_dict = bundle_ctx.bundles.bundle_dict
+def test_transaction_functions_is_overlap_bundle_bundle_no_overlap(ctx):
+    bundle_dict = ctx.bundles.bundle_dict
     keys = list(bundle_dict.keys())
     b1, b2 = keys[0], keys[-1]
     promo_a = {"promotion_scope": "bundle", "promotion_target_id": b1}
     promo_b = {"promotion_scope": "bundle", "promotion_target_id": b2}
-    assert not is_overlap(bundle_ctx, promo_a, promo_b, [])
+    assert not is_overlap(ctx, promo_a, promo_b, [])
 
 
 # ============================================================
@@ -216,7 +219,7 @@ def test_transaction_is_overlap_bundle_bundle_no_overlap(bundle_ctx):
 # ============================================================
 
 
-def test_transaction_should_use_promo(seed: int = 42):
+def test_transaction_functions_should_use_promo(seed: int = 42):
     rng = random.Random(seed)
     customer_segment = _build_customer_segment()
     cart_subtotal = rng.randint(10, 500)
@@ -229,16 +232,16 @@ def test_transaction_should_use_promo(seed: int = 42):
 # ============================================================
 
 
-def test_transaction_is_promotion_viable_empty_items(promotion_ctx, seed: int = 42):
-    # UNIT: promotion_ctx used only to get a realistic promo dict shape;
+def test_transaction_functions_is_promotion_viable_empty_items(ctx, seed: int = 42):
+    # UNIT: ctx used only to get a realistic promo dict shape;
     # the function itself does not read ctx.
     rng = random.Random(seed)
-    promotion = _build_promotion(promotion_ctx, rng)
+    promotion = _build_promotion(ctx, rng)
     result = is_promotion_viable(promotion, [])
     assert not result
 
 
-def test_transaction_is_promotion_viable_category_scope_dollar_discount_exceeds(
+def test_transaction_functions_is_promotion_viable_category_scope_dollar_discount_exceeds(
     seed: int = 42,
 ):
     rng = random.Random(seed)
@@ -254,7 +257,7 @@ def test_transaction_is_promotion_viable_category_scope_dollar_discount_exceeds(
     assert not result
 
 
-def test_transaction_is_promotion_viable_category_scope_dollar_discount_does_not_exceed(
+def test_transaction_functions_is_promotion_viable_category_scope_dollar_discount_does_not_exceed(
     seed: int = 42,
 ):
     rng = random.Random(seed)
@@ -270,7 +273,7 @@ def test_transaction_is_promotion_viable_category_scope_dollar_discount_does_not
     assert result
 
 
-def test_transaction_is_promotion_viable_product_scope_dollar_discount_exceeds(
+def test_transaction_functions_is_promotion_viable_product_scope_dollar_discount_exceeds(
     seed: int = 42,
 ):
     rng = random.Random(seed)
@@ -287,7 +290,7 @@ def test_transaction_is_promotion_viable_product_scope_dollar_discount_exceeds(
     assert not result
 
 
-def test_transaction_is_promotion_viable_product_scope_dollar_discount_does_not_exceed(
+def test_transaction_functions_is_promotion_viable_product_scope_dollar_discount_does_not_exceed(
     seed: int = 42,
 ):
     rng = random.Random(seed)
@@ -302,7 +305,7 @@ def test_transaction_is_promotion_viable_product_scope_dollar_discount_does_not_
     assert result
 
 
-def test_transaction_is_promotion_viable_product_scope_percentage_discount_exceeds(
+def test_transaction_functions_is_promotion_viable_product_scope_percentage_discount_exceeds(
     seed: int = 42,
 ):
     rng = random.Random(seed)
@@ -317,7 +320,7 @@ def test_transaction_is_promotion_viable_product_scope_percentage_discount_excee
     assert not result
 
 
-def test_transaction_is_promotion_viable_product_scope_percentage_discount_does_not_exceed(
+def test_transaction_functions_is_promotion_viable_product_scope_percentage_discount_does_not_exceed(
     seed: int = 42,
 ):
     rng = random.Random(seed)

@@ -40,7 +40,7 @@ from tests.helpers import (
 # ============================================================
 
 
-def test_promotion_safe_date_window_never_inverts():
+def test_promotion_functions_safe_date_window_never_inverts():
     start, end = _build_date_range()
     s, e = safe_date_window(start, end, pd.Timestamp(DATA_END_DATE))
     assert s <= e
@@ -51,7 +51,7 @@ def test_promotion_safe_date_window_never_inverts():
 # ============================================================
 
 
-def test_promotion_select_promotion_mechanics_properties(seed: int = 42):
+def test_promotion_functions_select_promotion_mechanics_properties(seed: int = 42):
     rng = random.Random(seed)
     campaign_type = rng.choice(list(CAMPAIGN_PROMOTION_STRATEGY.keys()))
     channels = rng.sample(
@@ -95,7 +95,7 @@ def test_promotion_select_promotion_mechanics_properties(seed: int = 42):
 # ============================================================
 
 
-def test_promotion_select_category_returns_valid(seed: int = 42):
+def test_promotion_functions_select_category_returns_valid(seed: int = 42):
     rng = random.Random(seed)
     campaign_type = rng.choice(list(CAMPAIGN_PROMOTION_STRATEGY.keys()))
     target_segment = _build_customer_segment()
@@ -124,13 +124,13 @@ def test_promotion_select_category_returns_valid(seed: int = 42):
 # select_product_in_category()
 # ============================================================
 # UNIT: reads only products_df (single table, no lifecycle join).
-# product_ctx is the lightest ctx fixture.
+# ctx is the lightest ctx fixture.
 
 
-def test_promotion_select_product_in_category_valid(product_ctx):
-    category = _build_category(product_ctx, 1)[0]
-    result = select_product_in_category(product_ctx, category)
-    valid_products = product_ctx.products.category_to_products[category]
+def test_promotion_functions_select_product_in_category_valid(ctx):
+    category = _build_category(ctx, 1)[0]
+    result = select_product_in_category(ctx, category)
+    valid_products = ctx.products.category_to_products[category]
     assert result is None or result in valid_products
 
 
@@ -141,14 +141,14 @@ def test_promotion_select_product_in_category_valid(product_ctx):
 # the discount calculation, not lifecycle or bundle validity.
 
 
-def test_promotion_generate_promotion_value_percentage_discount(
-    bundle_ctx, seed: int = 42
+def test_promotion_functions_generate_promotion_value_percentage_discount(
+    ctx, seed: int = 42
 ):
     rng = random.Random(seed)
-    bundle = _build_bundle(bundle_ctx)
+    bundle = _build_bundle(ctx)
 
     value = generate_promotion_value(
-        bundle_ctx,
+        ctx,
         promotion_mechanic="percentage_discount",
         promotion_scope="category",
         promotion_target_id="Beverages",
@@ -161,11 +161,11 @@ def test_promotion_generate_promotion_value_percentage_discount(
     assert isinstance(value, (int, float))
 
 
-def test_promotion_generate_promotion_value_free_shipping(bundle_ctx):
-    bundle = _build_bundle(bundle_ctx)
+def test_promotion_functions_generate_promotion_value_free_shipping(ctx):
+    bundle = _build_bundle(ctx)
 
     value = generate_promotion_value(
-        bundle_ctx,
+        ctx,
         promotion_mechanic="free_shipping",
         promotion_scope="cart",
         promotion_target_id=None,
@@ -183,7 +183,7 @@ def test_promotion_generate_promotion_value_free_shipping(bundle_ctx):
 # ============================================================
 
 
-def test_promotion_generate_promotion_name_returns_string():
+def test_promotion_functions_generate_promotion_name_returns_string():
     name = generate_promotion_name(
         promotion_mechanic="dollar_discount",
         promotion_scope="product",
@@ -200,7 +200,7 @@ def test_promotion_generate_promotion_name_returns_string():
 # ============================================================
 
 
-def test_promotion_get_min_spend():
+def test_promotion_functions_get_min_spend():
     val = get_min_spend(
         promotion_mechanic="percentage_discount",
         promotion_scope="product",
@@ -215,17 +215,17 @@ def test_promotion_get_min_spend():
 # ============================================================
 # generate_discount_code()
 # ============================================================
-# UNIT: pure string assembly. Uses campaign_ctx only to get a
+# UNIT: pure string assembly. Uses ctx only to get a
 # real campaign_id string — no DataFrame traversal.
 
 
-def test_promotion_generate_discount_code_structure(campaign_ctx, seed: int = 42):
+def test_promotion_functions_generate_discount_code_structure(ctx, seed: int = 42):
     rng = random.Random(seed)
     promotion_mechanic = rng.choice(list(PROMOTION_TYPE_PROB.keys()))
     promotion_scope = rng.choice(["cart", "category", "product"])
     promotion_target_id = "Beverages"
     promotion_value = rng.randint(5, 10)
-    campaign_id = _build_campaign(campaign_ctx)["campaign_id"]
+    campaign_id = _build_campaign(ctx)["campaign_id"]
     code = generate_discount_code(
         promotion_mechanic,
         promotion_scope,
@@ -265,12 +265,12 @@ def test_promotion_generate_discount_code_structure(campaign_ctx, seed: int = 42
 # ============================================================
 # UNIT: the filtering logic is what's under test. We mock
 # get_active_promotions so no real promotions_df is read.
-# promotion_ctx is passed only because the function signature
+# ctx is passed only because the function signature
 # requires ctx — the mock intercepts before ctx is used.
 
 
-def test_check_promotion_eligibility_treatment_sees_global_and_treatment_promotions(
-    monkeypatch, promotion_ctx
+def test_promotion_functions_check_promotion_eligibility_treatment_sees_global_and_treatment_promotions(
+    monkeypatch, ctx
 ):
     """
     Treatment customer should see both promos linked to their treatment campaign
@@ -293,7 +293,7 @@ def test_check_promotion_eligibility_treatment_sees_global_and_treatment_promoti
         ]
     )
 
-    result = check_promotion_eligibility(promotion_ctx, timestamp, active_campaigns)
+    result = check_promotion_eligibility(ctx, timestamp, active_campaigns)
 
     # Treatment sees: PROMO001 (global) + PROMO002 (CAMP001 = treatment)
     # NOT PROMO003 (CAMP002 = control only)
@@ -304,8 +304,8 @@ def test_check_promotion_eligibility_treatment_sees_global_and_treatment_promoti
     assert "PROMO003" not in ids
 
 
-def test_check_promotion_eligibility_control_sees_global_promotions(
-    monkeypatch, promotion_ctx
+def test_promotion_functions_check_promotion_eligibility_control_sees_global_promotions(
+    monkeypatch, ctx
 ):
     """
     Control only customer should see only global promotions.
@@ -325,14 +325,14 @@ def test_check_promotion_eligibility_control_sees_global_promotions(
         ]
     )
 
-    result = check_promotion_eligibility(promotion_ctx, timestamp, active_campaigns)
+    result = check_promotion_eligibility(ctx, timestamp, active_campaigns)
 
     assert len(result) == 1
     assert result[0]["promotion_id"] == "PROMO001"
 
 
-def test_check_promotion_eligibility_no_campaigns_sees_global_promotions(
-    monkeypatch, promotion_ctx
+def test_promotion_functions_check_promotion_eligibility_no_campaigns_sees_global_promotions(
+    monkeypatch, ctx
 ):
     """
     No active campaigns → only global promotions (campaign_id=None) returned.
@@ -346,7 +346,7 @@ def test_check_promotion_eligibility_no_campaigns_sees_global_promotions(
     )
 
     timestamp = _build_datetime()
-    result = check_promotion_eligibility(promotion_ctx, timestamp, None)
+    result = check_promotion_eligibility(ctx, timestamp, None)
 
     assert len(result) == 1
     assert result[0]["promotion_id"] == "PROMO001"

@@ -21,23 +21,23 @@ from tests.helpers import (
 # ============================================================
 # UNIT: selected_products is a plain list of (pid, qty) tuples.
 # product_price_map and product_cost_map are the only ctx reads,
-# which we satisfy by passing product_ctx (lightweight fixture).
+# which we satisfy by passing ctx (lightweight fixture).
 
 
-def test_bundle_price_covers_cost(product_ctx):
+def test_bundle_functions_calculate_bundle_pricing_price_covers_cost(ctx):
     for bundle_type in BUNDLE_DEFINITIONS:
-        selected_products = _build_bundle_products_dict(product_ctx)
+        selected_products = _build_bundle_products_dict(ctx)
 
         total_cost = round(
             sum(
-                product_ctx.products.product_cost_map[pid] * qty
+                ctx.products.product_cost_map[pid] * qty
                 for pid, qty in selected_products
             ),
             2,
         )
 
         bundle_price, discount_value = calculate_bundle_pricing(
-            product_ctx,
+            ctx,
             bundle_type,
             selected_products,
         )
@@ -51,21 +51,21 @@ def test_bundle_price_covers_cost(product_ctx):
 # ============================================================
 
 
-def test_bundle_split_window_non_overlapping():
+def test_bundle_functions_split_window_non_overlapping():
     scenario = _build_bundle_lifecycle()
     phases = split_window(scenario["start"], scenario["end"])
     for i in range(len(phases) - 1):
         assert phases[i][1] < phases[i + 1][0]
 
 
-def test_bundle_phases_covers_full_window():
+def test_bundle_functions_split_window_phases_covers_full_window():
     scenario = _build_bundle_lifecycle()
     phases = split_window(scenario["start"], scenario["end"])
     assert phases[0][0] == scenario["start"]
     assert phases[-1][1] == scenario["end"]
 
 
-def test_bundle_launch_always_first():
+def test_bundle_functions_split_window_launch_always_first():
     scenario = _build_bundle_lifecycle()
     phases = split_window(scenario["start"], scenario["end"])
     assert phases[0][2] == "LAUNCH"
@@ -76,7 +76,7 @@ def test_bundle_launch_always_first():
 # ============================================================
 
 
-def test_bundle_prices_never_increase_across_phases():
+def test_bundle_functions_phase_prices_never_increase_across_phases():
     """
     LAUNCH >= PROMO >= EOL
     """
@@ -90,7 +90,7 @@ def test_bundle_prices_never_increase_across_phases():
     assert all(prices[i] >= prices[i + 1] for i in range(len(prices) - 1))
 
 
-def test_bundle_discounts_never_decrease_across_phases():
+def test_bundle_functions_phase_prices_discounts_never_decrease_across_phases():
     scenario = _build_bundle_pricing_inputs()
     results = phase_prices(
         scenario["base_price"],
@@ -101,7 +101,7 @@ def test_bundle_discounts_never_decrease_across_phases():
     assert all(discounts[i] <= discounts[i + 1] for i in range(len(discounts) - 1))
 
 
-def test_bundle_phase_discount_less_than_phase_price():
+def test_bundle_functions_phase_prices_discount_less_than_phase_price():
     scenario = _build_bundle_pricing_inputs()
     results = phase_prices(
         scenario["base_price"],
@@ -116,19 +116,19 @@ def test_bundle_phase_discount_less_than_phase_price():
 # select_products_for_bundle()
 # ============================================================
 # UNIT: the only ctx usage is products_df, which is available from
-# the lightweight product_ctx fixture. We are testing the selection
+# the lightweight ctx fixture. We are testing the selection
 # logic in isolation — not how lifecycle or pricing interacts with it.
 
 
-def test_bundle_select_products_for_set_bundle(product_ctx, seed: int = 42):
+def test_bundle_functions_select_products_for_set_bundle(ctx, seed: int = 42):
     rng = random.Random(seed)
     n = 2
 
-    category1, category2 = _build_category(product_ctx, n)
+    category1, category2 = _build_category(ctx, n)
     buy_quantity = rng.randint(1, 3)
 
     selected_products, selected_categories = select_products_for_bundle(
-        product_ctx,
+        ctx,
         "Set",
         [category1, category2],
         buy_quantity,
@@ -138,13 +138,13 @@ def test_bundle_select_products_for_set_bundle(product_ctx, seed: int = 42):
     assert len(selected_products) == n
     for pid, qty in selected_products:
         assert (
-            pid in product_ctx.products.category_to_products[category1]
-            or pid in product_ctx.products.category_to_products[category2]
+            pid in ctx.products.category_to_products[category1]
+            or pid in ctx.products.category_to_products[category2]
         )
         assert qty > 0
 
 
-def test_bundle_select_products_for_non_set_bundle(product_ctx, seed: int = 42):
+def test_bundle_functions_select_products_for_non_set_bundle(ctx, seed: int = 42):
     rng = random.Random(seed)
     n = 1
 
@@ -152,11 +152,11 @@ def test_bundle_select_products_for_non_set_bundle(product_ctx, seed: int = 42):
         if bundle_type == "Set":
             continue
 
-        (category,) = _build_category(product_ctx, n)
+        (category,) = _build_category(ctx, n)
         buy_quantity = rng.randint(1, 3)
 
         selected_products, selected_categories = select_products_for_bundle(
-            product_ctx,
+            ctx,
             bundle_type,
             [category],
             buy_quantity,
@@ -165,5 +165,5 @@ def test_bundle_select_products_for_non_set_bundle(product_ctx, seed: int = 42):
         assert selected_categories == [category]
         assert len(selected_products) == n
         for pid, qty in selected_products:
-            assert pid in product_ctx.products.category_to_products[category]
+            assert pid in ctx.products.category_to_products[category]
             assert qty > 0

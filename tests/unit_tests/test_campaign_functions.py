@@ -28,7 +28,7 @@ from tests.helpers import (
 # ============================================================
 
 
-def test_campaign_pick_channels(seed: int = 42):
+def test_campaign_functions_pick_channels(seed: int = 42):
     rng = random.Random(seed)
     campaign_type = rng.choice(list(CAMPAIGN_PROMOTION_STRATEGY.keys()))
     channels = pick_channels(campaign_type)
@@ -43,7 +43,7 @@ def test_campaign_pick_channels(seed: int = 42):
 # ============================================================
 
 
-def test_campaign_calculate_budget(seed: int = 42):
+def test_campaign_functions_calculate_budget(seed: int = 42):
     rng = random.Random(seed)
     campaign_type = rng.choice(list(CAMPAIGN_PROMOTION_STRATEGY.keys()))
     channels = rng.sample(CHANNELS, k=rng.randint(1, 2))
@@ -68,7 +68,7 @@ def test_campaign_calculate_budget(seed: int = 42):
 # ============================================================
 
 
-def test_campaign_simulate_exposure_control_group(seed: int = 42):
+def test_campaign_functions_simulate_exposure_control_group(seed: int = 42):
     rng = random.Random(seed)
 
     device_category = rng.choice(list(DEVICE_CATEGORY.keys()))
@@ -96,7 +96,9 @@ def test_campaign_simulate_exposure_control_group(seed: int = 42):
     assert result["cost_per_msg"] == 0.0
 
 
-def test_campaign_simulate_exposure_treatment_direct_msg_channel(seed: int = 42):
+def test_campaign_functions_simulate_exposure_treatment_direct_msg_channel(
+    seed: int = 42,
+):
     rng = random.Random(seed)
 
     device_category = rng.choice(list(DEVICE_CATEGORY.keys()))
@@ -134,7 +136,9 @@ def test_campaign_simulate_exposure_treatment_direct_msg_channel(seed: int = 42)
     assert result["clicked_time"] is not None
 
 
-def test_campaign_simulate_exposure_treatment_exposure_only_channel(seed: int = 42):
+def test_campaign_functions_simulate_exposure_treatment_exposure_only_channel(
+    seed: int = 42,
+):
     rng = random.Random(seed)
 
     device_category = rng.choice(list(DEVICE_CATEGORY.keys()))
@@ -168,7 +172,7 @@ def test_campaign_simulate_exposure_treatment_exposure_only_channel(seed: int = 
     assert result["clicked"] is True
 
 
-def test_campaign_simulate_exposure_treatment_not_exposed(seed: int = 42):
+def test_campaign_functions_simulate_exposure_treatment_not_exposed(seed: int = 42):
     rng = random.Random(seed)
 
     device_category = rng.choice(list(DEVICE_CATEGORY.keys()))
