@@ -129,7 +129,7 @@ jobs:
       - name: Scan for secrets
         run: gitleaks detect --source . --exit-code 2 --redact
 
-      - name: Generate Raw Data for Testing (synthetic data generation logic testing)
+      - name: Generate Synthetic Test Data
         env:
           DATASET_SIZE: ${{ env.DATASET_SIZE }}
         if: needs.changes.outputs.test == 'true'
