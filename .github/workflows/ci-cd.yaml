@@ -79,7 +79,7 @@ jobs:
 
       - name: Get changed files
         id: changes
-        uses: tj-actions/changes@v44
+        uses: tj-actions/changed-files@v44
 
       - name: Display changed files
         run: |
@@ -166,7 +166,7 @@ jobs:
 
       - name: Get changed files
         id: changes
-        uses: tj-actions/changes@v44
+        uses: tj-actions/changed-files@v44
 
       - name: Set up Python
         uses: actions/setup-python@v5
