@@ -21,6 +21,7 @@ from data_generation.registry import REGISTRY
 fake = Faker()
 
 os.makedirs(RAW_DIR, exist_ok=True)
+DATASET_SIZE = os.getenv("DATASET_SIZE", "local").lower()
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAIN
