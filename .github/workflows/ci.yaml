@@ -1,5 +1,5 @@
 ---
-name: CI/CD MegaMart
+name: CI
 
 on:
   push:
@@ -9,18 +9,7 @@ on:
     branches:
       - dev
       - main
-  workflow_dispatch:
-    inputs:
-      dataset_size:
-        description: Dataset size
-        required: true
-        default: ci
-        type: choice
-
-        options:
-          - local
-          - ci
-          - full
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -32,9 +21,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DBT_PROFILES_DIR: ./dbt_profiles
-  DBT_TARGET: ci
-  DATASET_SIZE: ${{ github.event.inputs.dataset_size }}
+  DATASET_SIZE: ci
 
 jobs:
   # --- CHANGE DETECTION ---
