@@ -348,8 +348,5 @@ def stock_snapshots_generator(ctx: GenerationContext):
     df_snapshots = pd.DataFrame(weekly_snapshots).sort_values(
         by=["week_start_date", "store_id", "product_id"]
     )
-    df_events["event_timestamp"] = pd.to_datetime(
-        df_events["event_timestamp"], utc=True
-    )
     save(df_events, "inventory_change_events_raw.csv")
     save(df_snapshots, "stock_snapshots_raw.csv")

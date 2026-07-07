@@ -673,6 +673,4 @@ def clickstreams_generator(ctx: GenerationContext):
     # ---------------------------
     # Export to CSV
     # ---------------------------
-    df = pd.DataFrame(clickstreams)
-    df["event_timestamp"] = pd.to_datetime(df["event_timestamp"], utc=True)
-    save(df, "clickstreams_raw.csv")
+    save(pd.DataFrame(clickstreams), "clickstreams_raw.csv")

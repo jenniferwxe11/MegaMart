@@ -89,8 +89,7 @@ def dirty_transactions(ctx: GenerationContext):
         df[df["transaction_time"].notna()].sample(frac=0.01, random_state=57).index
     )
     df.loc[fut_idx, "transaction_time"] = pd.to_datetime(
-        [fake.future_datetime(end_date="+10y") for _ in range(len(fut_idx))],
-        utc=True,
+        [fake.future_datetime(end_date="+10y") for _ in range(len(fut_idx))]
     )
     append_error(df, fut_idx, "future transaction time")
 

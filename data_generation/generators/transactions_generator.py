@@ -612,10 +612,5 @@ def transactions_generator(ctx: GenerationContext):
     # ---------------------------
     # Export to CSV
     # ---------------------------
-    df_transactions = pd.DataFrame(transactions)
-    df_transactions["transaction_time"] = pd.to_datetime(
-        df_transactions["transaction_time"], utc=True
-    )
-    save(df_transactions, "transactions_raw.csv")
-
+    save(pd.DataFrame(transactions), "transactions_raw.csv")
     save(pd.DataFrame(transaction_items), "transaction_items_raw.csv")

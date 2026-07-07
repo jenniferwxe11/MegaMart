@@ -55,7 +55,7 @@ def get_eligible_promotions(ctx, transaction_time, cart_items, cart_subtotal):
     promotions_df = ctx.promotions.promotions_df
 
     # Parse time
-    transaction_time = pd.Timestamp(transaction_time).tz_localize(None)
+    transaction_time = pd.Timestamp(transaction_time)
 
     # Filter active promotions
     valid_promotions = promotions_df[
@@ -349,7 +349,7 @@ def apply_cart_level_discount(
     promo = promo_row.iloc[0]
 
     # --- Date Validation ---
-    transaction_time = pd.Timestamp(transaction_time).tz_localize(None)
+    transaction_time = pd.Timestamp(transaction_time)
 
     if (
         transaction_time < promo["effective_start_date"]
