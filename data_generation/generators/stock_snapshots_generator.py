@@ -326,7 +326,7 @@ def stock_snapshots_generator(ctx: GenerationContext):
             if stock_band != last_stock_band or stock_status != last_stock_status:
                 weekly_snapshots.append(
                     {
-                        "week_start_date": week_start_date,
+                        "week_start_date": week_start_date.date(),
                         "store_id": store_id,
                         "product_id": product_id,
                         "stock_status": stock_status,

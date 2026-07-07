@@ -91,7 +91,7 @@ def load_store_catalogues():
 def _load_product_lifecycles():
     return pd.read_csv(
         f"{RAW_DIR}/product_lifecycles_raw.csv",
-        parse_dates=["launch_date", "discontinuation_date"],
+        parse_dates=["launch_date", "discontinuation_date", "valid_from", "valid_to"],
     )
 
 

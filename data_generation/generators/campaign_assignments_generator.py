@@ -130,6 +130,5 @@ def campaign_assignments_generator(ctx: GenerationContext):
     # ---------------------------
     # Export to CSV
     # ---------------------------
-
     save(pd.DataFrame(campaign_assignments), "campaign_assignments_raw.csv")
     save(pd.DataFrame(campaign_exposures), "campaign_exposures_raw.csv")
