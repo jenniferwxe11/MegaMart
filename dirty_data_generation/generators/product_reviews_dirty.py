@@ -1,5 +1,6 @@
 import random
 
+import pandas as pd
 from faker import Faker
 
 from dirty_data_generation.context.generation_context import GenerationContext
@@ -31,9 +32,9 @@ def dirty_reviews(ctx: GenerationContext):
 
     # Future review_date
     fut_idx = df.sample(frac=0.02, random_state=81).index
-    df.loc[fut_idx, "review_date"] = [
-        fake.future_datetime(end_date="+10y") for _ in range(len(fut_idx))
-    ]
+    df.loc[fut_idx, "review_date"] = pd.to_datetime(
+        [fake.future_date(end_date="+10y") for _ in range(len(fut_idx))]
+    )
     append_error(df, fut_idx, "future review date")
 
     # Missing review_text

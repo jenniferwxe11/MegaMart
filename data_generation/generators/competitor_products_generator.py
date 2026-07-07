@@ -121,5 +121,10 @@ def competitor_products_generator(ctx: GenerationContext):
     # ---------------------------
     # Export to CSV
     # ---------------------------
+    df_price_history = pd.DataFrame(competitor_price_history)
+    df_price_history["update_timestamp"] = pd.to_datetime(
+        df_price_history["update_timestamp"], utc=True
+    )
+    save(df_price_history, "competitor_price_history_raw.csv")
+
     save(pd.DataFrame(all_competitor_products), "competitor_products_raw.csv")
-    save(pd.DataFrame(competitor_price_history), "competitor_price_history_raw.csv")

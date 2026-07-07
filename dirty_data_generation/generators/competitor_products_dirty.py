@@ -41,9 +41,10 @@ def dirty_competitor_products(ctx: GenerationContext):
 
     # Future update_timestamp
     fut_idx = df.sample(frac=0.02, random_state=92).index
-    df.loc[fut_idx, "update_timestamp"] = [
-        fake.future_datetime(end_date="+10y") for _ in range(len(fut_idx))
-    ]
+    df.loc[fut_idx, "update_timestamp"] = pd.to_datetime(
+        [fake.future_datetime(end_date="+10y") for _ in range(len(fut_idx))],
+        utc=True,
+    )
     append_error(df, fut_idx, "future update timestamp")
 
     # Duplicate rows

@@ -130,6 +130,17 @@ def campaign_assignments_generator(ctx: GenerationContext):
     # ---------------------------
     # Export to CSV
     # ---------------------------
-
-    save(pd.DataFrame(campaign_assignments), "campaign_assignments_raw.csv")
-    save(pd.DataFrame(campaign_exposures), "campaign_exposures_raw.csv")
+    df_assignments = pd.DataFrame(campaign_assignments)
+    df_exposures = pd.DataFrame(campaign_exposures)
+    df_assignments["eligible_at"] = pd.to_datetime(
+        df_assignments["eligible_at"], utc=True
+    )
+    df_exposures["exposed_time"] = pd.to_datetime(
+        df_exposures["exposed_time"], utc=True
+    )
+    df_exposures["opened_time"] = pd.to_datetime(df_exposures["opened_time"], utc=True)
+    df_exposures["clicked_time"] = pd.to_datetime(
+        df_exposures["clicked_time"], utc=True
+    )
+    save(df_assignments, "campaign_assignments_raw.csv")
+    save(df_exposures, "campaign_exposures_raw.csv")
