@@ -107,19 +107,19 @@ CUSTOMERS_SCHEMA = [
     bigquery.SchemaField("dob", "DATE"),
     bigquery.SchemaField("area", "STRING"),
     bigquery.SchemaField("region", "STRING"),
-    bigquery.SchemaField("signup_date", "TIMESTAMP"),
+    bigquery.SchemaField("signup_date", "DATE"),
     bigquery.SchemaField("loyalty_points", "INTEGER"),
     bigquery.SchemaField("customer_segment", "STRING"),
-    bigquery.SchemaField("email_marketing_opt_in", "STRING"),
-    bigquery.SchemaField("sms_marketing_opt_in", "STRING"),
-    bigquery.SchemaField("push_notifications_opt_in", "STRING"),
+    bigquery.SchemaField("email_marketing_opt_in", "BOOL"),
+    bigquery.SchemaField("sms_marketing_opt_in", "BOOL"),
+    bigquery.SchemaField("push_notifications_opt_in", "BOOL"),
     bigquery.SchemaField("device_category", "STRING"),
     bigquery.SchemaField("device_platform", "STRING"),
 ]
 INVENTORY_CHANGE_EVENTS_SCHEMA = [
     bigquery.SchemaField("store_id", "STRING"),
     bigquery.SchemaField("product_id", "STRING"),
-    bigquery.SchemaField("event_timestamp", "DATE"),
+    bigquery.SchemaField("event_timestamp", "TIMESTAMP"),
     bigquery.SchemaField("delta", "INTEGER"),
     bigquery.SchemaField("reason", "STRING"),
     bigquery.SchemaField("stock_after", "INTEGER"),
@@ -155,7 +155,7 @@ PRODUCT_REVIEWS_SCHEMA = [
     bigquery.SchemaField("customer_id", "STRING"),
     bigquery.SchemaField("rating", "INTEGER"),
     bigquery.SchemaField("review_text", "STRING"),
-    bigquery.SchemaField("review_date", "TIMESTAMP"),
+    bigquery.SchemaField("review_date", "DATE"),
 ]
 PRODUCTS_SCHEMA = [
     bigquery.SchemaField("product_id", "STRING"),
@@ -181,7 +181,7 @@ PROMOTIONS_SCHEMA = [
     bigquery.SchemaField("priority", "INTEGER"),
 ]
 STOCK_SNAPSHOTS_SCHEMA = [
-    bigquery.SchemaField("week_start_date", "TIMESTAMP"),
+    bigquery.SchemaField("week_start_date", "DATE"),
     bigquery.SchemaField("store_id", "STRING"),
     bigquery.SchemaField("product_id", "STRING"),
     bigquery.SchemaField("stock_status", "STRING"),
