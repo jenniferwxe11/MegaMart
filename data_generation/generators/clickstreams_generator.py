@@ -673,5 +673,4 @@ def clickstreams_generator(ctx: GenerationContext):
     # ---------------------------
     # Export to CSV
     # ---------------------------
-
     save(pd.DataFrame(clickstreams), "clickstreams_raw.csv")

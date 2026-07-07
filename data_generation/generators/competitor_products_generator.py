@@ -121,5 +121,5 @@ def competitor_products_generator(ctx: GenerationContext):
     # ---------------------------
     # Export to CSV
     # ---------------------------
-    save(pd.DataFrame(all_competitor_products), "competitor_products_raw.csv")
     save(pd.DataFrame(competitor_price_history), "competitor_price_history_raw.csv")
+    save(pd.DataFrame(all_competitor_products), "competitor_products_raw.csv")

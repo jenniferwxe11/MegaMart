@@ -612,6 +612,5 @@ def transactions_generator(ctx: GenerationContext):
     # ---------------------------
     # Export to CSV
     # ---------------------------
-
     save(pd.DataFrame(transactions), "transactions_raw.csv")
     save(pd.DataFrame(transaction_items), "transaction_items_raw.csv")

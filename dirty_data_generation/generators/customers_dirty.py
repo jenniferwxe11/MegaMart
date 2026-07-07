@@ -1,5 +1,5 @@
 import random
-from datetime import datetime
+from datetime import date
 
 import pandas as pd
 from faker import Faker
@@ -39,24 +39,50 @@ def dirty_customers(ctx: GenerationContext):
         df, col="email", rate=0.08, error_label="email formatting anomaly"
     )
 
+    # Area-region mismatch
+    area_region_map = ctx.region_areas.area_region_map
+    regions = ctx.region_areas.regions
+
+    mismatch_idx = (
+        df[df["area"].notna() & df["region"].notna()]
+        .sample(frac=0.03, random_state=9)
+        .index
+    )
+
+    for idx in mismatch_idx:
+        area = df.at[idx, "area"]
+
+        correct_region = area_region_map.get(area)
+
+        if correct_region is None:
+            continue
+
+        df.at[idx, "region"] = random.choice(
+            [r for r in regions if r != correct_region]
+        )
+
+    append_error(df, mismatch_idx, "area-region mismatch")
+
     # Future signup dates
     future_indices = df.sample(frac=0.02, random_state=2).index
-    df.loc[future_indices, "signup_date"] = [
-        fake.future_datetime(end_date="+10y") for _ in range(len(future_indices))
-    ]
+    df.loc[future_indices, "signup_date"] = pd.to_datetime(
+        [fake.future_date(end_date="+10y") for _ in range(len(future_indices))]
+    )
     append_error(df, future_indices, "future signup date")
 
     # DOB in the future or impossibly old
     dob_indices = df[df["dob"].notna()].sample(frac=0.03, random_state=3).index
-    df.loc[dob_indices, "dob"] = [
-        random.choice(
-            [
-                fake.future_datetime(end_date="+10y"),  # future
-                fake.past_datetime(start_date=datetime(1800, 1, 1)),  # impossibly old
-            ]
-        )
-        for _ in range(len(dob_indices))
-    ]
+    df.loc[dob_indices, "dob"] = pd.to_datetime(
+        [
+            random.choice(
+                [
+                    fake.future_date(end_date="+10y"),  # future
+                    fake.past_date(start_date=date(1800, 1, 1)),  # impossibly old
+                ]
+            )
+            for _ in range(len(dob_indices))
+        ]
+    )
     append_error(df, dob_indices, "invalid date of birth")
 
     # Age < 18 (DOB too recent)
@@ -97,23 +123,41 @@ def dirty_customers(ctx: GenerationContext):
         error_label="missing customer segment",
     )
 
-    # Opt-in flag stored as string instead of bool
+    # Missing marketing preferences
     for col in [
         "email_marketing_opt_in",
         "sms_marketing_opt_in",
         "push_notifications_opt_in",
     ]:
-        str_mask = df[col].notna() & pd.Series(
-            [random.random() < 0.05 for _ in range(len(df))], index=df.index
+        df = inject_nulls(
+            df,
+            df[col].notna(),
+            col,
+            rate=0.03,
+            error_label=f"missing {col}",
         )
 
-        affected_indices = df[str_mask].index
+    # Email marketing enabled but email missing
+    email_idx = df[df["email"].notna()].sample(frac=0.03, random_state=7).index
 
-        df.loc[str_mask, col] = df.loc[str_mask, col].map(
-            {True: "true", False: "false", "true": "true", "false": "false"}
-        )
+    df.loc[email_idx, "email"] = None
+    df.loc[email_idx, "email_marketing_opt_in"] = True
+    append_error(
+        df,
+        email_idx,
+        "email marketing enabled without email",
+    )
 
-        append_error(df, affected_indices, f"{col} stored as string")
+    # Push notifications enabled but device platform missing
+    push_idx = df[df["device_platform"].notna()].sample(frac=0.03, random_state=8).index
+
+    df.loc[push_idx, "device_platform"] = None
+    df.loc[push_idx, "push_notifications_opt_in"] = True
+    append_error(
+        df,
+        push_idx,
+        "push notifications enabled without device platform",
+    )
 
     # Whitespace in customer_name
     df = inject_whitespace(
@@ -121,6 +165,19 @@ def dirty_customers(ctx: GenerationContext):
         col="customer_name",
         rate=0.05,
         error_label="customer name formatting anomaly",
+    )
+
+    # Device category missing if device platform is present
+    device_idx = (
+        df[df["device_platform"].notna()].sample(frac=0.03, random_state=9).index
+    )
+
+    df.loc[device_idx, "device_category"] = None
+
+    append_error(
+        df,
+        device_idx,
+        "device category missing for device platform",
     )
 
     return save(df, "customers_dirty.csv")

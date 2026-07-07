@@ -1,5 +1,6 @@
 import random
 
+import pandas as pd
 from faker import Faker
 
 from dirty_data_generation.context.generation_context import GenerationContext
@@ -45,7 +46,9 @@ def dirty_stock_snapshots(ctx: GenerationContext):
             and n_errors < MAX_ERRORS_PER_ROW
             and "future week start date" not in df.at[i, "error_types"]
         ):
-            df.at[i, "week_start_date"] = fake.future_datetime(end_date="+10y")
+            df.at[i, "week_start_date"] = pd.Timestamp(
+                fake.future_date(end_date="+10y")
+            )
 
             df.at[i, "error_types"].append("future week start date")
             n_errors += 1
