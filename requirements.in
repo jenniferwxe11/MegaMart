@@ -4,6 +4,7 @@ pytest
 pytest-cov
 pip-audit
 bandit
+setuptools>=83.0.0
 
 # dbt
 dbt-core>=1.11,<2.0
