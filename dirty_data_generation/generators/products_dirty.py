@@ -21,21 +21,36 @@ def dirty_products(ctx: GenerationContext):
     df.loc[zero_idx, "selling_price"] = [
         random.choice([0, -abs(random.uniform(1, 50))]) for _ in range(len(zero_idx))
     ]
-    append_error(df, zero_idx, "zero or negative selling price")
+    append_error(
+        df,
+        zero_idx,
+        error_label="zero or negative selling price",
+        columns=["selling_price"],
+    )
 
     # Cost > selling price
     inv_idx = df.sample(frac=0.03, random_state=11).index
     df.loc[inv_idx, "cost_price"] = [
         df.loc[idx, "selling_price"] * random.uniform(1.1, 1.5) for idx in inv_idx
     ]
-    append_error(df, inv_idx, "margin inversion")
+    append_error(
+        df,
+        inv_idx,
+        error_label="selling price margin inversion",
+        columns=["selling_price"],
+    )
 
     # Extreme outlier price
     out_idx = df.sample(frac=0.01, random_state=12).index
     df.loc[out_idx, "selling_price"] = [
         round(random.uniform(10000, 1000000), 2) for _ in range(len(out_idx))
     ]
-    append_error(df, out_idx, "extreme outlier price")
+    append_error(
+        df,
+        out_idx,
+        error_label="extreme outlier selling price",
+        columns=["selling_price"],
+    )
 
     # Missing brand
     df = inject_nulls(
@@ -54,6 +69,11 @@ def dirty_products(ctx: GenerationContext):
         df["product_name"].sample(n=len(dup_names), random_state=14).values
     )
 
-    append_error(df, dup_names.index, "duplicate product name")
+    append_error(
+        df,
+        dup_names.index,
+        error_label="duplicate product name",
+        columns=["product_name"],
+    )
 
     return save(df, "products_dirty.csv")

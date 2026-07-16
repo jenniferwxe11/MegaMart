@@ -80,7 +80,7 @@ def dirty_store_catalogues(ctx: GenerationContext):
     df = duplicate_rows(
         df,
         rate=0.03,
-        error_label="duplicate listing",
+        error_label="duplicate store catalogue rows",
     )
 
     return save(df, "store_catalogues_dirty.csv")

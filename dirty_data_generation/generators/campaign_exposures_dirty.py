@@ -66,6 +66,10 @@ def dirty_campaign_exposures(ctx: GenerationContext):
     df_dirty = pd.DataFrame(rows)
 
     # Duplicate rows
-    df_dirty = duplicate_rows(df_dirty, rate=0.03)
+    df_dirty = duplicate_rows(
+        df_dirty,
+        rate=0.03,
+        error_label="duplicate campaign exposure rows",
+    )
 
     return save(df_dirty, "campaign_exposures_dirty.csv")

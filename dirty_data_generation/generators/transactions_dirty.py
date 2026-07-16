@@ -37,12 +37,28 @@ def dirty_transactions(ctx: GenerationContext):
         round(total + random.uniform(-50, 50), 2)
         for total in df.loc[math_idx, "transaction_total"]
     ]
-    append_error(df, math_idx, "calculation error")
+    append_error(
+        df,
+        math_idx,
+        error_label="calculation error",
+        columns=[
+            "transaction_total",
+            "cart_subtotal",
+            "total_discount",
+            "shipping_fee",
+            "shipping_discount",
+        ],
+    )
 
     # Negative transaction_total for Completed orders
     neg_idx = df.sample(frac=0.02, random_state=51).index
     df.loc[neg_idx, "transaction_total"] = -abs(df.loc[neg_idx, "transaction_total"])
-    append_error(df, neg_idx, "negative transaction total")
+    append_error(
+        df,
+        neg_idx,
+        error_label="negative transaction total",
+        columns=["transaction_total"],
+    )
 
     # Missing customer_id
     df = inject_nulls(
@@ -61,12 +77,22 @@ def dirty_transactions(ctx: GenerationContext):
         .values
     )
     df.loc[dup_idx, "transaction_id"] = replacement_ids
-    append_error(df, dup_idx, "duplicate transaction id")
+    append_error(
+        df,
+        dup_idx,
+        error_label="duplicate transaction id",
+        columns=["transaction_id"],
+    )
 
     # cart_subtotal = 0 for Completed order
     zero_idx = df.sample(frac=0.02, random_state=53).index
     df.loc[zero_idx, "cart_subtotal"] = 0.0
-    append_error(df, zero_idx, "zero cart subtotal for completed order")
+    append_error(
+        df,
+        zero_idx,
+        error_label="zero cart subtotal for completed order",
+        columns=["cart_subtotal"],
+    )
 
     # basket_size mismatch
     mismatch_idx = df.sample(frac=0.03, random_state=54).index
@@ -74,7 +100,12 @@ def dirty_transactions(ctx: GenerationContext):
         df.loc[mismatch_idx, "basket_size"]
         + np.random.randint(-5, 6, size=len(mismatch_idx))
     ).clip(lower=0)
-    append_error(df, mismatch_idx, "basket size mismatch")
+    append_error(
+        df,
+        mismatch_idx,
+        error_label="basket size mismatch",
+        columns=["basket_size", "transaction_id"],
+    )
 
     # Invalid payment_method value
     pm_idx = df[df["payment_method"].notna()].sample(frac=0.02, random_state=55).index
@@ -82,7 +113,12 @@ def dirty_transactions(ctx: GenerationContext):
         random.choice(["Bitcoin", "Barter", "Gift Card", "UNKNOWN"])
         for _ in range(len(pm_idx))
     ]
-    append_error(df, pm_idx, "invalid payment method")
+    append_error(
+        df,
+        pm_idx,
+        error_label="invalid payment method",
+        columns=["payment_method"],
+    )
 
     # Future transaction_time
     fut_idx = (
@@ -91,7 +127,12 @@ def dirty_transactions(ctx: GenerationContext):
     df.loc[fut_idx, "transaction_time"] = pd.to_datetime(
         [fake.future_datetime(end_date="+10y") for _ in range(len(fut_idx))]
     )
-    append_error(df, fut_idx, "future transaction time")
+    append_error(
+        df,
+        fut_idx,
+        error_label="future transaction time",
+        columns=["transaction_time"],
+    )
 
     # Shipping discount > shipping fee
     over_sd = df[df["shipping_fee"] > 0].sample(frac=0.02, random_state=58).index
@@ -99,7 +140,12 @@ def dirty_transactions(ctx: GenerationContext):
         round(fee * random.uniform(1.1, 2.0), 2)
         for fee in df.loc[over_sd, "shipping_fee"]
     ]
-    append_error(df, over_sd, "shipping discount greater than shipping fee")
+    append_error(
+        df,
+        over_sd,
+        error_label="shipping discount greater than shipping fee",
+        columns=["shipping_fee", "shipping_discount"],
+    )
 
     return save(df, "transactions_dirty.csv")
 
@@ -115,19 +161,34 @@ def dirty_transaction_items(ctx: GenerationContext):
     df.loc[orphan_idx, "transaction_id"] = [
         f"TRAN_{random.randint(1000, 9999)}" for _ in range(len(orphan_idx))
     ]
-    append_error(df, orphan_idx, "orphaned transaction item")
+    append_error(
+        df,
+        orphan_idx,
+        error_label="orphaned transaction item",
+        columns=["transaction_id"],
+    )
 
     # unit_price = 0
     unit_price_idx = df.sample(frac=0.02, random_state=61).index
     df.loc[unit_price_idx, "unit_price"] = 0.0
-    append_error(df, unit_price_idx, "zero unit price")
+    append_error(
+        df,
+        unit_price_idx,
+        error_label="zero unit price",
+        columns=["unit_price"],
+    )
 
     # quantity = 0 or negative
     qty_idx = df.sample(frac=0.02, random_state=62).index
     df.loc[qty_idx, "quantity"] = [
         random.choice([0, -abs(random.randint(1, 5))]) for _ in range(len(qty_idx))
     ]
-    append_error(df, qty_idx, "invalid quantity")
+    append_error(
+        df,
+        qty_idx,
+        error_label="invalid quantity",
+        columns=["quantity"],
+    )
 
     # item_discount > item_subtotal
     disc_idx = df.sample(frac=0.02, random_state=63).index
@@ -135,7 +196,12 @@ def dirty_transaction_items(ctx: GenerationContext):
         round(subtotal * random.uniform(1.1, 2.0), 2)
         for subtotal in df.loc[disc_idx, "item_subtotal"]
     ]
-    append_error(df, disc_idx, "item discount greater than item subtotal")
+    append_error(
+        df,
+        disc_idx,
+        error_label="item discount greater than item subtotal",
+        columns=["item_discount", "item_subtotal"],
+    )
 
     # final_item_price ≠ subtotal - discount
     math_idx = df.sample(frac=0.04, random_state=64).index
@@ -143,7 +209,12 @@ def dirty_transaction_items(ctx: GenerationContext):
         round(price + random.uniform(-20, 20), 2)
         for price in df.loc[math_idx, "final_item_price"]
     ]
-    append_error(df, math_idx, "final item price mismatch")
+    append_error(
+        df,
+        math_idx,
+        error_label="final item price mismatch",
+        columns=["final_item_price", "item_subtotal", "item_discount"],
+    )
 
     # Missing product_id
     df = inject_nulls(

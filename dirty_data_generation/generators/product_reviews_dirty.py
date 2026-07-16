@@ -28,14 +28,24 @@ def dirty_reviews(ctx: GenerationContext):
         random.choice([0, -random.randint(1, 5), random.randint(6, 10)])
         for _ in range(len(oor_idx))
     ]
-    append_error(df, oor_idx, "rating out of range")
+    append_error(
+        df,
+        oor_idx,
+        error_label="rating out of range",
+        columns=["rating"],
+    )
 
     # Future review_date
     fut_idx = df.sample(frac=0.02, random_state=81).index
     df.loc[fut_idx, "review_date"] = pd.to_datetime(
         [fake.future_date(end_date="+10y") for _ in range(len(fut_idx))]
     )
-    append_error(df, fut_idx, "future review date")
+    append_error(
+        df,
+        fut_idx,
+        error_label="future review date",
+        columns=["review_date"],
+    )
 
     # Missing review_text
     df = inject_nulls(
@@ -46,13 +56,22 @@ def dirty_reviews(ctx: GenerationContext):
         error_label="missing review text",
     )
 
-    # Duplicate reviews
-    df = duplicate_rows(df, rate=0.04)
+    # Duplicate rows
+    df = duplicate_rows(
+        df,
+        rate=0.04,
+        error_label="duplicate product review rows",
+    )
 
     # Rating/sentiment mismatch
     indices = df.sample(frac=0.02, random_state=2).index
     df.loc[indices, "rating"] = [random.randint(1, 5) for _ in range(len(indices))]
-    append_error(df, indices, "rating/sentiment mismatch")
+    append_error(
+        df,
+        indices,
+        error_label="rating/sentiment mismatch",
+        columns=["rating", "review_text"],
+    )
 
     # Whitespace in review_text
     df = inject_whitespace(

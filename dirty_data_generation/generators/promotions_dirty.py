@@ -17,14 +17,24 @@ def dirty_promotions(ctx: GenerationContext):
     not_fs = df["promotion_mechanic"] != "free_shipping"
     zero_v = df[not_fs].sample(frac=0.03, random_state=20).index
     df.loc[zero_v, "promotion_value"] = [0 for _ in range(len(zero_v))]
-    append_error(df, zero_v, "zero promotion value for non-free-shipping")
+    append_error(
+        df,
+        zero_v,
+        error_label="zero promotion value for non free-shipping",
+        columns=["promotion_mechanic", "promotion_value"],
+    )
 
     # End date before start date
     inv_idx = df.sample(frac=0.02, random_state=21).index
     df.loc[inv_idx, ["effective_start_date", "effective_end_date"]] = df.loc[
         inv_idx, ["effective_end_date", "effective_start_date"]
     ].values
-    append_error(df, inv_idx, "inverted date range")
+    append_error(
+        df,
+        inv_idx,
+        error_label="inverted effective date range",
+        columns=["effective_start_date", "effective_end_date"],
+    )
 
     # Null promotion_value
     mask = df[["promotion_mechanic", "promotion_scope"]].notna().all(axis=1)
@@ -40,7 +50,12 @@ def dirty_promotions(ctx: GenerationContext):
         .index
     )
     df.loc[fs_idx, "promotion_scope"] = "product"
-    append_error(df, fs_idx, "free shipping promotion with product scope")
+    append_error(
+        df,
+        fs_idx,
+        error_label="free shipping promotion with product scope",
+        columns=["promotion_mechanic", "promotion_scope"],
+    )
 
     # Duplicate promotion_id
     dup_idx = df.sample(frac=0.01, random_state=24).index
@@ -48,11 +63,21 @@ def dirty_promotions(ctx: GenerationContext):
         df["promotion_id"].sample(n=len(dup_idx), replace=True, random_state=25).values
     )
     df.loc[dup_idx, "promotion_id"] = replacement_ids
-    append_error(df, dup_idx, "duplicate promotion id")
+    append_error(
+        df,
+        dup_idx,
+        error_label="duplicate promotion id",
+        columns=["promotion_id"],
+    )
 
     # Negative min_spend
     ms_idx = df[df["min_spend"].notna()].sample(frac=0.01, random_state=25).index
     df.loc[ms_idx, "min_spend"] = -abs(df.loc[ms_idx, "min_spend"])
-    append_error(df, ms_idx, "negative min spend")
+    append_error(
+        df,
+        ms_idx,
+        error_label="negative min spend",
+        columns=["min_spend"],
+    )
 
     return save(df, "promotions_dirty.csv")

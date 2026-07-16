@@ -26,7 +26,12 @@ def dirty_bundles(ctx: GenerationContext):
         bdf["bundle_id"].sample(n=len(dup_idx), replace=True, random_state=40).values
     )
     bdf.loc[dup_idx, "bundle_id"] = replacement_ids
-    append_error(bdf, dup_idx, "duplicate bundle id")
+    append_error(
+        bdf,
+        dup_idx,
+        error_label="duplicate bundle id",
+        columns=["bundle_id"],
+    )
 
     return save(bdf, "bundles_dirty.csv")
 
@@ -42,7 +47,12 @@ def dirty_bundle_pricings(ctx: GenerationContext):
         bpdf[bpdf["discount_value"].notna()].sample(frac=0.03, random_state=41).index
     )
     bpdf.loc[neg_idx, "discount_value"] = -abs(bpdf.loc[neg_idx, "discount_value"])
-    append_error(bpdf, neg_idx, "negative discount value")
+    append_error(
+        bpdf,
+        neg_idx,
+        error_label="negative discount value",
+        columns=["discount_value"],
+    )
 
     # Null discount
     bpdf = inject_nulls(
@@ -59,12 +69,18 @@ def dirty_bundle_pricings(ctx: GenerationContext):
         bpdf.loc[idx, ["effective_start_date", "effective_end_date"]] = bpdf.loc[
             idx, ["effective_end_date", "effective_start_date"]
         ].values
-    append_error(bpdf, inv_idx, "inverted date range")
+    append_error(
+        bpdf,
+        inv_idx,
+        error_label="inverted effective date range",
+        columns=["effective_start_date", "effective_end_date"],
+    )
 
     # Duplicate pricing rows
     bpdf = duplicate_rows(
         bpdf,
         rate=0.03,
+        error_label="duplicate bundle pricing rows",
     )
 
     return save(bpdf, "bundle_pricings_dirty.csv")

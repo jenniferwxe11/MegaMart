@@ -63,6 +63,10 @@ def dirty_stock_snapshots(ctx: GenerationContext):
             df.at[i, "error_types"].append("missing snapshot data")
 
     # Duplicate rows
-    df = duplicate_rows(df, rate=0.01, error_label="duplicate row")
+    df = duplicate_rows(
+        df,
+        rate=0.01,
+        error_label="duplicate stock snapshot rows",
+    )
 
     return save(df, "stock_snapshots_dirty.csv")

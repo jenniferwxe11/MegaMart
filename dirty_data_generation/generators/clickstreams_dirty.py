@@ -67,13 +67,16 @@ def dirty_clickstreams(ctx: GenerationContext):
             )
 
             for func in funcs:
-                if func.__name__ == "time_anomaly":
+                if func is time_anomaly:
                     dirty_row = func(dirty_row, previous_row)
-                elif func.__name__ == "wrong_event_sequence":
+
+                elif func is wrong_event_sequence:
                     dirty_row = func(previous_row, dirty_row, session_rows)
                     break
-                elif func.__name__ in ("mismatch_fields", "populate_wrong_fields"):
+
+                elif func is mismatch_fields or func is populate_wrong_fields:
                     dirty_row = func(ctx, dirty_row)
+
                 else:
                     dirty_row = func(dirty_row)
 

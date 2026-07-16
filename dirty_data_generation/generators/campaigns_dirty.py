@@ -21,21 +21,36 @@ def dirty_campaigns(ctx: GenerationContext):
     # Negative budget
     neg_idx = df.sample(frac=0.02, random_state=30).index
     df.loc[neg_idx, "budget"] = -abs(df.loc[neg_idx, "budget"])
-    append_error(df, neg_idx, "negative budget")
+    append_error(
+        df,
+        neg_idx,
+        error_label="negative budget",
+        columns=["budget"],
+    )
 
     # Astronomical budget
     big_idx = df.sample(frac=0.01, random_state=31).index
     df.loc[big_idx, "budget"] = [
         random.randint(10_000_000, 5_000_000_000) for _ in range(len(big_idx))
     ]
-    append_error(df, big_idx, "astronomical budget")
+    append_error(
+        df,
+        big_idx,
+        error_label="astronomical budget",
+        columns=["budget"],
+    )
 
     # end_date < start_date
     inv_idx = df.sample(frac=0.02, random_state=32).index
     df.loc[inv_idx, ["start_date", "end_date"]] = df.loc[
         inv_idx, ["end_date", "start_date"]
     ].values
-    append_error(df, inv_idx, "inverted date range")
+    append_error(
+        df,
+        inv_idx,
+        error_label="inverted date range",
+        columns=["start_date", "end_date"],
+    )
 
     # Missing target_segment
     df = inject_nulls(
@@ -54,7 +69,12 @@ def dirty_campaigns(ctx: GenerationContext):
     df.loc[str_mask, "is_ab_test"] = df.loc[str_mask, "is_ab_test"].map(
         {True: "True", False: "False"}
     )
-    append_error(df, str_mask[str_mask].index, "is_ab_test stored as string")
+    append_error(
+        df,
+        str_mask[str_mask].index,
+        error_label="is_ab_test stored as string",
+        columns=["is_ab_test"],
+    )
 
     # Whitespace in campaign_name
     df = inject_whitespace(

@@ -32,7 +32,12 @@ def dirty_customers(ctx: GenerationContext):
     dup_mask = online_mask & df["email"].notna()
     indices = df[dup_mask].sample(frac=0.03, random_state=1).index
     df.loc[indices, "email"] = [random.choice(email_pool) for _ in range(len(indices))]
-    append_error(df, indices, "duplicate email")
+    append_error(
+        df,
+        indices,
+        error_label="duplicate email",
+        columns=["email"],
+    )
 
     # Mixed-case/whitespace in email
     df = inject_whitespace(
@@ -61,14 +66,24 @@ def dirty_customers(ctx: GenerationContext):
             [r for r in regions if r != correct_region]
         )
 
-    append_error(df, mismatch_idx, "area-region mismatch")
+    append_error(
+        df,
+        mismatch_idx,
+        error_label="area-region mismatch",
+        columns=["area", "region"],
+    )
 
     # Future signup dates
     future_indices = df.sample(frac=0.02, random_state=2).index
     df.loc[future_indices, "signup_date"] = pd.to_datetime(
         [fake.future_date(end_date="+10y") for _ in range(len(future_indices))]
     )
-    append_error(df, future_indices, "future signup date")
+    append_error(
+        df,
+        future_indices,
+        error_label="future signup date",
+        columns=["signup_date"],
+    )
 
     # DOB in the future or impossibly old
     dob_indices = df[df["dob"].notna()].sample(frac=0.03, random_state=3).index
@@ -83,7 +98,12 @@ def dirty_customers(ctx: GenerationContext):
             for _ in range(len(dob_indices))
         ]
     )
-    append_error(df, dob_indices, "invalid date of birth")
+    append_error(
+        df,
+        dob_indices,
+        error_label="invalid date of birth",
+        columns=["dob"],
+    )
 
     # Age < 18 (DOB too recent)
     young_indices = df[df["dob"].notna()].sample(frac=0.02, random_state=4).index
@@ -93,7 +113,12 @@ def dirty_customers(ctx: GenerationContext):
             for _ in range(len(young_indices))
         ]
     )
-    append_error(df, young_indices, "underage date of birth")
+    append_error(
+        df,
+        young_indices,
+        error_label="underage date of birth",
+        columns=["dob"],
+    )
 
     # Loyalty points negative
     neg_idx = (
@@ -104,7 +129,12 @@ def dirty_customers(ctx: GenerationContext):
     df.loc[neg_idx, "loyalty_points"] = [
         -random.randint(1, 500) for _ in range(len(neg_idx))
     ]
-    append_error(df, neg_idx, "negative loyalty points")
+    append_error(
+        df,
+        neg_idx,
+        error_label="negative loyalty points",
+        columns=["loyalty_points"],
+    )
 
     # Invalid gender values
     gender_indices = df[df["gender"].notna()].sample(frac=0.01, random_state=6).index
@@ -112,7 +142,12 @@ def dirty_customers(ctx: GenerationContext):
         random.choice(["f", "m", "male", "female", "unknown", ""])
         for _ in range(len(gender_indices))
     ]
-    append_error(df, gender_indices, "invalid gender value")
+    append_error(
+        df,
+        gender_indices,
+        error_label="invalid gender value",
+        columns=["gender"],
+    )
 
     # Missing customer_segment for non-walk-in
     df = inject_nulls(
@@ -145,7 +180,8 @@ def dirty_customers(ctx: GenerationContext):
     append_error(
         df,
         email_idx,
-        "email marketing enabled without email",
+        error_label="email marketing enabled without email",
+        columns=["email", "email_marketing_opt_in"],
     )
 
     # Push notifications enabled but device platform missing
@@ -156,7 +192,8 @@ def dirty_customers(ctx: GenerationContext):
     append_error(
         df,
         push_idx,
-        "push notifications enabled without device platform",
+        error_label="push notifications enabled without device platform",
+        columns=["device_platform", "push_notifications_opt_in"],
     )
 
     # Whitespace in customer_name
@@ -177,7 +214,8 @@ def dirty_customers(ctx: GenerationContext):
     append_error(
         df,
         device_idx,
-        "device category missing for device platform",
+        error_label="device category missing for device platform",
+        columns=["device_platform", "device_category"],
     )
 
     return save(df, "customers_dirty.csv")

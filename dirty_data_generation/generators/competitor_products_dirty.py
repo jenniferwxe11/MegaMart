@@ -30,24 +30,43 @@ def dirty_competitor_products(ctx: GenerationContext):
     df.loc[zero_idx, "scraped_price"] = [
         random.choice([0, -abs(random.uniform(1, 50))]) for _ in range(len(zero_idx))
     ]
-    append_error(df, zero_idx, "zero or negative scraped price")
+    append_error(
+        df,
+        zero_idx,
+        error_label="zero or negative scraped price",
+        columns=["scraped_price"],
+    )
 
     # Price spike >5×
     spike_idx = df.sample(frac=0.02, random_state=91).index
     df.loc[spike_idx, "scraped_price"] = (
         df.loc[spike_idx, "scraped_price"] * random.uniform(5.0, 10.0)
     ).round(2)
-    append_error(df, spike_idx, "price spike greater than 5x")
+    append_error(
+        df,
+        spike_idx,
+        error_label="price spike greater than 5x",
+        columns=["scraped_price"],
+    )
 
     # Future update_timestamp
     fut_idx = df.sample(frac=0.02, random_state=92).index
     df.loc[fut_idx, "update_timestamp"] = pd.to_datetime(
         [fake.future_datetime(end_date="+10y") for _ in range(len(fut_idx))]
     )
-    append_error(df, fut_idx, "future update timestamp")
+    append_error(
+        df,
+        fut_idx,
+        error_label="future update timestamp",
+        columns=["update_timestamp"],
+    )
 
     # Duplicate rows
-    df = duplicate_rows(df, rate=0.04)
+    df = duplicate_rows(
+        df,
+        rate=0.04,
+        error_label="duplicate competitor product rows",
+    )
 
     # Missing scraped_category
     df = inject_nulls(
@@ -66,6 +85,11 @@ def dirty_competitor_products(ctx: GenerationContext):
     df.loc[str_mask, "has_active_promo"] = df.loc[str_mask, "has_active_promo"].map(
         {True: "True", False: "False"}
     )
-    append_error(df, str_mask[str_mask].index, "has_active_promo stored as string")
+    append_error(
+        df,
+        str_mask[str_mask].index,
+        error_label="has_active_promo stored as string",
+        columns=["has_active_promo"],
+    )
 
     return save(df, "competitor_price_history_dirty.csv")

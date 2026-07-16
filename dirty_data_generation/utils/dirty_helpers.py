@@ -3,6 +3,7 @@ import random
 import pandas as pd
 
 from dirty_data_generation.config.constants import MAX_ERRORS_PER_ROW
+from dirty_data_generation.utils.error_registry import register_error
 
 
 def coinflip(prob: float) -> bool:
@@ -39,12 +40,16 @@ def append_error(
     df: pd.DataFrame,
     indices,
     error_label: str,
+    columns: list[str],
     max_errors: int = MAX_ERRORS_PER_ROW,
 ) -> None:
     """
     Append an error label to rows by index.
-    Deduplicates labels and respects error cap.
+
+    Deduplicates labels, respects the maximum error cap,
+    and registers the affected columns for profiling.
     """
+    register_error(error_label, columns)
 
     for idx in list(indices):
 
@@ -87,6 +92,7 @@ def inject_nulls(
             df,
             affected,
             error_label,
+            columns=[col],
             max_errors=max_errors,
         )
 
@@ -144,6 +150,7 @@ def inject_whitespace(
         df,
         affected,
         error_label,
+        columns=[col],
         max_errors=max_errors,
     )
 
@@ -153,7 +160,7 @@ def inject_whitespace(
 def duplicate_rows(
     df: pd.DataFrame,
     rate: float,
-    error_label: str = "duplicate row",
+    error_label: str,
 ) -> pd.DataFrame:
     """
     Duplicate rows and mark duplicated copies.
@@ -169,20 +176,12 @@ def duplicate_rows(
         random_state=42,
     ).copy(deep=True)
 
-    for idx in dupes.index:
-
-        errors = dupes.at[idx, "error_types"]
-
-        if not isinstance(errors, list):
-            errors = []
-
-        else:
-            errors = errors.copy()
-
-        if error_label not in errors:
-            errors.append(error_label)
-
-        dupes.at[idx, "error_types"] = errors
+    append_error(
+        dupes,
+        dupes.index,
+        error_label,
+        columns=[col for col in dupes.columns if col != "error_types"],
+    )
 
     return pd.concat(
         [df, dupes],
