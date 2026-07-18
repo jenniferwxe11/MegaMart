@@ -13,6 +13,7 @@ from data_generation.load_generators import load_all_generators
 from data_generation.pipeline.dependency_graph import DEPENDENCIES
 from data_generation.pipeline.toposort import topo_sort
 from data_generation.registry import REGISTRY
+from data_generation.utils.io_utils import export_region_area_seed
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Setup
@@ -76,6 +77,8 @@ def run_generation():
             print(f"✗ {generator_name} failed: {e}")
             traceback.print_exc()
             errors.append((generator_name, str(e)))
+
+    export_region_area_seed()
 
     print("\n" + "=" * 60)
 

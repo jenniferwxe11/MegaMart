@@ -1,0 +1,393 @@
+version: 2
+
+models:
+  - name: customers
+
+    tests:
+      - customers_area_region_match:
+          arguments:
+            mapping_model: ref('region_area_mapping')
+          config:
+            meta:
+              title: Area Region Mismatch
+              category: Business Rule Violations
+              severity: Medium
+              description: Every area must belong to its assigned region.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              dob IS NULL
+              OR signup_date IS NULL
+              OR dob <= signup_date
+
+          config:
+            meta:
+              title: Signup Date is before Date of Birth
+              category: Business Rule Violations
+              severity: Low
+              description: Signup date should be after Date of Birth.
+
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+          - unique:
+              config:
+                meta:
+                  title: Duplicate Customer ID
+                  category: Duplicate Records
+                  severity: High
+                  description: Customer IDs should be unique
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^CUST[0-9]{3,}$"
+
+      - name: customer_type
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  [
+                    "Retail Walk-In",
+                    "Retail Members",
+                    "Online Only",
+                    "Omnichannel",
+                  ]
+
+      - name: customer_name
+        tests:
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: '^[A-Za-z -]+$'
+
+              config:
+                meta:
+                  title: Invalid Customer Name Format
+                  category: Formatting
+                  severity: Low
+                  description: Customer name contains leading/trailing whitespace or invalid formatting.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR customer_type IN ('Retail Walk-In', 'Retail Members')
+
+              config:
+                meta:
+                  title: Missing Customer Name
+                  category: Missing Values
+                  severity: Low
+                  description: Online and Omnichannel customers must have a customer name.
+
+      - name: email
+        tests:
+          - unique:
+              config:
+                where: "email IS NOT NULL"
+
+                meta:
+                  title: Duplicate Email
+                  category: Duplicate Records
+                  severity: High
+                  description: Customer email should uniquely identify a customer.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: '^[^@]+@[^@]+\\.[^@]+$'
+
+              config:
+                meta:
+                  title: Invalid Email Format
+                  category: Formatting
+                  severity: High
+                  description: Email contains invalid formatting or whitespace.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR customer_type IN ('Retail Walk-In', 'Retail Members')
+
+              config:
+                meta:
+                  title: Missing Email
+                  category: Missing Values
+                  severity: Low
+                  description: Online and Omnichannel customers must have an email address.
+
+      - name: gender
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["Female", "Male"]
+
+              config:
+                meta:
+                  title: Invalid Gender
+                  category: Business Rule Violations
+                  severity: Low
+                  description: Gender must either be Female or Male.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR customer_type IN ('Retail Walk-In', 'Retail Members')
+
+              config:
+                meta:
+                  title: Missing Gender
+                  category: Missing Values
+                  severity: Low
+                  description: Online and Omnichannel customers must have a gender.
+
+      - name: dob
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NULL
+                  OR (
+                    dob <= current_date()
+                    AND dob >= DATE '1900-01-01'
+                  )
+
+              config:
+                meta:
+                  title: Invalid Date of Birth
+                  category: Date Issue
+                  severity: Low
+                  description: Date of Birth cannot be in the future or unrealistically old.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NULL
+                  OR DATE_DIFF(current_date(), dob, YEAR) >= 18
+
+              config:
+                meta:
+                  title: Underage Customer
+                  category: Business Rule Violations
+                  severity: Medium
+                  description: Customer must be at least 18 years old.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR customer_type IN ('Retail Walk-In', 'Retail Members')
+
+              config:
+                meta:
+                  title: Missing Date of Birth
+                  category: Missing Values
+                  severity: Low
+                  description: Online and Omnichannel customers must have a Date of Birth.
+
+      - name: area
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR customer_type IN ('Retail Walk-In', 'Retail Members')
+
+              config:
+                meta:
+                  title: Missing Area
+                  category: Missing Values
+                  severity: Low
+                  description: Online and Omnichannel customers must have an area name.
+
+      - name: region
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR customer_type IN ('Retail Walk-In', 'Retail Members')
+
+              config:
+                meta:
+                  title: Missing Region
+                  category: Missing Values
+                  severity: Low
+                  description: Online and Omnichannel customers must have a region name.
+
+      - name: signup_date
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NULL
+                  OR signup_date <= current_date()
+
+              config:
+                meta:
+                  title: Future Signup Date
+                  category: Date Issues
+                  severity: Medium
+                  description: Signup date cannot be in the future.
+
+      - name: loyalty_points
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 1000000
+                strictly: false
+
+              config:
+                meta:
+                  title: Negative Loyalty Points
+                  category: Business Rule Violations
+                  severity: Low
+                  description: Loyalty points cannot be negative.
+
+      - name: customer_segment
+        tests:
+          - accepted_values:
+              arguments:
+                values:
+                  [
+                    "New Customers",
+                    "Active Customers",
+                    "Churn Risk Customers",
+                    "High Spenders",
+                    "Budget Shoppers",
+                  ]
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR customer_type IN ('Retail Walk-In', 'Retail Members')
+
+              config:
+                meta:
+                  title: Missing Customer Segment
+                  category: Missing Values
+                  severity: Medium
+                  description: Online and Omnichannel customers must have a customer segment.
+
+      - name: email_marketing_opt_in
+        tests:
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR customer_type IN ('Retail Walk-In', 'Retail Members')
+
+              config:
+                meta:
+                  title: Missing Email Marketing Opt In
+                  category: Missing Values
+                  severity: Medium
+                  description: Online and Omnichannel customers must have an email marketing preference.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  = FALSE
+                  OR email IS NOT NULL
+
+              config:
+                meta:
+                  title: Email Marketing Without Email
+                  category: Business Rule Violations
+                  severity: High
+                  description: Customers opting into email marketing must have an email address.
+
+      - name: sms_marketing_opt_in
+        tests:
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR customer_type IN ('Retail Walk-In', 'Retail Members')
+
+              config:
+                meta:
+                  title: Missing SMS Marketing Opt In
+                  category: Missing Values
+                  severity: Medium
+                  description: Online and Omnichannel customers must have a SMS marketing preference.
+
+      - name: push_notifications_opt_in
+        tests:
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR customer_type IN ('Retail Walk-In', 'Retail Members')
+
+              config:
+                meta:
+                  title: Missing Push Notifications Opt In
+                  category: Missing Values
+                  severity: Medium
+                  description: Online and Omnichannel customers must have a push notifications marketing preference.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  = FALSE
+                  OR device_platform IS NOT NULL
+
+              config:
+                meta:
+                  title: Push Notification Marketing Without Device Platform
+                  category: Business Rule Violations
+                  severity: High
+                  description: Customers opting into push notifications marketing must have a device platform.
+
+      - name: device_category
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["Mobile", "Desktop", "Tablet"]
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: >
+                  IS NOT NULL
+                  OR device_platform IS NULL
+
+              config:
+                meta:
+                  title: Missing Device Category
+                  category: Missing Values
+                  severity: Medium
+                  description: Device category is required when a device platform exists.
+
+      - name: device_platform
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["iOS", "Android", "Web"]

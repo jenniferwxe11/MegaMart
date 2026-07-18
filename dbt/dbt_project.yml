@@ -7,10 +7,17 @@ profile: megamart
 model-paths: ["models"]
 analysis-paths: ["analysis"]
 test-paths: ["tests"]
-seed-paths: ["data"]
+seed-paths: ["seeds"]
 macro-paths: ["macros"]
 
 target-path: "target"
 clean-targets:
   - "target"
-  - "dbt_modules"
+  - "dbt_packages"
+
+seeds:
+  megamart:
+    region_area_mapping:
+      +column_types:
+        region: string
+        area: string

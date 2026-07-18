@@ -120,7 +120,7 @@ def generate_customer_profile(ctx, customer_type):
             email = f"{first_name}.{last_name}@{fake.safe_domain_name()}".lower()
             gender = random.choice(["Female", "Male"])
             region, area = get_random_region_area(ctx)
-            signup_date = sample_signup_date() if random.random() < 0.97 else None
+            signup_date = sample_signup_date()
             dob = generate_dob(signup_date)
 
             loyalty_points = 0
@@ -161,7 +161,7 @@ def generate_customer_profile(ctx, customer_type):
             email = f"{first_name}.{last_name}@{fake.safe_domain_name()}".lower()
             gender = random.choice(["Female", "Male"])
             region, area = get_random_region_area(ctx)
-            signup_date = sample_signup_date() if random.random() < 0.97 else None
+            signup_date = sample_signup_date()
             dob = generate_dob(signup_date)
             loyalty_points = 0
 
