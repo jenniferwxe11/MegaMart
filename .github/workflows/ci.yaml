@@ -46,10 +46,14 @@ jobs:
               - 'data_generation/**/*.py'
               - 'tests/**/*.py'
             dbt:
-              - 'models/**'
-              - 'seeds/**'
-              - 'snapshots/**'
-              - 'dbt_project.yml'
+              - 'dbt/models/**'
+              - 'dbt/seeds/**'
+              - 'dbt/macros/**'
+              - 'dbt/tests/**'
+              - 'dbt/packages.yml'
+              - 'dbt/package-lock.yml'
+              - 'dbt/dbt_project.yml'
+              - 'dbt_profiles/**'
 
   # --- CI ---
   ci:
@@ -148,6 +152,10 @@ jobs:
     timeout-minutes: 20
     if: needs.changes.outputs.dbt == 'true'
 
+    env:
+      DBT_PROJECT_DIR: dbt
+      DBT_PROFILES_DIR: dbt_profiles
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -176,13 +184,16 @@ jobs:
           pip install -r requirements.txt
 
       - name: Install dbt dependencies
-        run: dbt deps
+        run: |
+          dbt deps \
+            --project-dir $DBT_PROJECT_DIR \
+            --profiles-dir $DBT_PROFILES_DIR
 
       - name: Download previous dbt artifacts
         uses: actions/download-artifact@v4
         with:
           name: dbt-target
-          path: target
+          path: dbt/target
         continue-on-error: true
 
       - name: Check modified dbt files
@@ -190,9 +201,12 @@ jobs:
         run: |
           FILES="${{ steps.changes.outputs.all_changed_files }}"
 
+          DBT_PATTERN='^dbt/models/|^dbt/seeds/|^dbt/macros/|^dbt/tests/|\
+          ^dbt/dbt_project.yml|^dbt/packages.yml|^dbt/package-lock.yml'
+
           DBT_FILES=$(echo "$FILES" \
             | tr ' ' '\n' \
-            | grep -E '^models/|^seeds/|^snapshots/|^dbt_project.yml' \
+            | grep -E "$DBT_PATTERN" \
             || true)
 
           if [ -z "$DBT_FILES" ]; then
@@ -204,23 +218,27 @@ jobs:
       - name: Parse dbt project
         if: steps.dbt-files.outputs.dbt_changed == 'true'
         run: |
-          dbt parse
+          dbt parse \
+            --project-dir $DBT_PROJECT_DIR \
+            --profiles-dir $DBT_PROFILES_DIR
 
       - name: Compile dbt models
         if: steps.dbt-files.outputs.dbt_changed == 'true'
         run: |
-          dbt compile
+          dbt compile \
+            --project-dir $DBT_PROJECT_DIR \
+            --profiles-dir $DBT_PROFILES_DIR
 
       - name: Upload dbt target artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dbt-target
-          path: target/
+          path: dbt/target/
 
       - name: Upload dbt logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dbt-logs
-          path: logs/
+          path: dbt/logs/
