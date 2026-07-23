@@ -15,6 +15,6 @@ select
     push_notifications_opt_in,
     device_category,
     device_platform,
-    safe_cast(nullif(dob, '') as date) as dob,
-    safe_cast(nullif(signup_date, '') as date) as signup_date
+    dob,
+    signup_date
 from {{ source('raw', 'customers') }}
