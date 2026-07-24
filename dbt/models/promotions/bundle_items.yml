@@ -1,0 +1,89 @@
+version: 2
+
+models:
+  # --- BUNDLE ITEMS ---
+  - name: bundle_items
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - bundle_id
+              - product_id
+
+          config:
+            meta:
+              title: Duplicate Product within Bundle
+              category: Business Rule Violations
+              severity: High
+              description: Each bundle-product combination must be unique.
+
+    # --- Column Constraints ---
+    columns:
+      - name: bundle_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Bundle ID
+                  category: Missing Values
+                  severity: High
+                  description: bundle_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('bundles')
+                field: bundle_id
+
+              config:
+                meta:
+                  title: Invalid Bundle Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: bundle_id must exist in the bundles table.
+
+      - name: product_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product ID
+                  category: Missing Values
+                  severity: High
+                  description: product_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: quantity
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Quantity
+                  category: Missing Values
+                  severity: High
+                  description: quantity is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Quantity Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: quantity must be between 1 and 100000.

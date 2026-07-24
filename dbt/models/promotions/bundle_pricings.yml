@@ -1,0 +1,201 @@
+version: 2
+
+models:
+  # --- BUNDLE PRICINGS ---
+  - name: bundle_pricings
+
+    # --- Business Rules ---
+    tests:
+      - bundle_pricing_lifecycle_integrity:
+          config:
+            meta:
+              title: Bundle Pricing Lifecycle Integrity Violation
+              category: Business Rule Violations
+              severity: High
+              description: Bundle pricing phases must follow a continuous, chronological, and non overlapping lifecycle.
+
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - bundle_id
+              - pricing_phase
+
+          config:
+            meta:
+              title: Multiple Prices for Same Bundle Phase
+              category: Business Rule Violations
+              severity: High
+              description: A bundle must only have one price defined for each pricing phase.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "discount_value <= bundle_price"
+
+          config:
+            meta:
+              title: Discount Value Exceeds Bundle Price
+              category: Business Rule Violations
+              severity: High
+              description: discount_value must be less than or equal to bundle_price.
+
+    # --- Column Constraints ---
+    columns:
+      - name: bundle_pricing_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Bundle Pricing ID
+                  category: Missing Values
+                  severity: High
+                  description: bundle_pricing_id is required.
+
+          - unique:
+              config:
+                meta:
+                  title: Duplicate Bundle Pricing ID
+                  category: Duplicate Records
+                  severity: High
+                  description: bundle_pricing_id must be unique.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^BPRICE[0-9]{3,}$"
+
+              config:
+                meta:
+                  title: Invalid Bundle Pricing ID Format
+                  category: Formatting
+                  severity: High
+                  description: bundle_pricing_id must follow the expected format.
+
+      - name: bundle_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Bundle ID
+                  category: Missing Values
+                  severity: High
+                  description: bundle_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('bundles')
+                field: bundle_id
+
+              config:
+                meta:
+                  title: Invalid Bundle Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: bundle_id must exist in the bundles table.
+
+      - name: bundle_price
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Bundle Price
+                  category: Missing Values
+                  severity: High
+                  description: bundle_price is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Bundle Price Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: bundle_price must be between 0 and 100000.
+
+      - name: discount_value
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Discount Value
+                  category: Missing Values
+                  severity: High
+                  description: discount_value is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Discount Value Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: discount_value must be between 0 and 100000.
+
+      - name: effective_start_date
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Effective Start Date
+                  category: Missing Values
+                  severity: High
+                  description: effective_start_date is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Effective Start Date Type
+                  category: Date Type
+                  severity: Medium
+                  description: effective_start_date must be stored as a DATE.
+
+      - name: effective_end_date
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Effective End Date
+                  category: Missing Values
+                  severity: High
+                  description: effective_end_date is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Effective End Date Type
+                  category: Date Type
+                  severity: Medium
+                  description: effective_end_date must be stored as a DATE.
+
+      - name: pricing_phase
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Pricing Phase
+                  category: Missing Values
+                  severity: Medium
+                  description: pricing_phase is required.
+
+          - accepted_values:
+              arguments:
+                values: ["LAUNCH", "EOL", "PROMO"]
+
+              config:
+                meta:
+                  title: Invalid Pricing Phase
+                  category: Data Quality
+                  severity: High
+                  description: pricing_phase must be one of the supported values.
