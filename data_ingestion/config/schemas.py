@@ -110,7 +110,6 @@ CUSTOMERS_SCHEMA = [
     bigquery.SchemaField("area", "STRING"),
     bigquery.SchemaField("region", "STRING"),
     bigquery.SchemaField("signup_date", "DATE"),
-    bigquery.SchemaField("loyalty_points", "INTEGER"),
     bigquery.SchemaField("customer_segment", "STRING"),
     bigquery.SchemaField("email_marketing_opt_in", "BOOL"),
     bigquery.SchemaField("sms_marketing_opt_in", "BOOL"),
