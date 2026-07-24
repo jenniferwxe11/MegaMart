@@ -25,17 +25,19 @@ def test_clickstream_session_flow_get_location_home_area(ctx):
     Integration contract: get_location() must return the customer's
     home area ~80% of the time.
     """
+    random.seed(42)
+
     customer = _build_customer_with_location(ctx)
     customer_id = customer["customer_id"]
     cust_area = customer["area"]
-    hits, trials = 0, 100
+    hits, trials = 0, 1000
     for _ in range(trials):
         result = get_location(ctx, customer_id)
         if result == cust_area:
             hits += 1
     ratio = hits / trials
     assert 0.7 <= ratio <= 0.9, (
-        f"Expected home area probability 0.7-0.9, got {ratio:.2f} "
+        f"Expected home area probability around 80%, got {ratio:.2f} "
         f"for customer {customer_id} in area {cust_area!r}"
     )
 
