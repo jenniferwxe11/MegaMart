@@ -1,0 +1,186 @@
+version: 2
+
+models:
+  # --- PRODUCT REVIEWS ---
+  - name: product_reviews
+
+    # --- Business Rules ---
+    tests:
+      - review_date_after_transaction_date:
+          arguments:
+            mapping_model: ref('transactions')
+
+          config:
+            meta:
+              title: Review Date before Transaction Date
+              category: Business Rule Violations
+              severity: Medium
+              description: review_date must be on or after transaction_date for the same purchase.
+
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - transaction_id
+              - product_id
+
+          config:
+            meta:
+              title: Multiple Reviews for the Same Purchased Product
+              category: Business Rule Violations
+              severity: High
+              description: A purchased product must only receive one review per transaction.
+
+    # --- Column Constraints ---
+    columns:
+      - name: review_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Review ID
+                  category: Missing Values
+                  severity: High
+                  description: review_id is required.
+
+          - unique:
+              config:
+                meta:
+                  title: Duplicate Review ID
+                  category: Duplicate Records
+                  severity: High
+                  description: review_id must be unique.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^REV[0-9]{3,}$"
+
+              config:
+                meta:
+                  title: Invalid Review ID Format
+                  category: Formatting
+                  severity: High
+                  description: review_id must follow the expected format.
+
+      - name: transaction_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Transaction ID
+                  category: Missing Values
+                  severity: High
+                  description: transaction_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('transactions')
+                field: transaction_id
+
+              config:
+                meta:
+                  title: Invalid Transaction Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: transaction_id must exist in the transactions table.
+
+      - name: product_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product ID
+                  category: Missing Values
+                  severity: High
+                  description: product_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: customer_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Customer ID
+                  category: Missing Values
+                  severity: High
+                  description: customer_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('customers')
+                field: customer_id
+
+              config:
+                meta:
+                  title: Invalid Customer Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: customer_id must exist in the customers table.
+
+      - name: rating
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Rating
+                  category: Missing Values
+                  severity: High
+                  description: rating is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 5
+                strictly: false
+
+              config:
+                meta:
+                  title: Rating Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: rating must be between 1 and 5.
+
+      - name: review_text
+        tests: []
+
+      - name: review_date
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Review Date
+                  category: Missing Values
+                  severity: High
+                  description: review_date is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Review Date Type
+                  category: Date Type
+                  severity: Low
+                  description: review_date must be stored as a DATE.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_date()"
+
+              config:
+                meta:
+                  title: Future Review Date
+                  category: Date Issues
+                  severity: Medium
+                  description: review_date must not be in the future.

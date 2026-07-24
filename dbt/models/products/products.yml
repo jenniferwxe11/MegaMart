@@ -1,0 +1,136 @@
+version: 2
+
+models:
+  # --- PRODUCTS ---
+  - name: products
+
+    # --- Business Rules ---
+    tests:
+    - dbt_utils.expression_is_true:
+        arguments:
+          expression: "cost_price <= selling_price"
+
+        config:
+          meta:
+            title: Cost Price Exceeds Selling Price
+            category: Business Rule Violations
+            severity: Medium
+            description: cost_price must be less than or equal to selling_price.
+
+    # --- Column Constraints ---
+    columns:
+      - name: product_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product ID
+                  category: Missing Values
+                  severity: High
+                  description: product_id is required.
+
+          - unique:
+              config:
+                meta:
+                  title: Duplicate Product ID
+                  category: Duplicate Records
+                  severity: High
+                  description: product_id must be unique.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^PROD[0-9]{3,}$"
+
+              config:
+                meta:
+                  title: Invalid Product ID Format
+                  category: Formatting
+                  severity: High
+                  description: product_id must follow the expected format.
+
+      - name: product_name
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product Name
+                  category: Missing Values
+                  severity: High
+                  description: product_name is required.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: '^[^ ].*[^ ]$'
+
+              config:
+                meta:
+                  title: Invalid Product Name Format
+                  category: Formatting
+                  severity: Low
+                  description: product_name must follow the expected format and must not have leading/trailing whitespace.
+
+      - name: brand
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Brand
+                  category: Missing Values
+                  severity: Medium
+                  description: brand is required.
+
+      - name: category
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Category
+                  category: Missing Values
+                  severity: Medium
+                  description: category is required.
+
+      - name: selling_price
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Selling Price
+                  category: Missing Values
+                  severity: Medium
+                  description: selling_price is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Selling Price Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: selling_price must be between 0 and 100000.
+
+      - name: cost_price
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Cost Price
+                  category: Missing Values
+                  severity: Medium
+                  description: cost_price is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Cost Price Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: cost_price must be between 0 and 100000.
