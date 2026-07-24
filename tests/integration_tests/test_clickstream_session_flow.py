@@ -265,34 +265,54 @@ def test_clickstream_session_flow_attempt_reactivation_treatment_increases_react
 ):
     """
     Integration contract:
-    The same customer should have a higher reactivation rate when exposed
-    to an active Treatment campaign than when not exposed to any campaign.
+    A treatment campaign should increase the reactivation rate for the
+    same customer under identical conditions.
     """
 
-    assign_df = ctx.campaign_assignments.campaign_assignments_df
-    campaigns_df = ctx.campaigns.campaigns_df
     customers_df = ctx.customers.customers_df
 
-    treatment_rows = assign_df[assign_df["assignment_group"] == "Treatment"]
-    if treatment_rows.empty:
-        pytest.skip("No treatment assignments")
-
-    row = treatment_rows.sample(n=1, random_state=seed).iloc[0]
-
-    customer_id = row["customer_id"]
-    cust = customers_df[customers_df["customer_id"] == customer_id].iloc[0]
-    campaign = campaigns_df[campaigns_df["campaign_id"] == row["campaign_id"]].iloc[0]
-
-    mid_campaign = (
-        campaign["start_date"] + (campaign["end_date"] - campaign["start_date"]) / 2
+    customer = (
+        customers_df[customers_df["customer_type"].isin(["Online Only", "Omnichannel"])]
+        .sample(n=1, random_state=seed)
+        .iloc[0]
     )
-    last_active = mid_campaign - pd.Timedelta(days=25)
+
+    customer_id = customer["customer_id"]
+
+    current_time = pd.Timestamp("2025-07-15")
+    last_active = current_time - pd.Timedelta(days=25)
+
+    treatment_campaign = pd.DataFrame(
+        {
+            "assignment_group": ["Treatment"],
+            "start_date": [current_time - pd.Timedelta(days=5)],
+            "end_date": [current_time + pd.Timedelta(days=10)],
+        }
+    )
+
+    with patch(
+        "data_generation.services.clickstreams.clickstream_session_service.get_active_campaigns",
+        return_value=None,
+    ) as mock_lookup:
+
+        attempt_reactivation(
+            ctx,
+            activity_multiplier=3,
+            customer_id=customer_id,
+            current_time=current_time,
+            last_active_time=last_active,
+            customer_segment=customer["customer_segment"],
+            cart_content=[],
+        )
+
+        assert mock_lookup.called
 
     #
     # Baseline (no campaign)
     #
+
     with patch(
-        "data_generation.services.clickstreams.clickstream_lookup_service.get_active_campaigns",
+        "data_generation.services.clickstreams.clickstream_session_service.get_active_campaigns",
         return_value=None,
     ):
         baseline = sum(
@@ -300,9 +320,9 @@ def test_clickstream_session_flow_attempt_reactivation_treatment_increases_react
                 ctx,
                 activity_multiplier=3,
                 customer_id=customer_id,
-                current_time=mid_campaign,
+                current_time=current_time,
                 last_active_time=last_active,
-                customer_segment=cust["customer_segment"],
+                customer_segment=customer["customer_segment"],
                 cart_content=[],
             )
             is not None
@@ -312,23 +332,27 @@ def test_clickstream_session_flow_attempt_reactivation_treatment_increases_react
     #
     # Treatment campaign
     #
-    treatment = sum(
-        attempt_reactivation(
-            ctx,
-            activity_multiplier=3,
-            customer_id=customer_id,
-            current_time=mid_campaign,
-            last_active_time=last_active,
-            customer_segment=cust["customer_segment"],
-            cart_content=[],
+    with patch(
+        "data_generation.services.clickstreams.clickstream_session_service.get_active_campaigns",
+        return_value=treatment_campaign,
+    ):
+        treatment = sum(
+            attempt_reactivation(
+                ctx,
+                activity_multiplier=3,
+                customer_id=customer_id,
+                current_time=current_time,
+                last_active_time=last_active,
+                customer_segment=customer["customer_segment"],
+                cart_content=[],
+            )
+            is not None
+            for _ in range(N)
         )
-        is not None
-        for _ in range(N)
-    )
 
     assert treatment > baseline, (
         f"Treatment reactivations ({treatment}) should be greater than "
-        f"no-campaign reactivations ({baseline})"
+        f"baseline ({baseline})"
     )
 
 
