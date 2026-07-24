@@ -292,7 +292,7 @@ def test_clickstream_session_flow_attempt_reactivation_treatment_increases_react
     # Baseline (no campaign)
     #
     with patch(
-        "data_generation.clickstream.session_flow.get_active_campaigns",
+        "data_generation.services.clickstreams.clickstream_lookup_service.get_active_campaigns",
         return_value=None,
     ):
         baseline = sum(
