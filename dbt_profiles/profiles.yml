@@ -1,11 +1,29 @@
 megamart:
-  target: dev
+  target: dirty
   outputs:
-    dev:
+    raw:
       type: bigquery
       method: oauth
       project: mega-mart-storage
-      dataset: mega_mart_dataset
+      dataset: synthetic_raw
+      threads: 1
+      timeout_seconds: 300
+      location: asia-southeast1
+
+    dirty:
+      type: bigquery
+      method: oauth
+      project: mega-mart-storage
+      dataset: synthetic_dirty
+      threads: 1
+      timeout_seconds: 300
+      location: asia-southeast1
+
+    clean:
+      type: bigquery
+      method: oauth
+      project: mega-mart-storage
+      dataset: synthetic_clean
       threads: 1
       timeout_seconds: 300
       location: asia-southeast1

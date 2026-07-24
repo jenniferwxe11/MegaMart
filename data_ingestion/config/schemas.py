@@ -1,3 +1,5 @@
+# data_ingestion/config/schemas.py
+
 from google.cloud import bigquery
 
 BUNDLE_ITEMS_SCHEMA = [

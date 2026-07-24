@@ -72,4 +72,4 @@ jobs:
 
       - name: Show uploaded tables
         run: |
-          bq ls mega-mart-storage:raw_dev
+          bq ls mega-mart-storage:synthetic_dirty
