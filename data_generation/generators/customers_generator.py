@@ -53,7 +53,6 @@ def customers_generator(ctx: GenerationContext):
                 "area": customer_profile["area"],
                 "region": customer_profile["region"],
                 "signup_date": customer_profile["signup_date"],
-                "loyalty_points": customer_profile["loyalty_points"],
                 "customer_segment": customer_profile["customer_segment"],
                 "email_marketing_opt_in": customer_profile["email_marketing_opt_in"],
                 "sms_marketing_opt_in": customer_profile["sms_marketing_opt_in"],

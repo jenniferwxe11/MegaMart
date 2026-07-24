@@ -8,13 +8,12 @@ select
     gender,
     area,
     region,
-    loyalty_points,
     customer_segment,
     email_marketing_opt_in,
     sms_marketing_opt_in,
     push_notifications_opt_in,
     device_category,
     device_platform,
-    dob,
-    signup_date
+    safe_cast(dob as date) as dob,
+    safe_cast(signup_date as date) as signup_date
 from {{ source('raw', 'customers') }}

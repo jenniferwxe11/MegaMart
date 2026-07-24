@@ -308,7 +308,7 @@ models:
         tests:
           - dbt_expectations.expect_column_values_to_match_regex:
               arguments:
-                regex: ^[A-Za-z]+(?:[ '-][A-Za-z]+)*$
+                regex: "^[A-Za-z -]+$"
 
               config:
                 meta:
@@ -331,7 +331,7 @@ models:
 
           - dbt_expectations.expect_column_values_to_match_regex:
               arguments:
-                regex: ^[^\s@]+@[^\s@]+\.[^\s@]+$
+                regex: "^[^@ ]+@[^@ ]+[.][^@ ]+$"
 
               config:
                 meta:

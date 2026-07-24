@@ -79,7 +79,6 @@ def generate_customer_profile(ctx, customer_type):
     area = None
     region = None
     signup_date = None
-    loyalty_points = 0
     customer_segment = None
     email_marketing_opt_in = None
     sms_marketing_opt_in = None
@@ -104,7 +103,6 @@ def generate_customer_profile(ctx, customer_type):
         if customer_type == "Retail Members":
             email = f"{fake.user_name()}@{fake.safe_domain_name()}"
             signup_date = sample_signup_date() if random.random() < 0.97 else None
-            loyalty_points = 0
 
         # -----------------------------------------------------
         # ONLINE ONLY CUSTOMERS:
@@ -122,8 +120,6 @@ def generate_customer_profile(ctx, customer_type):
             region, area = get_random_region_area(ctx)
             signup_date = sample_signup_date()
             dob = generate_dob(signup_date)
-
-            loyalty_points = 0
 
             email_marketing_opt_in = random.choices(
                 [True, False], weights=[0.28, 0.72], k=1
@@ -163,7 +159,6 @@ def generate_customer_profile(ctx, customer_type):
             region, area = get_random_region_area(ctx)
             signup_date = sample_signup_date()
             dob = generate_dob(signup_date)
-            loyalty_points = 0
 
             email_marketing_opt_in = random.choices(
                 [True, False], weights=[0.28, 0.72], k=1
@@ -197,7 +192,6 @@ def generate_customer_profile(ctx, customer_type):
         "area": area,
         "region": region,
         "signup_date": signup_date,
-        "loyalty_points": loyalty_points,
         "customer_segment": customer_segment,
         "email_marketing_opt_in": email_marketing_opt_in,
         "sms_marketing_opt_in": sms_marketing_opt_in,
