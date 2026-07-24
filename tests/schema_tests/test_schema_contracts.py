@@ -214,12 +214,14 @@ def test_schema_contracts_regex_columns(dataframes):
         df = dataframes[table]
 
         for col, pattern in rules.items():
+            assert col in df.columns, f"{table} missing regex column: {col}"
 
             series = df[col]
-
             series = series[series.notna() & (series != "")]
 
-            assert series.astype(str).str.fullmatch(pattern).all()
+            assert (
+                series.astype(str).str.fullmatch(pattern).all()
+            ), f"{table}.{col} contains values that do not match {pattern}"
 
 
 def test_schema_contracts_list_dict_foreign_keys(dataframes):

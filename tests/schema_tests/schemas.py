@@ -1,12 +1,12 @@
 TABLE_CONTRACTS = {
     "customers": {
         "pk": ["customer_id"],
-        "unique_columms": ["email"],
+        "unique_columns": ["email"],
         "required": ["customer_id", "customer_type"],
         "regex": {
             "customer_id": "^CUST[0-9]{3,}$",
             "customer_name": "^[A-Za-z -]+$",
-            "email": "^[^@]+@[^@]+\\.[^@]+$",
+            "email": r"^[^\s@]+@[^\s@]+\.[^\s@]+$",
         },
         "types": {
             "customer_id": "string",
@@ -16,7 +16,6 @@ TABLE_CONTRACTS = {
             "gender": "string",
             "area": "string",
             "region": "string",
-            "loyalty_points": "int",
             "customer_segment": "string",
             "email_marketing_opt_in": "bool",
             "sms_marketing_opt_in": "bool",
@@ -45,9 +44,6 @@ TABLE_CONTRACTS = {
             ],
             "device_category": ["Mobile", "Desktop", "Tablet"],
             "device_platform": ["iOS", "Android", "Web"],
-        },
-        "ranges": {
-            "loyalty_points": (0, None),
         },
     },
     "stores": {
@@ -418,7 +414,7 @@ TABLE_CONTRACTS = {
     },
     "bundles": {
         "pk": ["bundle_id"],
-        "required": ["bundle_id", "bundle_type"],
+        "required": ["bundle_id", "bundle_name", "bundle_type", "categories"],
         "regex": {
             "bundle_id": "^BUNDLE[0-9]{3,}$",
         },
@@ -436,7 +432,7 @@ TABLE_CONTRACTS = {
         "unique_combinations": [
             ["bundle_id", "product_id"],
         ],
-        "required": ["bundle_id", "product_id"],
+        "required": ["bundle_id", "product_id", "quantity"],
         "fk": {
             "bundle_id": ("bundles", "bundle_id"),
             "product_id": ("products", "product_id"),
@@ -459,8 +455,10 @@ TABLE_CONTRACTS = {
             "bundle_pricing_id",
             "bundle_id",
             "bundle_price",
+            "discount_value",
             "effective_start_date",
             "effective_end_date",
+            "pricing_phase",
         ],
         "fk": {
             "bundle_id": ("bundles", "bundle_id"),
@@ -488,6 +486,10 @@ TABLE_CONTRACTS = {
         "pk": ["promotion_id"],
         "required": [
             "promotion_id",
+            "promotion_name",
+            "promotion_theme",
+            "promotion_target_id",
+            "promotion_value",
             "discount_code",
             "effective_start_date",
             "effective_end_date",
@@ -746,7 +748,14 @@ TABLE_CONTRACTS = {
         "unique_combinations": [
             ["transaction_id", "product_id"],
         ],
-        "required": ["review_id", "product_id", "customer_id", "rating", "review_date"],
+        "required": [
+            "review_id",
+            "transaction_id",
+            "product_id",
+            "customer_id",
+            "rating",
+            "review_date",
+        ],
         "fk": {
             "product_id": ("products", "product_id"),
             "customer_id": ("customers", "customer_id"),
@@ -756,6 +765,7 @@ TABLE_CONTRACTS = {
         },
         "types": {
             "review_id": "string",
+            "transaction_id": "string",
             "product_id": "string",
             "customer_id": "string",
             "rating": "int",
