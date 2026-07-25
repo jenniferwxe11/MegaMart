@@ -1,0 +1,154 @@
+version: 2
+
+models:
+  # --- STORE CATALOGUES ---
+  - name: store_catalogues
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - store_id
+              - product_id
+
+          config:
+            meta:
+              title: Duplicated Product Record for the Same Store
+              category: Business Rule Violations
+              severity: High
+              description: A product must appear only once in each store's catalogue.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "trim(store_product_name) != ''"
+
+          config:
+            meta:
+              title: Blank Store Product Name
+              category: Missing Values
+              severity: Medium
+              description: store_product_name must not be blank.
+
+      - store_brand_matches_product_brand:
+          config:
+            meta:
+              title: Store Brand Alignment
+              category: Business Rule Violations
+              severity: Low
+              description: store_brand must match the brand in the products table.
+
+      - store_category_matches_product_category:
+          config:
+            meta:
+              title: Store Category Alignment
+              category: Business Rule Violations
+              severity: Medium
+              description: store_category must match the category in the products table.
+
+      - store_price_matches_product_price:
+          config:
+            meta:
+              title: Store Price Alignment
+              category: Business Rule Violations
+              severity: Medium
+              description: store_selling_price must be within 20% of selling_price in the products table.
+
+    # --- Column Constraints ---
+    columns:
+      - name: store_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store ID
+                  category: Missing Values
+                  severity: Medium
+                  description: store_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('stores')
+                field: store_id
+
+              config:
+                meta:
+                  title: Invalid Store Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: store_id must exist in the stores table.
+
+      - name: product_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product ID
+                  category: Missing Values
+                  severity: Medium
+                  description: product_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: store_product_name
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store Product Name
+                  category: Missing Values
+                  severity: Medium
+                  description: store_product_name is required.
+
+      - name: store_brand
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store Brand
+                  category: Missing Values
+                  severity: Medium
+                  description: store_brand is required.
+
+      - name: store_category
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store Category
+                  category: Missing Values
+                  severity: Medium
+                  description: store_category is required.
+
+      - name: store_selling_price
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store Selling Price
+                  category: Missing Values
+                  severity: Medium
+                  description: store_selling_price is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Store Selling Price Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: store_selling_price must be greater than 0 and less than 100000.

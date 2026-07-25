@@ -1,0 +1,120 @@
+version: 2
+
+models:
+  # --- STORES ---
+  - name: stores
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              starts_with(store_name,'MegaMart')
+
+          config:
+            meta:
+              title: Invalid Store Name
+              category: Business Rule Violations
+              severity: Medium
+              description: store_name must start with 'MegaMart'.
+
+      - physical_store_valid_area_region:
+          arguments:
+              mapping_model: ref('region_area_mapping')
+
+          config:
+            meta:
+              title: Physical Store Location
+              category: Business Rule Violations
+              severity: Medium
+              description: Physical stores must belong to a valid area and region.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              store_type != 'Online'
+              OR (
+                area = 'Nationwide'
+                AND region = 'Nationwide'
+              )
+
+          config:
+            meta:
+              title: Online Store Area Coverage
+              category: Business Rule Violations
+              severity: Medium
+              description: Online stores must have 'Nationwide' as both area and region.
+
+    # --- Column Constraints ---
+    columns:
+      - name: store_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store ID
+                  category: Missing Values
+                  severity: Medium
+                  description: store_id is required.
+
+          - unique:
+              config:
+                meta:
+                  title: Duplicate Store ID
+                  category: Duplicate Records
+                  severity: High
+                  description: store_id must be unique.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^STOR[0-9]{3,}$"
+
+              config:
+                meta:
+                  title: Invalid Store ID Format
+                  category: Formatting
+                  severity: High
+                  description: store_id must follow the expected format.
+
+      - name: store_name
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store Name
+                  category: Missing Values
+                  severity: Medium
+                  description: store_name is required.
+
+      - name: area
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Area
+                  category: Missing Values
+                  severity: Medium
+                  description: area is required.
+
+      - name: region
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Region
+                  category: Missing Values
+                  severity: Medium
+                  description: region is required.
+
+      - name: store_type
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["Online", "Flagship", "Mall", "Neighbourhood"]
+
+              config:
+                meta:
+                  title: Invalid Store Type
+                  category: Data Quality
+                  severity: High
+                  description: store_type must be one of the supported values.
