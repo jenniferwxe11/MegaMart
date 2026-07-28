@@ -1,0 +1,188 @@
+version: 2
+
+models:
+  # --- INVENTORY CHANGE EVENTS ---
+  - name: inventory_change_events
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - store_id
+              - product_id
+              - event_timestamp
+
+          config:
+            meta:
+              title: Multiple Inventory Change Event at the Same Time for the Same Store Product
+              category: Business Rule Violations
+              severity: High
+              description: An inventory change event must only occur once per store product at a given timestamp.
+
+      - delta_matches_stock_after_movement:
+          config:
+            meta:
+              title: Delta Does Not Match Inventory Movement
+              category: Business Rule Violations
+              severity: High
+              description: >
+                delta must equal the change in stock_after between consecutive
+                inventory change events for the same store product.
+
+      - opening_balance_first_record:
+          config:
+            meta:
+              title: Product Opening Balance
+              category: Business Rule Violations
+              severity: High
+              description: Opening balance must be first record of store product inventory change event.
+
+      - opening_balance_uniqueness:
+          config:
+            meta:
+              title: Duplicate Opening Balance
+              category: Business Rule Violations
+              severity: High
+              description: Each store product must have exactly one opening balance inventory change event.
+
+      - opening_balance_delta_matches_stock_after:
+          config:
+            meta:
+              title: Opening Balance Delta Does Not Match Stock After
+              category: Business Rule Violations
+              severity: High
+              description: The opening balance event must have delta equal to stock_after.
+
+    # --- Column Constraints ---
+    columns:
+      - name: store_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store ID
+                  category: Missing Values
+                  severity: High
+                  description: store_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('stores')
+                field: store_id
+
+              config:
+                meta:
+                  title: Invalid Store Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: store_id must exist in the stores table.
+
+      - name: product_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product ID
+                  category: Missing Values
+                  severity: High
+                  description: product_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: event_timestamp
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Event Timestamp
+                  category: Missing Values
+                  severity: High
+                  description: event_timestamp is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: TIMESTAMP
+
+              config:
+                meta:
+                  title: Invalid Event Timestamp Type
+                  category: Date Type
+                  severity: Low
+                  description: event_timestamp must be stored as a TIMESTAMP.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_timestamp()"
+
+              config:
+                meta:
+                  title: Future Event Timestamp
+                  category: Date Issues
+                  severity: Medium
+                  description: event_timestamp must not be in the future.
+
+      - name: delta
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "!= 0"
+
+              config:
+                meta:
+                  title: Zero Delta
+                  category: Business Rule Violations
+                  severity: Medium
+                  description: delta must not be 0.
+
+      - name: reason
+        tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - "Opening balance"
+                  - "Stockout event — stock zeroed"
+                  - "Anticipated stockout — proactive drawdown"
+                  - "Pre-seasonal restock"
+                  - "Post-seasonal demand drop"
+                  - "Overstocked — replenishment paused"
+                  - "Forecasting error — over-ordered"
+                  - "Normal healthy-band drift"
+                  - "Low-band minor fluctuation"
+                  - "Critical stock — replenishment triggered"
+                  - "Critical stock — operational delay, partial decay"
+                  - "Phasing out — replenishment stopped"
+                  - "Phasing out — small final restock"
+                  - "Perishable spoilage / expiry loss"
+
+              config:
+                meta:
+                  title: Invalid Reason
+                  category: Data Quality
+                  severity: Low
+                  description: reason must be one of the supported values.
+
+      - name: stock_after
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Stock After Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: stock_after must be between 0 and 100000 inclusive.

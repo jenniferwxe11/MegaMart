@@ -14,7 +14,6 @@ from data_generation.config.stocks_config import (
     CATEGORY_BASE_STOCK,
     CHANGE_REASONS,
     EVENT_STOCK_DROP_RATES,
-    LIFECYCLE_STOCKOUT_MULTIPLIER,
     STOCK_BANDS,
     STOCK_STATUSES,
     STORE_OVERORDER_BIAS,
@@ -32,6 +31,9 @@ from data_generation.utils.io_utils import save
 
 @register("stock_snapshots_generator")
 def stock_snapshots_generator(ctx: GenerationContext):
+    print(pd.Timestamp(DATA_START_DATE))
+    print(pd.Timestamp(DATA_START_DATE).day_name())
+    print((pd.Timestamp(DATA_START_DATE) + timedelta(days=7)).day_name())
     # ---------------------------
     # Load Data
     # ---------------------------
@@ -104,15 +106,9 @@ def stock_snapshots_generator(ctx: GenerationContext):
         if product_lifecycle_match.empty:
             continue
 
-        product_lifecycle_row = product_lifecycle_match.iloc[0]
-
-        launch_date = product_lifecycle_row.get(
-            "launch_date", pd.Timestamp(DATA_START_DATE)
-        )
-        discontinuation_date = product_lifecycle_row.get(
-            "discontinuation_date", pd.Timestamp(DATA_END_DATE)
-        )
-        status = product_lifecycle_row.get("status", "Active")
+        product_lifecycle_match = product_lifecycle_match.sort_values(
+            "valid_from"
+        ).reset_index(drop=True)
 
         # --- Baseline inventory ---
         base_low, base_high = CATEGORY_BASE_STOCK.get(category, (20, 50))
@@ -120,14 +116,7 @@ def stock_snapshots_generator(ctx: GenerationContext):
         brand_mult = BRAND_STOCKOUT_MULTIPLIER.get(brand, 1.0)
         store_mult = STORE_STOCKOUT_MULTIPLIER.get(store_type, 1.0)
         store_variation = random.uniform(0.8, 1.2)
-        lifecycle_status_mult = LIFECYCLE_STOCKOUT_MULTIPLIER.get(status, 1.0)
-        base_stock = int(
-            base_stock
-            * brand_mult
-            * store_mult
-            * store_variation
-            * lifecycle_status_mult
-        )
+        base_stock = int(base_stock * brand_mult * store_mult * store_variation)
 
         # Initialize weekly stock trajectory from baseline
         last_week_stock = base_stock
@@ -159,6 +148,21 @@ def stock_snapshots_generator(ctx: GenerationContext):
             pd.Timestamp(DATA_START_DATE) + timedelta(days=7),
             pd.Timestamp(DATA_END_DATE),
         ):
+            active_lifecycle = product_lifecycle_match[
+                (product_lifecycle_match["valid_from"] <= week_start_date)
+                & (
+                    product_lifecycle_match["valid_to"].isna()
+                    | (product_lifecycle_match["valid_to"] >= week_start_date)
+                )
+            ]
+
+            if active_lifecycle.empty:
+                continue
+
+            lifecycle_row = active_lifecycle.iloc[0]
+            launch_date = lifecycle_row["launch_date"]
+
+            discontinuation_date = lifecycle_row["discontinuation_date"]
             week_end_date = week_start_date + timedelta(days=6)
 
             # Filter out period outside product's active lifecycle
@@ -276,11 +280,11 @@ def stock_snapshots_generator(ctx: GenerationContext):
                     if random.random() < 0.9:
                         # Reduces replenishment probability significantly
                         final_stock = int(final_stock * random.uniform(0.5, 0.85))
-                        reason_key = "eol_drawdown"
+                        reason_key = "phasing_out_drawdown"
                     else:
                         # Small chance of replenishment
                         final_stock += int(base_stock * random.uniform(0.4, 0.8))
-                        reason_key = "eol_final_restock"
+                        reason_key = "phasing_out_final_restock"
 
                 # Perishable spoilage
                 if category in [

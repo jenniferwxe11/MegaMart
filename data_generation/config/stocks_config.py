@@ -40,8 +40,8 @@ CHANGE_REASONS = {
     "low_band_drift": "Low-band minor fluctuation",
     "critical_replenish": "Critical stock — replenishment triggered",
     "critical_decay": "Critical stock — operational delay, partial decay",
-    "eol_drawdown": "End-of-life — replenishment stopped",
-    "eol_final_restock": "End-of-life — small final restock",
+    "phasing_out_drawdown": "Phasing out — replenishment stopped",
+    "phasing_out_final_restock": "Phasing out — small final restock",
     "spoilage": "Perishable spoilage / expiry loss",
 }
 
