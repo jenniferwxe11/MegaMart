@@ -1,0 +1,106 @@
+version: 2
+
+models:
+  # --- COMPETITOR PRODUCTS ---
+  - name: competitor_products
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - competitor
+              - product_name
+
+          config:
+            meta:
+              title: Duplicate Competitor for the Same Product
+              category: Business Rule Violations
+              severity: High
+              description: A competitor must only appear once per product.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              (is_exclusive = TRUE AND product_id IS NULL)
+              OR
+              (is_exclusive = FALSE AND product_id IS NOT NULL)
+
+          config:
+            meta:
+              title: Exclusive Product ID Consistency
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                Exclusive products must have a NULL product_id,
+                while non exclusive products must reference a valid product_id.
+
+    columns:
+      - name: competitor
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Competitor
+                  category: Missing Values
+                  severity: High
+                  description: competitor is required.
+
+      - name: product_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                where: "product_id IS NOT NULL"
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: product_name
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product Name
+                  category: Missing Values
+                  severity: High
+                  description: product_name is required.
+
+      - name: brand
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Brand
+                  category: Missing Values
+                  severity: High
+                  description: brand is required.
+
+      - name: category
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Category
+                  category: Missing Values
+                  severity: High
+                  description: category is required.
+
+      - name: is_exclusive
+        tests:
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+              config:
+                meta:
+                  title: Invalid Exclusivity Indicator
+                  category: Data Quality
+                  severity: Low
+                  description: is_exclusive must either be TRUE or FALSE.
