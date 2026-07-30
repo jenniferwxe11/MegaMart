@@ -1,5 +1,6 @@
 # data_ingestion/load_to_bigquery.py
 
+import ast
 import logging
 import subprocess
 
@@ -23,6 +24,21 @@ logger = logging.getLogger(__name__)
 def ensure_correct_dtypes(df, schema):
     for field in schema:
         col_name = field.name
+
+        if field.mode == "REPEATED":
+            df[col_name] = (
+                df[col_name]
+                .fillna("[]")
+                .apply(
+                    lambda x: (
+                        ast.literal_eval(x)
+                        if isinstance(x, str)
+                        else (x if isinstance(x, list) else [])
+                    )
+                )
+            )
+            continue
+
         col_type = field.field_type
 
         if col_type == "STRING":
