@@ -1,0 +1,196 @@
+version: 2
+
+models:
+  # --- CAMPAIGN ASSIGNMENTS ---
+  - name: campaign_assignments
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - campaign_id
+              - customer_id
+              - eligible_at
+
+          config:
+            meta:
+              title: Duplicate Campaign Assignment
+              category: Business Rule Violations
+              severity: High
+              description: >
+                A campaign assignment must only appear once per
+                campaign, customer, and eligible_at date.
+
+      - customer_has_required_campaign_consent:
+          arguments:
+            customer_model: ref('customers')
+            campaign_model: ref('campaigns')
+
+          config:
+            meta:
+              title: Customer Missing Required Campaign Consent
+              category: Business Rule Violations
+              severity: High
+              description: >
+                Customers assigned to campaigns using direct messaging
+                channels must have consent for at least one required channel.
+
+      - ab_campaign_contains_both_groups:
+          arguments:
+            campaign_model: ref('campaigns')
+
+          config:
+            meta:
+              title: Missing A/B Test Group
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                A/B test campaigns must contain both Treatment
+                and Control assignments.
+
+      - non_ab_campaigns_have_only_treatment:
+          arguments:
+            campaign_model: ref('campaigns')
+
+          config:
+            meta:
+              title: Invalid Assignment Group for Non-A/B Campaign
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                Campaigns that are not A/B tests must only contain
+                Treatment assignments.
+
+      - eligible_at_equal_campaign_start_date:
+          arguments:
+            campaign_model: ref('campaigns')
+
+          config:
+            meta:
+              title: Eligible At Does Not Equal Campaign Start Date
+              category: Business Rule Violations
+              severity: Medium
+              description: eligible_at must equal campaign start_date.
+
+      - customer_signup_before_eligible_at:
+          arguments:
+            customer_model: ref('customers')
+
+          config:
+            meta:
+              title: Customer Signup after Eligible Date
+              category: Business Rule Violations
+              severity: Medium
+              description: Customer signup_date must be on or before eligible_at.
+
+      - customer_segment_equal_campaign_target_segment:
+          arguments:
+            customer_model: ref('customers')
+            campaign_model: ref('campaigns')
+
+          config:
+            meta:
+              title: Customer Segment Does Not Equal Campaign Target Segment
+              category: Business Rule Violations
+              severity: Medium
+              description: customer_segment must equal campaign target_segment.
+
+      - customer_type_only_in_online_only_or_omnichannel:
+          arguments:
+            customer_model: ref('customers')
+
+          config:
+            meta:
+              title: Invalid Customer Type for Campaign Assignment
+              category: Business Rule Violations
+              severity: Medium
+              description: customer_type must either be 'Online Only' or 'Omnichannel'.
+
+    # --- Column Constraints ---
+    columns:
+      - name: campaign_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Campaign ID
+                  category: Missing Values
+                  severity: High
+                  description: campaign_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('campaigns')
+                field: campaign_id
+
+              config:
+                meta:
+                  title: Invalid Campaign Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: campaign_id must exist in the campaigns table.
+
+      - name: customer_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Customer ID
+                  category: Missing Values
+                  severity: High
+                  description: customer_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('customers')
+                field: customer_id
+
+              config:
+                meta:
+                  title: Invalid Customer Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: customer_id must exist in the customers table.
+
+      - name: assignment_group
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Assignment Group
+                  category: Missing Values
+                  severity: High
+                  description: assignment_group is required.
+
+          - accepted_values:
+              arguments:
+                values: ["Treatment", "Control"]
+
+              config:
+                meta:
+                  title: Invalid Assignment Group
+                  category: Data Quality
+                  severity: Low
+                  description: assignment_group must either be Treatment or Control.
+
+      - name: eligible_at
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Eligible At
+                  category: Missing Values
+                  severity: High
+                  description: eligible_at is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Eligible At Type
+                  category: Date Type
+                  severity: Low
+                  description: eligible_at must be stored as a DATE.
