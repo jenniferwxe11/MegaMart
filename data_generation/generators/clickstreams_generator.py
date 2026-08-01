@@ -160,7 +160,7 @@ def clickstreams_generator(ctx: GenerationContext):
                 ctx, customer_id, session_start_time
             )
             campaign_ids = (
-                []
+                None
                 if active_campaigns is None
                 else active_campaigns["campaign_id"].unique().tolist()
             )
@@ -534,8 +534,11 @@ def clickstreams_generator(ctx: GenerationContext):
                 )
 
                 # Deduplicate lists
-                promotion_ids = list(dict.fromkeys(promotion_ids or []))
-                bundle_ids = list(dict.fromkeys(bundle_ids or []))
+                promotion_ids = (
+                    list(dict.fromkeys(promotion_ids)) if promotion_ids else None
+                )
+
+                bundle_ids = list(dict.fromkeys(bundle_ids)) if bundle_ids else None
 
                 # --- Record Event Flow ---
                 events.append(event_type)

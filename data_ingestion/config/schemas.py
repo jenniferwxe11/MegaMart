@@ -77,7 +77,7 @@ CLICKSTREAM_SCHEMA = [
     bigquery.SchemaField("category", "STRING"),
     bigquery.SchemaField("promotion_ids", "STRING", mode="REPEATED"),
     bigquery.SchemaField("bundle_ids", "STRING", mode="REPEATED"),
-    bigquery.SchemaField("bounce_flag", "STRING"),
+    bigquery.SchemaField("bounce_flag", "INTEGER"),
     bigquery.SchemaField("cart_size", "INTEGER"),
     bigquery.SchemaField("cart_content", "STRING", mode="REPEATED"),
     bigquery.SchemaField("purchased_items", "STRING", mode="REPEATED"),
