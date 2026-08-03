@@ -2,10 +2,13 @@
 pre-commit
 pytest
 pytest-cov
-pip-audit
+
+# security
 bandit
-setuptools>=83.0.0
+pip-audit
+cryptography>=50.0.0
 pyasn1>=0.6.4
+setuptools>=83.0.0
 
 # dbt
 dbt-core>=1.11,<2.0

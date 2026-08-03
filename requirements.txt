@@ -47,8 +47,10 @@ colorama==0.4.6
     # via dbt-common
 coverage[toml]==7.15.2
     # via pytest-cov
-cryptography==49.0.0
-    # via google-auth
+cryptography==50.0.0
+    # via
+    #   -r requirements.in
+    #   google-auth
 cyclonedx-python-lib==11.11.0
     # via pip-audit
 daff==1.4.2
