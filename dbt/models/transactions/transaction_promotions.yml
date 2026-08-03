@@ -1,0 +1,109 @@
+version: 2
+
+models:
+  - name: transaction_promotions
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - transaction_id
+              - promotion_id
+
+          config:
+            meta:
+              title: Duplicate Transaction Promotion
+              category: Business Rule Violations
+              severity: High
+              description: A promotion must only appear once per transaction.
+
+      - promotion_type_matches_promotions:
+          arguments:
+            promotion_model: ref('promotions')
+
+          config:
+            meta:
+              title: Promotion Type Does Not Match Promotions Table
+              category: Business Rule Violations
+              severity: High
+              description: promotion_type must match the promotion_type in the promotions table for the given promotion_id.
+
+    # --- Column Constraints ---
+    columns:
+      - name: transaction_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Transaction ID
+                  category: Missing Values
+                  severity: High
+                  description: transaction_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('transactions')
+                field: transaction_id
+
+              config:
+                meta:
+                  title: Invalid Transaction Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: transaction_id must exist in the transactions table.
+
+      - name: promotion_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Promotion ID
+                  category: Missing Values
+                  severity: High
+                  description: promotion_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('promotions')
+                field: promotion_id
+
+              config:
+                meta:
+                  title: Invalid Promotion Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: promotion_id must exist in the promotions table.
+
+      - name: promotion_type
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Promotion Type
+                  category: Missing Values
+                  severity: High
+                  description: promotion_type is required.
+
+      - name: amount
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Amount
+                  category: Missing Values
+                  severity: High
+                  description: amount is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Amount Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: amount must be more than 0 and less than 100000.
