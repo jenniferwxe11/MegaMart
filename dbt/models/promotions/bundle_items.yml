@@ -19,6 +19,18 @@ models:
               severity: High
               description: Each bundle-product combination must be unique.
 
+      - bundle_categories_match_items:
+          arguments:
+            bundle_model: ref('bundles')
+            product_model: ref('products')
+
+          config:
+            meta:
+              title: Bundle Category Does Not Match Items
+              category: Business Rule Violations
+              severity: Medium
+              description: Bundle categories must match the categories of the items in the bundle.
+
     # --- Column Constraints ---
     columns:
       - name: bundle_id
@@ -86,4 +98,4 @@ models:
                   title: Quantity Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: quantity must be between 1 and 100000.
+                  description: quantity must be between 1 and 100000 inclusive.

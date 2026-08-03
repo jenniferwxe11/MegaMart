@@ -75,7 +75,7 @@ models:
       - dbt_utils.expression_is_true:
           arguments:
             expression: >
-              COALESCE(is_current, FALSE) = FALSE
+              COALESCE(is_current, FALSE) is FALSE
               OR valid_to IS NULL
 
           config:

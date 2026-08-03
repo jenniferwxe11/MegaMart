@@ -6,6 +6,15 @@ models:
 
     # --- Business Rules ---
     tests:
+      - no_duplicate_channel_inside_channels:
+          config:
+            where: 'channels IS NOT NULL'
+            meta:
+              title: Duplicate Channel inside Channels
+              category: Business Rule Violations
+              severity: Medium
+              description: channels should not have duplicated channel.
+
       - dbt_utils.expression_is_true:
           arguments:
             expression: "start_date <= end_date"

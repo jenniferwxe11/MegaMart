@@ -4,6 +4,28 @@ models:
   # --- BUNDLES ---
   - name: bundles
 
+    # --- Business Rules ---
+    tests:
+      - no_duplicate_category_inside_categories:
+          config:
+            where: 'categories IS NOT NULL'
+            meta:
+              title: Duplicate Category inside Categories
+              category: Business Rule Violations
+              severity: Medium
+              description: categories must not have duplicated category.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "array_length(categories) > 0"
+
+          config:
+            meta:
+              title: Empty Categories
+              category: Missing Values
+              severity: High
+              description: Each bundle must contain at least one category.
+
     # --- Column Constraints ---
     columns:
       - name: bundle_id
@@ -75,14 +97,3 @@ models:
                   category: Missing Values
                   severity: High
                   description: categories is required.
-
-          - dbt_utils.expression_is_true:
-              arguments:
-                expression: "!= '[]'"
-
-              config:
-                meta:
-                  title: Empty Categories
-                  category: Missing Values
-                  severity: High
-                  description: Each bundle must contain at least one category.

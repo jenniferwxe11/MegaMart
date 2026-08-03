@@ -17,8 +17,9 @@ models:
               title: Duplicate Competitor Product at the Same Scrape Timestamp
               category: Business Rule Violations
               severity: High
-              description: A competitor must only appear once per product for each scrape timestamp.
+              description: A competitor product must only appear once per competitor and update_timestamp.
 
+    # --- Column Constraints ---
     columns:
       - name: competitor
         tests:

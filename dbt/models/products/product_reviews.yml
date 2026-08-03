@@ -8,7 +8,7 @@ models:
     tests:
       - review_date_after_transaction_date:
           arguments:
-            mapping_model: ref('transactions')
+            transaction_model: ref('transactions')
 
           config:
             meta:
@@ -148,7 +148,7 @@ models:
                   title: Rating Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: rating must be between 1 and 5.
+                  description: rating must be between 1 and 5 inclusive.
 
       - name: review_text
         tests: []

@@ -14,10 +14,10 @@ models:
 
           config:
             meta:
-              title: Duplicate Competitor for the Same Product
+              title: Duplicate Competitor Product
               category: Business Rule Violations
               severity: High
-              description: A competitor must only appear once per product.
+              description: A competitor product must only appear once.
 
       - dbt_utils.expression_is_true:
           arguments:
@@ -35,6 +35,7 @@ models:
                 Exclusive products must have a NULL product_id,
                 while non exclusive products must reference a valid product_id.
 
+    # --- Column Constraints ---
     columns:
       - name: competitor
         tests:

@@ -3,13 +3,14 @@
 version: 2
 
 models:
+  # --- CUSTOMERS ---
   - name: customers
 
     # --- Business Rules ---
     tests:
       - customers_area_region_match:
           arguments:
-            mapping_model: ref('region_area_mapping')
+            area_region_model: ref('region_area_mapping')
 
           config:
             meta:
@@ -331,7 +332,7 @@ models:
 
           - dbt_expectations.expect_column_values_to_match_regex:
               arguments:
-                regex: '^[^\s@]+@[^\s@]+\.[^\s@]+$'
+                regex: '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$'
 
               config:
                 meta:

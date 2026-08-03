@@ -170,6 +170,7 @@ models:
         tests:
           - not_null:
               config:
+                where: "promotion_scope != 'cart'"
                 meta:
                   title: Missing Promotion Target ID
                   category: Missing Values
@@ -198,7 +199,7 @@ models:
                   title: Promotion Value Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: promotion_value must be between 0 and 100000.
+                  description: promotion_value must be between 0 and 100000 inclusive.
 
       - name: min_spend
         tests:
@@ -213,7 +214,7 @@ models:
                   title: Minimum Spend Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: min_spend must be between 0 and 100000.
+                  description: min_spend must be between 0 and 100000 inclusive.
 
       - name: discount_code
         tests:
@@ -291,4 +292,4 @@ models:
                   title: Priority Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: priority must be between 1 and 4.
+                  description: priority must be between 1 and 4 inclusive.

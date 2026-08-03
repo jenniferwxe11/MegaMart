@@ -1,4 +1,4 @@
-{% test store_brand_matches_product_brand(model) %}
+{% test store_category_equals_product_category(model) %}
 
 select
     s.store_id,
@@ -6,7 +6,6 @@ select
 from {{ model }} s
 join {{ ref('products') }} p
 using(product_id)
-where lower(trim(s.store_brand))
-      != lower(trim(p.brand))
+where s.store_category != p.category
 
 {% endtest %}

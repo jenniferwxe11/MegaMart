@@ -110,7 +110,7 @@ models:
                   title: Selling Price Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: selling_price must be between 0 and 100000.
+                  description: selling_price must be more than 0 and less than 100000.
 
       - name: cost_price
         tests:
@@ -133,4 +133,4 @@ models:
                   title: Cost Price Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: cost_price must be between 0 and 100000.
+                  description: cost_price must be more than 0 and less than 100000.

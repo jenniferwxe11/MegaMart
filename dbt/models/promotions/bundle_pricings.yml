@@ -14,6 +14,17 @@ models:
               severity: High
               description: Bundle pricing phases must follow a continuous, chronological, and non overlapping lifecycle.
 
+      - bundle_promotions_match_bundle_pricing:
+          arguments:
+            promotion_model: ref('promotions')
+
+          config:
+            meta:
+              title: Bundle Promotion Does Not Match Bundle Pricing
+              category: Business Rule Violations
+              severity: Medium
+              description: Bundle promotions must use the same discount value as the referenced bundle pricing.
+
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
@@ -22,7 +33,7 @@ models:
 
           config:
             meta:
-              title: Multiple Prices for Same Bundle Phase
+              title: Multiple Prices for the Same Bundle Phase
               category: Business Rule Violations
               severity: High
               description: A bundle must only have one price defined for each pricing phase.
@@ -112,7 +123,7 @@ models:
                   title: Bundle Price Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: bundle_price must be between 0 and 100000.
+                  description: bundle_price must be more than 0 and less than 100000.
 
       - name: discount_value
         tests:
@@ -135,7 +146,7 @@ models:
                   title: Discount Value Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: discount_value must be between 0 and 100000.
+                  description: discount_value must be between 0 and 100000 inclusive.
 
       - name: effective_start_date
         tests:

@@ -15,10 +15,10 @@ models:
 
           config:
             meta:
-              title: Multiple Inventory Change Event at the Same Time for the Same Store Product
+              title: Duplicate Inventory Change Event
               category: Business Rule Violations
               severity: High
-              description: An inventory change event must only occur once per store product at a given timestamp.
+              description: An inventory change event must only appear once per store, product, and event_timestamp.
 
       - delta_matches_stock_after_movement:
           config:

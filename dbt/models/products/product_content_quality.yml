@@ -33,7 +33,7 @@ models:
       - dbt_utils.expression_is_true:
           arguments:
             expression: >
-              COALESCE(has_image, FALSE) = FALSE
+              COALESCE(has_image, FALSE) IS FALSE
               OR image_count > 0
 
           config:
@@ -46,7 +46,7 @@ models:
       - dbt_utils.expression_is_true:
           arguments:
             expression: >
-              COALESCE(has_image, TRUE) = TRUE
+              COALESCE(has_image, TRUE) IS TRUE
               OR image_count = 0
 
           config:
@@ -59,7 +59,7 @@ models:
       - dbt_utils.expression_is_true:
           arguments:
             expression: >
-              COALESCE(has_description, FALSE) = FALSE
+              COALESCE(has_description, FALSE) IS FALSE
               OR description_length > 0
 
           config:
@@ -72,7 +72,7 @@ models:
       - dbt_utils.expression_is_true:
           arguments:
             expression: >
-              COALESCE(has_description, TRUE) = TRUE
+              COALESCE(has_description, TRUE) IS TRUE
               OR description_length = 0
 
           config:
@@ -98,7 +98,7 @@ models:
       - dbt_utils.expression_is_true:
           arguments:
             expression: >
-              COALESCE(is_current, FALSE) = FALSE
+              COALESCE(is_current, FALSE) IS FALSE
               OR valid_to IS NULL
 
           config:
@@ -225,7 +225,7 @@ models:
                   title: Image Count Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: image_count must be between 0 and 100000.
+                  description: image_count must be between 0 and 100000 inclusive.
 
       - name: image_quality_score
         tests:
@@ -240,7 +240,7 @@ models:
                   title: Image Quality Score Out of Valid Range
                   category: Range Validation
                   severity: Low
-                  description: image_quality_score must be between 0 and 1.
+                  description: image_quality_score must be between 0 and 1 inclusive.
 
       - name: has_nutritional_info
         tests:
@@ -307,7 +307,7 @@ models:
                   title: Description Length Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: description_length must be between 0 and 100000.
+                  description: description_length must be between 0 and 100000 inclusive.
 
       - name: missing_attribute_count
         tests:
@@ -330,7 +330,7 @@ models:
                   title: Missing Attribute Count Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: missing_attribute_count must be between 0 and 100000.
+                  description: missing_attribute_count must be between 0 and 100000 inclusive.
 
       - name: valid_from
         tests:

@@ -16,7 +16,7 @@ models:
 
           config:
             meta:
-              title: Multiple Stock Snapshot on the Same Date for the Same Store Product
+              title: Duplicate Stock Snapshot
               category: Business Rule Violations
               severity: High
               description: Each store product must have at most one stock snapshot for a given week.

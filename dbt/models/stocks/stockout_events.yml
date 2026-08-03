@@ -15,7 +15,7 @@ models:
 
           config:
             meta:
-              title: Multiple Stockout Event on the Same Date for the Same Store Product
+              title: Duplicate Stockout Event
               category: Business Rule Violations
               severity: High
               description: Each store product must have at most one stockout event starting on a given date.

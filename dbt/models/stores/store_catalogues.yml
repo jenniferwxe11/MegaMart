@@ -14,7 +14,7 @@ models:
 
           config:
             meta:
-              title: Duplicated Product Record for the Same Store
+              title: Duplicate Store Product
               category: Business Rule Violations
               severity: High
               description: A product must appear only once in each store's catalogue.
@@ -30,21 +30,21 @@ models:
               severity: Medium
               description: store_product_name must not be blank.
 
-      - store_brand_matches_product_brand:
+      - store_brand_equals_product_brand:
           config:
             meta:
               title: Store Brand Alignment
               category: Business Rule Violations
               severity: Low
-              description: store_brand must match the brand in the products table.
+              description: store_brand must equal the brand in the products table.
 
-      - store_category_matches_product_category:
+      - store_category_equals_product_category:
           config:
             meta:
               title: Store Category Alignment
               category: Business Rule Violations
               severity: Medium
-              description: store_category must match the category in the products table.
+              description: store_category must equal the category in the products table.
 
       - store_price_matches_product_price:
           config:

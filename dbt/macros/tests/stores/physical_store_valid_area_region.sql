@@ -1,4 +1,4 @@
-{% test physical_store_valid_area_region(model, mapping_model) %}
+{% test physical_store_valid_area_region(model, area_region_model) %}
 
 select
     s.store_id,
@@ -6,7 +6,7 @@ select
     s.region,
     s.area
 from {{ model }} s
-left join {{ mapping_model }} m
+left join {{ area_region_model }} m
     on s.region = m.region
    and s.area = m.area
 where

@@ -9,7 +9,7 @@ models:
       - dbt_utils.expression_is_true:
           arguments:
             expression: >
-              starts_with(store_name,'MegaMart')
+              starts_with(store_name, 'MegaMart')
 
           config:
             meta:
@@ -20,7 +20,7 @@ models:
 
       - physical_store_valid_area_region:
           arguments:
-              mapping_model: ref('region_area_mapping')
+              area_region_model: ref('region_area_mapping')
 
           config:
             meta:
