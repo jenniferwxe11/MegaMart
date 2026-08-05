@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      python: ${{ steps.filter.outputs.python }}
+      lint: ${{ steps.filter.outputs.lint }}
       test: ${{ steps.filter.outputs.test }}
       dbt: ${{ steps.filter.outputs.dbt }}
 
@@ -40,33 +40,35 @@ jobs:
         id: filter
         with:
           filters: |
-            python:
+            lint:
               - '**/*.py'
             test:
               - 'data_generation/**/*.py'
               - 'tests/**/*.py'
             dbt:
-              - 'dbt/models/**'
-              - 'dbt/seeds/**'
-              - 'dbt/macros/**'
-              - 'dbt/tests/**'
-              - 'dbt/packages.yml'
-              - 'dbt/package-lock.yml'
-              - 'dbt/dbt_project.yml'
+              - 'dbt/**'
               - 'dbt_profiles/**'
+              - 'data_generation/**/*.py'
+              - 'dirty_data_generation/**/*.py'
 
   # --- CI ---
   ci:
     runs-on: ubuntu-latest
     needs: [changes]
     timeout-minutes: 20
-    if: needs.changes.outputs.python == 'true'
+    if: needs.changes.outputs.lint == 'true'
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Debug filters
+        run: |
+          echo "lint=${{ needs.changes.outputs.lint }}"
+          echo "test=${{ needs.changes.outputs.test }}"
+          echo "dbt=${{ needs.changes.outputs.dbt }}"
 
       - name: Get changed files
         id: changes
@@ -120,7 +122,7 @@ jobs:
 
           PY_FILES=$(echo "$FILES" \
             | tr ' ' '\n' \
-            | grep '^data_generation/.*\.py$\|^tests/.*\.py$' \
+            | grep -E '^data_generation/.*\.py$|^dirty_data_generation/.*\.py$|^tests/.*\.py$' \
             || true)
 
           if [ -z "$PY_FILES" ]; then
@@ -156,7 +158,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [changes]
     timeout-minutes: 20
-    if: needs.changes.outputs.dbt == 'true'
+    if: |
+      github.event_name == 'pull_request' &&
+      needs.changes.outputs.dbt == 'true'
 
     env:
       DBT_PROJECT_DIR: dbt
@@ -165,10 +169,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Get changed files
-        id: changes
-        uses: tj-actions/changed-files@v44
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -203,38 +203,24 @@ jobs:
           path: dbt/target
         continue-on-error: true
 
-      - name: Check modified dbt files
-        id: dbt-files
-        run: |
-          FILES="${{ steps.changes.outputs.all_changed_files }}"
-
-          DBT_PATTERN='^dbt/models/|^dbt/seeds/|^dbt/macros/|^dbt/tests/|\
-          ^dbt/dbt_project.yml|^dbt/packages.yml|^dbt/package-lock.yml'
-
-          DBT_FILES=$(echo "$FILES" \
-            | tr ' ' '\n' \
-            | grep -E "$DBT_PATTERN" \
-            || true)
-
-          if [ -z "$DBT_FILES" ]; then
-            echo "dbt_changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "dbt_changed=true" >> $GITHUB_OUTPUT
-          fi
-
       - name: Parse dbt project
-        if: steps.dbt-files.outputs.dbt_changed == 'true'
         run: |
           dbt parse \
             --project-dir $DBT_PROJECT_DIR \
             --profiles-dir $DBT_PROFILES_DIR
 
       - name: Compile dbt models
-        if: steps.dbt-files.outputs.dbt_changed == 'true'
         run: |
           dbt compile \
             --project-dir $DBT_PROJECT_DIR \
             --profiles-dir $DBT_PROFILES_DIR
+
+      # Future enhancement:
+      # - name: Build dbt project
+      #   run: |
+      #     dbt build \
+      #       --project-dir $DBT_PROJECT_DIR \
+      #       --profiles-dir $DBT_PROFILES_DIR
 
       - name: Upload dbt target artifacts
         if: always()
