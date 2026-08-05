@@ -190,6 +190,16 @@ jobs:
           python -m pip install "pip-tools==7.6.0"
           python -m pip install -r requirements.txt
 
+      - name: Authenticate to Google Cloud Platform
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: access_token
+          workload_identity_provider: projects/594876062374/locations/global/workloadIdentityPools/mega-mart-pool/providers/github
+          service_account: mega-mart-service@mega-mart-storage.iam.gserviceaccount.com
+
+      - name: Verify authentication
+        run: gcloud auth list
+
       - name: Install dbt dependencies
         run: |
           dbt deps \
