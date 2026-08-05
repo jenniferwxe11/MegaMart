@@ -13,7 +13,6 @@ from dirty_data_generation.config.constants import (
 from dirty_data_generation.context.context_factory import build_base_context
 from dirty_data_generation.load_generators import load_all_generators
 from dirty_data_generation.registry import REGISTRY
-from dirty_data_generation.utils.error_registry import save_registry
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Setup
@@ -72,9 +71,6 @@ def run_dirty_generation():
             print(f"  ✗ {filename} failed: {e}")
             traceback.print_exc()
             errors.append((filename, str(e)))
-
-    save_registry()
-    print("  ✓ Saved error definitions to error_metadata.json")
 
     if errors:
         print(f"  ⚠ {len(errors)} table(s) skipped (files not found or errors above)")
