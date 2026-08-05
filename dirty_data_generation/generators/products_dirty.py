@@ -1,79 +1,54 @@
-import random
+# dirty_data_generation/generators/products_dirty.py
 
 from dirty_data_generation.context.generation_context import GenerationContext
-from dirty_data_generation.registry import register
-from dirty_data_generation.utils.dirty_helpers import (
-    append_error,
-    inject_nulls,
-    inject_whitespace,
+from dirty_data_generation.corruption_rules.products_rules import (
+    cost_price_greater_than_selling_price,
+    cost_price_out_of_bounds,
+    duplicate_product_id,
+    invalid_product_id_format,
+    invalid_product_name_format,
+    missing_brand,
+    missing_category,
+    missing_cost_price,
+    missing_product_name,
+    missing_selling_price,
+    selling_price_out_of_bounds,
 )
+from dirty_data_generation.helpers.dirty_utils import apply_corruption
+from dirty_data_generation.registry import register
 from dirty_data_generation.utils.io_utils import save
+
+PRODUCT_RULES = [
+    # Missing Values
+    (0.04, missing_product_name),
+    (0.04, missing_brand),
+    (0.03, missing_category),
+    (0.03, missing_selling_price),
+    (0.03, missing_cost_price),
+    # Formatting
+    (0.03, invalid_product_id_format),
+    (0.03, invalid_product_name_format),
+    # Duplicates
+    (0.03, duplicate_product_id),
+    # Range Validation
+    (0.03, selling_price_out_of_bounds),
+    (0.03, cost_price_out_of_bounds),
+    # Business Rule Violations
+    (0.03, cost_price_greater_than_selling_price),
+]
 
 
 @register("dirty_products")
 def dirty_products(ctx: GenerationContext):
+
     df = ctx.products.products_df.copy()
 
-    df["error_types"] = [[] for _ in range(len(df))]
-
-    # Selling price = 0 or negative
-    zero_idx = df.sample(frac=0.02, random_state=10).index
-    df.loc[zero_idx, "selling_price"] = [
-        random.choice([0, -abs(random.uniform(1, 50))]) for _ in range(len(zero_idx))
-    ]
-    append_error(
-        df,
-        zero_idx,
-        error_label="zero or negative selling price",
-        columns=["selling_price"],
-    )
-
-    # Cost > selling price
-    inv_idx = df.sample(frac=0.03, random_state=11).index
-    df.loc[inv_idx, "cost_price"] = [
-        df.loc[idx, "selling_price"] * random.uniform(1.1, 1.5) for idx in inv_idx
-    ]
-    append_error(
-        df,
-        inv_idx,
-        error_label="selling price margin inversion",
-        columns=["selling_price"],
-    )
-
-    # Extreme outlier price
-    out_idx = df.sample(frac=0.01, random_state=12).index
-    df.loc[out_idx, "selling_price"] = [
-        round(random.uniform(10000, 1000000), 2) for _ in range(len(out_idx))
-    ]
-    append_error(
-        df,
-        out_idx,
-        error_label="extreme outlier selling price",
-        columns=["selling_price"],
-    )
-
-    # Missing brand
-    df = inject_nulls(
-        df, df["brand"].isna(), "brand", rate=0.03, error_label="missing brand"
-    )
-
-    # Name case/whitespace noise
-    df = inject_whitespace(
-        df, col="product_name", rate=0.06, error_label="product name formatting anomaly"
-    )
-
-    # Duplicate product name (same name, different ID)
-    dup_names = df.sample(frac=0.02, random_state=13)
-
-    df.loc[dup_names.index, "product_name"] = (
-        df["product_name"].sample(n=len(dup_names), random_state=14).values
-    )
-
-    append_error(
-        df,
-        dup_names.index,
-        error_label="duplicate product name",
-        columns=["product_name"],
-    )
+    for rate, rule in PRODUCT_RULES:
+        apply_corruption(
+            df=df,
+            rate=rate,
+            corruption=rule,
+            ctx=ctx,
+        )
 
     return save(df, "products_dirty.csv")

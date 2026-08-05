@@ -1,3 +1,5 @@
+# dirty_data_generation/registry.py
+
 REGISTRY = {}
 
 
