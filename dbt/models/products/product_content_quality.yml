@@ -6,6 +6,15 @@ models:
 
     # --- Business Rules ---
     tests:
+      - product_content_quality_progression:
+          config:
+            meta:
+              title: Content Quality Regression
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                Quality tiers for the same product should not regress over time.
+
       - single_current_product_content_quality_version:
           config:
             meta:
@@ -107,6 +116,19 @@ models:
               category: Business Rule Violations
               severity: High
               description: valid_to must be NULL when is_current is TRUE.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              COALESCE(is_current, TRUE) IS TRUE
+              OR valid_to IS NOT NULL
+
+          config:
+            meta:
+              title: Historical Record without End Date
+              category: Business Rule Violations
+              severity: High
+              description: valid_to must not be NULL when is_current is FALSE.
 
     # --- Column Constraints ---
     columns:

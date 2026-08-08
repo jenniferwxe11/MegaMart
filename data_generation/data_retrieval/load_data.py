@@ -107,7 +107,12 @@ def _load_product_content_quality():
 
 
 def load_product_content_quality():
-    return _load_product_content_quality().copy()
+    df = _load_product_content_quality().copy()
+
+    df["has_image"] = df["has_image"].astype("boolean")
+    df["has_description"] = df["has_description"].astype("boolean")
+
+    return df
 
 
 def _load_stockout_events():
