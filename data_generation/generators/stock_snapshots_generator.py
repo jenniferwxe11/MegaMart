@@ -31,9 +31,6 @@ from data_generation.utils.io_utils import save
 
 @register("stock_snapshots_generator")
 def stock_snapshots_generator(ctx: GenerationContext):
-    print(pd.Timestamp(DATA_START_DATE))
-    print(pd.Timestamp(DATA_START_DATE).day_name())
-    print((pd.Timestamp(DATA_START_DATE) + timedelta(days=7)).day_name())
     # ---------------------------
     # Load Data
     # ---------------------------
