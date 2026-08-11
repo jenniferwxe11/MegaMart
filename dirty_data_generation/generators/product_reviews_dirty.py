@@ -1,81 +1,48 @@
-import random
-
-import pandas as pd
-from faker import Faker
+# dirty_data_generation/generators/product_reviews_dirty.py
 
 from dirty_data_generation.context.generation_context import GenerationContext
-from dirty_data_generation.registry import register
-from dirty_data_generation.utils.dirty_helpers import (
-    append_error,
-    duplicate_rows,
-    inject_nulls,
-    inject_whitespace,
+from dirty_data_generation.corruption_rules.product_reviews_rules import (
+    duplicate_review_id,
+    duplicate_transaction_product_pair,
+    future_review_date,
+    invalid_review_id_format,
+    missing_rating,
+    missing_review_date,
+    rating_out_of_bounds,
+    review_before_transaction,
 )
+from dirty_data_generation.helpers.dirty_utils import apply_corruption
+from dirty_data_generation.registry import register
 from dirty_data_generation.utils.io_utils import save
 
-fake = Faker()
+PRODUCT_REVIEW_RULES = [
+    # Missing Values
+    (0.03, missing_review_date),
+    (0.03, missing_rating),
+    # Formatting
+    (0.02, invalid_review_id_format),
+    # Duplicates
+    (0.02, duplicate_review_id),
+    # Range Validation
+    (0.03, rating_out_of_bounds),
+    # Business Rules
+    (0.02, future_review_date),
+    (0.02, review_before_transaction),
+    (0.02, duplicate_transaction_product_pair),
+]
 
 
-@register("dirty_reviews")
-def dirty_reviews(ctx: GenerationContext):
+@register("dirty_product_reviews")
+def dirty_product_reviews(ctx: GenerationContext):
+
     df = ctx.product_reviews.product_reviews_df.copy()
 
-    df["error_types"] = [[] for _ in range(len(df))]
-
-    # Rating out of range
-    oor_idx = df.sample(frac=0.03, random_state=80).index
-    df.loc[oor_idx, "rating"] = [
-        random.choice([0, -random.randint(1, 5), random.randint(6, 10)])
-        for _ in range(len(oor_idx))
-    ]
-    append_error(
-        df,
-        oor_idx,
-        error_label="rating out of range",
-        columns=["rating"],
-    )
-
-    # Future review_date
-    fut_idx = df.sample(frac=0.02, random_state=81).index
-    df.loc[fut_idx, "review_date"] = pd.to_datetime(
-        [fake.future_date(end_date="+10y") for _ in range(len(fut_idx))]
-    )
-    append_error(
-        df,
-        fut_idx,
-        error_label="future review date",
-        columns=["review_date"],
-    )
-
-    # Missing review_text
-    df = inject_nulls(
-        df,
-        df["review_text"].isna(),
-        "review_text",
-        rate=0.04,
-        error_label="missing review text",
-    )
-
-    # Duplicate rows
-    df = duplicate_rows(
-        df,
-        rate=0.04,
-        error_label="duplicate product review rows",
-    )
-
-    # Rating/sentiment mismatch
-    indices = df.sample(frac=0.02, random_state=2).index
-    df.loc[indices, "rating"] = [random.randint(1, 5) for _ in range(len(indices))]
-    append_error(
-        df,
-        indices,
-        error_label="rating/sentiment mismatch",
-        columns=["rating", "review_text"],
-    )
-
-    # Whitespace in review_text
-    df = inject_whitespace(
-        df, col="review_text", rate=0.05, error_label="review text formatting anomaly"
-    )
+    for rate, rule in PRODUCT_REVIEW_RULES:
+        apply_corruption(
+            df=df,
+            rate=rate,
+            corruption=rule,
+            ctx=ctx,
+        )
 
     return save(df, "product_reviews_dirty.csv")
