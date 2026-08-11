@@ -93,7 +93,6 @@ def invalid_gender(df, idx, ctx):
             "M",
             "f",
             "m",
-            "",
         ]
     )
 
@@ -171,12 +170,12 @@ def invalid_customer_id_format(df, idx, ctx):
         return
 
     corruptions = [
-        lambda x: x.replace("CUST", "CUS"),
-        lambda x: x.replace("CUST", "C"),
+        lambda x: x.replace("000", "00", 1),
+        lambda x: x.replace("CUST", "CUST-", 1),
         lambda x: x.lower(),
-        lambda x: x + "-ABC",
-        lambda x: "12345",
-        lambda x: "",
+        lambda x: x.replace("CUST", "C", 1),
+        lambda x: x.replace("CUST", "CUS", 1),
+        lambda x: x.replace("CUST", "CUST ", 1),
     ]
 
     df.at[idx, "customer_id"] = random.choice(corruptions)(value)
@@ -206,10 +205,12 @@ def invalid_email_format(df, idx, ctx):
         return
 
     corruptions = [
-        lambda x: x.replace("@", ""),
-        lambda x: " " + x,
-        lambda x: x + " ",
-        lambda x: x.replace(".", ""),
+        lambda x: x.replace(".com", "com", 1),
+        lambda x: x.replace("@", "@@", 1),
+        lambda x: x.rsplit(".", 1)[0] + ".",
+        lambda x: x.replace("@", ".", 1),
+        lambda x: x.replace("@", "@ ", 1),
+        lambda x: x.replace(".com", ",com", 1),
     ]
 
     df.at[idx, "email"] = random.choice(corruptions)(value)
@@ -222,22 +223,22 @@ def invalid_email_format(df, idx, ctx):
 
 def duplicate_email(df, idx, ctx):
 
-    emails = df["email"].dropna().tolist()
+    other_emails = df[df.index != idx]["email"].dropna().tolist()
 
-    if not emails:
+    if not other_emails:
         return
 
-    df.at[idx, "email"] = random.choice(emails)
+    df.at[idx, "email"] = random.choice(other_emails)
 
 
 def duplicate_customer_id(df, idx, ctx):
 
-    customer_ids = df["customer_id"].dropna().tolist()
+    other_customer_ids = df[df.index != idx]["customer_id"].dropna().tolist()
 
-    if not customer_ids:
+    if not other_customer_ids:
         return
 
-    df.at[idx, "customer_id"] = random.choice(customer_ids)
+    df.at[idx, "customer_id"] = random.choice(other_customer_ids)
 
 
 # =============================================================================
@@ -274,7 +275,9 @@ def signup_before_dob(df, idx, ctx):
     if pd.isna(df.at[idx, "signup_date"]) or pd.isna(df.at[idx, "dob"]):
         return
 
-    df.at[idx, "signup_date"] = df.at[idx, "dob"] - pd.Timedelta(days=20)
+    df.at[idx, "signup_date"] = df.at[idx, "dob"] - pd.Timedelta(
+        days=random.randint(30, 365)
+    )
 
 
 def underage_customer(df, idx, ctx):
@@ -282,7 +285,9 @@ def underage_customer(df, idx, ctx):
     if pd.isna(df.at[idx, "signup_date"]):
         return
 
-    df.at[idx, "dob"] = df.at[idx, "signup_date"] - pd.DateOffset(years=10)
+    df.at[idx, "dob"] = df.at[idx, "signup_date"] - pd.DateOffset(
+        years=random.randint(10, 17)
+    )
 
 
 def area_region_mismatch(df, idx, ctx):

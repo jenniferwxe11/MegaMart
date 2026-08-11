@@ -47,11 +47,12 @@ def invalid_product_id_format(df, idx, ctx):
         return
 
     corruptions = [
-        lambda x: x.replace("PROD", "P"),
+        lambda x: x.replace("000", "00", 1),
+        lambda x: x.replace("PROD", "PROD-", 1),
         lambda x: x.lower(),
-        lambda x: x + "-ABC",
-        lambda x: "12345",
-        lambda x: "",
+        lambda x: x.replace("PROD", "P", 1),
+        lambda x: x.replace("PROD", "PRODUCT", 1),
+        lambda x: x.replace("PROD", "PROD ", 1),
     ]
 
     df.at[idx, "product_id"] = random.choice(corruptions)(value)
@@ -80,12 +81,12 @@ def invalid_product_name_format(df, idx, ctx):
 
 def duplicate_product_id(df, idx, ctx):
 
-    product_ids = df["product_id"].dropna().tolist()
+    other_product_ids = df[df.index != idx]["product_id"].dropna().tolist()
 
-    if not product_ids:
+    if not other_product_ids:
         return
 
-    df.at[idx, "product_id"] = random.choice(product_ids)
+    df.at[idx, "product_id"] = random.choice(other_product_ids)
 
 
 # =============================================================================
@@ -104,9 +105,9 @@ def selling_price_out_of_bounds(df, idx, ctx):
         return
 
     corruptions = [
-        lambda x: 0,
-        lambda x: x * -1,
-        lambda x: x + random.uniform(100000, 10000000),
+        lambda _: 0,
+        lambda x: -abs(x),
+        lambda _: random.uniform(100001, 250000),
     ]
 
     df.at[idx, "selling_price"] = random.choice(corruptions)(value)
@@ -123,9 +124,9 @@ def cost_price_out_of_bounds(df, idx, ctx):
         return
 
     corruptions = [
-        lambda x: 0,
-        lambda x: x * -1,
-        lambda x: x + random.uniform(100000, 10000000),
+        lambda _: 0,
+        lambda x: -abs(x),
+        lambda _: random.uniform(100001, 250000),
     ]
 
     df.at[idx, "cost_price"] = random.choice(corruptions)(value)
