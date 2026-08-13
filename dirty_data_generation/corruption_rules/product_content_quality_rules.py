@@ -43,6 +43,10 @@ def missing_attribute_count(df, idx, ctx):
     df.at[idx, "missing_attribute_count"] = None
 
 
+def missing_has_nutritional_info(df, idx, ctx):
+    df.at[idx, "has_nutritional_info"] = pd.NA
+
+
 # =============================================================================
 # Formatting
 # =============================================================================
@@ -138,6 +142,21 @@ def missing_attribute_count_out_of_bounds(df, idx, ctx):
 # =============================================================================
 
 
+def no_current_record(df, idx, ctx):
+
+    product_id = df.at[idx, "product_id"]
+
+    rows = df[df["product_id"] == product_id]
+
+    if rows.empty:
+        return
+
+    df.loc[rows.index, "is_current"] = False
+    df.loc[rows.index, "valid_to"] = df.loc[rows.index, "valid_to"].fillna(
+        pd.Timestamp.today().normalize()
+    )
+
+
 def future_valid_from(df, idx, ctx):
 
     if pd.isna(df.at[idx, "valid_from"]):
@@ -158,6 +177,30 @@ def image_indicator_mismatch(df, idx, ctx):
         df.at[idx, "image_count"] = random.randint(1, 8)
     else:
         df.at[idx, "image_count"] = 0
+
+
+def image_quality_indicator_mismatch(df, idx, ctx):
+    """
+    If has_image is False, then image_quality_score should be None.
+    If has_image is True, then image_quality_score should not be None.
+    """
+
+    if pd.isna(df.at[idx, "has_image"]):
+        return
+
+    if df.at[idx, "has_image"] is False:
+        df.at[idx, "image_quality_score"] = round(random.uniform(0.1, 1.0), 2)
+    else:
+        df.at[idx, "image_quality_score"] = None
+
+
+def image_quality_without_image_count(df, idx, ctx):
+    """
+    If image_count is missing, image_quality_score should also be missing.
+    """
+
+    if pd.isna(df.at[idx, "image_count"]):
+        df.at[idx, "image_quality_score"] = round(random.uniform(0.1, 1.0), 2)
 
 
 def description_indicator_mismatch(df, idx, ctx):
@@ -245,15 +288,23 @@ def overlapping_validity_period(df, idx, ctx):
     if others.empty:
         return
 
-    other_idx = random.choice(others.index.tolist())
+    valid_others = others[others["valid_from"].notna() & others["valid_to"].notna()]
+
+    if valid_others.empty:
+        return
+
+    other_idx = random.choice(valid_others.index.tolist())
+
     other_from = df.at[other_idx, "valid_from"]
     other_to = df.at[other_idx, "valid_to"]
 
-    if pd.isna(other_from) or pd.isna(other_to):
+    if other_to <= other_from:
         return
 
-    df.at[idx, "valid_from"] = other_from + pd.Timedelta(days=10)
-    df.at[idx, "valid_to"] = other_to + pd.Timedelta(days=10)
+    overlap_start = other_from + (other_to - other_from) / 2
+
+    df.at[idx, "valid_from"] = overlap_start
+    df.at[idx, "valid_to"] = other_to
 
 
 def incorrect_quality_tier(df, idx, ctx):

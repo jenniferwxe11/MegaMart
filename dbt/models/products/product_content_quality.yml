@@ -21,7 +21,17 @@ models:
               title: Multiple Current Versions
               category: Business Rule Violations
               severity: High
-              description: Every product must have only one current content quality version.
+              description: Exactly one record per product has is_current is TRUE.
+
+      - current_product_content_quality_version_is_latest:
+          config:
+            meta:
+              title: Current Version Must Be Latest
+              category: Business Rule Violations
+              severity: High
+              description: >
+                The latest content quality version must have is_current set to TRUE,
+                and every previous version must have is_current set to FALSE.
 
       - non_overlapping_product_content_quality_versions:
           config:
@@ -64,6 +74,35 @@ models:
               category: Business Rule Violations
               severity: Medium
               description: has_image must be FALSE when image_count is 0.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              COALESCE(has_image, TRUE) IS TRUE
+              OR image_quality_score IS NULL
+
+          config:
+            meta:
+              title: Image Quality Score without Images
+              category: Business Rule Violations
+              severity: Medium
+              description: has_image must be FALSE when image_quality_score is NULL.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              COALESCE(has_image, FALSE) IS FALSE
+              OR (
+                image_quality_score IS NOT NULL
+                AND image_quality_score > 0
+              )
+
+          config:
+            meta:
+              title: Image Quality Score with Images
+              category: Business Rule Violations
+              severity: Medium
+              description: has_image must be TRUE when image_quality_score is greater than 0.
 
       - dbt_utils.expression_is_true:
           arguments:
@@ -321,7 +360,7 @@ models:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
-                max_value: 100000
+                max_value: 400
                 strictly: false
 
               config:
@@ -329,7 +368,7 @@ models:
                   title: Description Length Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: description_length must be between 0 and 100000 inclusive.
+                  description: description_length must be between 0 and 400 inclusive.
 
       - name: missing_attribute_count
         tests:
@@ -344,7 +383,7 @@ models:
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
-                max_value: 100000
+                max_value: 20
                 strictly: false
 
               config:
@@ -352,7 +391,7 @@ models:
                   title: Missing Attribute Count Out of Valid Range
                   category: Range Validation
                   severity: Medium
-                  description: missing_attribute_count must be between 0 and 100000 inclusive.
+                  description: missing_attribute_count must be between 0 and 20 inclusive.
 
       - name: valid_from
         tests:
