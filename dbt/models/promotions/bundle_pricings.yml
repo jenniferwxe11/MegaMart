@@ -25,6 +25,39 @@ models:
               severity: Medium
               description: Bundle promotions must use the same discount value as the referenced bundle pricing.
 
+      - bundle_pricing_progression:
+          config:
+            meta:
+              title: Bundle Price Increases Across Pricing Phases
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                Bundle prices must remain flat or decrease across pricing phases,
+                following the expected LAUNCH to PROMO to EOL progression.
+
+      - bundle_discount_progression:
+          config:
+            meta:
+              title: Bundle Discount Decreases Across Pricing Phases
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                Bundle discounts should remain flat or increase across pricing phases,
+                following the expected LAUNCH to PROMO to EOL progression.
+
+      - bundle_price_not_below_cost:
+          arguments:
+            bundle_items_model: ref('bundle_items')
+            product_model: ref('products')
+          config:
+            meta:
+              title: Bundle Price Below Product Cost
+              category: Business Rule Violations
+              severity: High
+              description: >
+                Bundle price must be greater than or equal to the total cost
+                of the products included in the bundle.
+
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:

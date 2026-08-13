@@ -31,6 +31,46 @@ models:
               severity: Medium
               description: Bundle categories must match the categories of the items in the bundle.
 
+      - bundle_item_quantity_matches_type:
+          arguments:
+            bundle_model: ref('bundles')
+
+          config:
+            meta:
+              title: Bundle Quantity Does Not Match Bundle Type
+              category: Business Rule Violations
+              severity: High
+              description: >
+                Bundle item quantities must follow the quantity rules defined
+                by the bundle type and bundle name.
+
+      - set_bundle_requires_multiple_categories:
+          arguments:
+            bundle_model: ref('bundles')
+            product_model: ref('products')
+
+          config:
+            meta:
+              title: Set Bundle Does Not Span Multiple Categories
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                Set bundles must contain products from at least two distinct categories.
+
+      - bundle_type_category_consistency:
+          arguments:
+            bundle_model: ref('bundles')
+            product_model: ref('products')
+
+          config:
+            meta:
+              title: Bundle Type Does Not Match Item Categories
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                Non-Set bundles must contain products from a single category,
+                while Set bundles may contain products from multiple categories.
+
     # --- Column Constraints ---
     columns:
       - name: bundle_id

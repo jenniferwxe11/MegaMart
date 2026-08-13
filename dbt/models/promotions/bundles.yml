@@ -93,7 +93,7 @@ models:
           - not_null:
               config:
                 meta:
-                  title: Missing Categories
-                  category: Missing Values
+                  title: Empty Categories
+                  category: Business Rule Violations
                   severity: High
-                  description: categories is required.
+                  description: Each bundle must contain at least one category.
