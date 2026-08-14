@@ -1,83 +1,71 @@
+# dirty_data_generation/generators/promotions_dirty.py
+
 from dirty_data_generation.context.generation_context import GenerationContext
-from dirty_data_generation.registry import register
-from dirty_data_generation.utils.dirty_helpers import (
-    append_error,
-    inject_nulls,
+from dirty_data_generation.corruption_rules.promotions_rules import (
+    discontinued_product_promotion_overlap,
+    duplicate_promotion_id,
+    free_shipping_invalid_scope,
+    invalid_discount_code_format,
+    invalid_effective_period,
+    invalid_promotion_id_format,
+    invalid_promotion_mechanic,
+    invalid_promotion_scope,
+    min_spend_out_of_range,
+    missing_discount_code,
+    missing_effective_end_date,
+    missing_effective_start_date,
+    missing_promotion_name,
+    missing_promotion_target_id,
+    missing_promotion_theme,
+    missing_promotion_value,
+    priority_out_of_range,
+    promotion_value_out_of_range,
+    zero_value_non_free_shipping,
 )
+from dirty_data_generation.helpers.dirty_utils import apply_corruption
+from dirty_data_generation.registry import register
 from dirty_data_generation.utils.io_utils import save
+
+PROMOTION_RULES = [
+    # Missing Values
+    (0.03, missing_promotion_name),
+    (0.03, missing_promotion_theme),
+    (0.03, missing_promotion_target_id),
+    (0.03, missing_promotion_value),
+    (0.03, missing_discount_code),
+    (0.03, missing_effective_start_date),
+    (0.03, missing_effective_end_date),
+    # Accepted Values
+    (0.02, invalid_promotion_mechanic),
+    (0.02, invalid_promotion_scope),
+    # Formatting
+    (0.02, invalid_promotion_id_format),
+    (0.03, invalid_discount_code_format),
+    # Duplicates
+    (0.02, duplicate_promotion_id),
+    # Range Validation
+    (0.02, promotion_value_out_of_range),
+    (0.02, min_spend_out_of_range),
+    (0.02, priority_out_of_range),
+    # Business Rule Violations
+    (0.03, invalid_effective_period),
+    (0.03, zero_value_non_free_shipping),
+    (0.03, free_shipping_invalid_scope),
+    (0.03, discontinued_product_promotion_overlap),
+]
 
 
 @register("dirty_promotions")
 def dirty_promotions(ctx: GenerationContext):
+
     df = ctx.promotions.promotions_df.copy()
 
-    df["error_types"] = [[] for _ in range(len(df))]
-
-    # Promotion value = 0 for non free shipping rows
-    not_fs = df["promotion_mechanic"] != "free_shipping"
-    zero_v = df[not_fs].sample(frac=0.03, random_state=20).index
-    df.loc[zero_v, "promotion_value"] = [0 for _ in range(len(zero_v))]
-    append_error(
-        df,
-        zero_v,
-        error_label="zero promotion value for non free-shipping",
-        columns=["promotion_mechanic", "promotion_value"],
-    )
-
-    # End date before start date
-    inv_idx = df.sample(frac=0.02, random_state=21).index
-    df.loc[inv_idx, ["effective_start_date", "effective_end_date"]] = df.loc[
-        inv_idx, ["effective_end_date", "effective_start_date"]
-    ].values
-    append_error(
-        df,
-        inv_idx,
-        error_label="inverted effective date range",
-        columns=["effective_start_date", "effective_end_date"],
-    )
-
-    # Null promotion_value
-    mask = df[["promotion_mechanic", "promotion_scope"]].notna().all(axis=1)
-
-    df = inject_nulls(
-        df, mask, "promotion_value", rate=0.02, error_label="missing promotion value"
-    )
-
-    # Scope/mechanic mismatch: free_shipping on scope = product
-    fs_idx = (
-        df[df["promotion_mechanic"] == "free_shipping"]
-        .sample(frac=0.02, random_state=23)
-        .index
-    )
-    df.loc[fs_idx, "promotion_scope"] = "product"
-    append_error(
-        df,
-        fs_idx,
-        error_label="free shipping promotion with product scope",
-        columns=["promotion_mechanic", "promotion_scope"],
-    )
-
-    # Duplicate promotion_id
-    dup_idx = df.sample(frac=0.01, random_state=24).index
-    replacement_ids = (
-        df["promotion_id"].sample(n=len(dup_idx), replace=True, random_state=25).values
-    )
-    df.loc[dup_idx, "promotion_id"] = replacement_ids
-    append_error(
-        df,
-        dup_idx,
-        error_label="duplicate promotion id",
-        columns=["promotion_id"],
-    )
-
-    # Negative min_spend
-    ms_idx = df[df["min_spend"].notna()].sample(frac=0.01, random_state=25).index
-    df.loc[ms_idx, "min_spend"] = -abs(df.loc[ms_idx, "min_spend"])
-    append_error(
-        df,
-        ms_idx,
-        error_label="negative min spend",
-        columns=["min_spend"],
-    )
+    for rate, rule in PROMOTION_RULES:
+        apply_corruption(
+            df=df,
+            rate=rate,
+            corruption=rule,
+            ctx=ctx,
+        )
 
     return save(df, "promotions_dirty.csv")
