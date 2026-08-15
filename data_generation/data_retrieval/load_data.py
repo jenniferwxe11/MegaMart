@@ -156,7 +156,11 @@ def load_campaigns():
     df = _load_campaigns().copy()
     if "channels" in df.columns:
         df = _parse_list_col(df, "channels")
-        return df
+
+    if "is_ab_test" in df.columns:
+        df["is_ab_test"] = df["is_ab_test"].astype("boolean")
+
+    return df
 
 
 def _load_campaign_assignments():
