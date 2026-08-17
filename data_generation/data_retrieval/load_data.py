@@ -181,7 +181,21 @@ def _load_campaign_exposures():
 
 
 def load_campaign_exposures():
-    return _load_campaign_exposures().copy()
+    df = _load_campaign_exposures().copy()
+
+    if "eligible" in df.columns:
+        df["eligible"] = df["eligible"].astype("boolean")
+
+    if "exposed" in df.columns:
+        df["exposed"] = df["exposed"].astype("boolean")
+
+    if "opened" in df.columns:
+        df["opened"] = df["opened"].astype("boolean")
+
+    if "clicked" in df.columns:
+        df["clicked"] = df["clicked"].astype("boolean")
+
+    return df
 
 
 def _load_bundles():

@@ -1,8 +1,12 @@
 # dirty_data_generation/helpers/dirty_utils.py
 
 import random
+from datetime import datetime, timedelta
 
 import pandas as pd
+from faker import Faker
+
+fake = Faker()
 
 # =============================================================================
 # Row Sampling
@@ -38,3 +42,29 @@ def apply_corruption(
             idx=idx,
             ctx=ctx,
         )
+
+
+def generate_future_date():
+    """
+    Generate an intentionally invalid future date 1–10 years ahead.
+    """
+
+    today = datetime.today().date()
+
+    return fake.date_between(
+        start_date=today + timedelta(days=365),
+        end_date=today + timedelta(days=365 * 10),
+    )
+
+
+def generate_future_datetime():
+    """
+    Generate an intentionally invalid future timestamp 1–10 years ahead.
+    """
+
+    now = datetime.now()
+
+    return fake.date_time_between(
+        start_date=now + timedelta(days=365),
+        end_date=now + timedelta(days=365 * 10),
+    )
