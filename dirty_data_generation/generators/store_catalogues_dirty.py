@@ -1,86 +1,48 @@
-import random
-
-from data_generation.config.products_config import CATEGORIES
 from dirty_data_generation.context.generation_context import GenerationContext
-from dirty_data_generation.registry import register
-from dirty_data_generation.utils.dirty_helpers import (
-    MAX_ERRORS_PER_ROW,
-    duplicate_rows,
-    inject_whitespace,
+from dirty_data_generation.corruption_rules.store_catalogues_rules import (
+    blank_store_product_name,
+    duplicate_store_product,
+    missing_product_id,
+    missing_store_brand,
+    missing_store_category,
+    missing_store_id,
+    missing_store_product_name,
+    missing_store_selling_price,
+    store_price_product_price_mismatch,
+    store_selling_price_out_of_range,
 )
+from dirty_data_generation.helpers.dirty_utils import apply_corruption
+from dirty_data_generation.registry import register
 from dirty_data_generation.utils.io_utils import save
+
+STORE_CATALOGUE_RULES = [
+    # Missing Values
+    (0.03, missing_store_id),
+    (0.03, missing_product_id),
+    (0.03, missing_store_product_name),
+    (0.03, blank_store_product_name),
+    (0.03, missing_store_brand),
+    (0.03, missing_store_category),
+    (0.03, missing_store_selling_price),
+    # Range Validation
+    (0.02, store_selling_price_out_of_range),
+    # Business Rule Violations
+    (0.03, duplicate_store_product),
+    (0.03, store_price_product_price_mismatch),
+]
 
 
 @register("dirty_store_catalogues")
 def dirty_store_catalogues(ctx: GenerationContext):
+
     df = ctx.store_catalogues.store_catalogues_df.copy()
 
-    df["error_types"] = [[] for _ in range(len(df))]
-
-    store_product_price_map = ctx.store_catalogues.store_product_price_map
-
-    for i, row in df.iterrows():
-        current_errors = df.at[i, "error_types"]
-        n_errors = len(set(current_errors))
-
-        if n_errors >= MAX_ERRORS_PER_ROW:
-            continue
-
-        base = store_product_price_map.get(
-            row["product_id"], row["store_selling_price"]
+    for rate, rule in STORE_CATALOGUE_RULES:
+        apply_corruption(
+            df=df,
+            rate=rate,
+            corruption=rule,
+            ctx=ctx,
         )
-
-        # Price spike: >40% above master
-        if random.random() < 0.05 and n_errors < MAX_ERRORS_PER_ROW:
-            df.at[i, "store_selling_price"] = round(base * random.uniform(1.4, 2.5), 2)
-            df.at[i, "error_types"].append("price anomaly")
-            n_errors += 1
-
-        # Price crash: <50% of master (only if no price error already)
-        elif (
-            random.random() < 0.03
-            and "price anomaly" not in df.at[i, "error_types"]
-            and n_errors < MAX_ERRORS_PER_ROW
-        ):
-            df.at[i, "store_selling_price"] = round(base * random.uniform(0.1, 0.49), 2)
-            df.at[i, "error_types"].append("price anomaly")
-            n_errors += 1
-
-        # Category label drift
-        if (
-            random.random() < 0.06
-            and "category label drift" not in df.at[i, "error_types"]
-            and n_errors < MAX_ERRORS_PER_ROW
-        ):
-            df.at[i, "store_category"] = random.choice(CATEGORIES)
-            df.at[i, "error_types"].append("category label drift")
-            n_errors += 1
-
-        # Missing store_selling_price
-        # Only inject if no price anomaly already on this row
-        if (
-            random.random() < 0.02
-            and "price anomaly" not in df.at[i, "error_types"]
-            and "missing store selling price" not in df.at[i, "error_types"]
-            and n_errors < MAX_ERRORS_PER_ROW
-        ):
-            df.at[i, "store_selling_price"] = None
-            df.at[i, "error_types"].append("missing store selling price")
-
-    # Whitespace/casing in store_product_name
-    df = inject_whitespace(
-        df,
-        col="store_product_name",
-        rate=0.07,
-        error_label="store product name formatting anomaly",
-        max_errors=MAX_ERRORS_PER_ROW,
-    )
-
-    # Duplicate (store_id, product_id) listings
-    df = duplicate_rows(
-        df,
-        rate=0.03,
-        error_label="duplicate store catalogue rows",
-    )
 
     return save(df, "store_catalogues_dirty.csv")

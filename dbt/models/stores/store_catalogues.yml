@@ -30,29 +30,13 @@ models:
               severity: Medium
               description: store_product_name must not be blank.
 
-      - store_brand_equals_product_brand:
-          config:
-            meta:
-              title: Store Brand Alignment
-              category: Business Rule Violations
-              severity: Low
-              description: store_brand must equal the brand in the products table.
-
-      - store_category_equals_product_category:
-          config:
-            meta:
-              title: Store Category Alignment
-              category: Business Rule Violations
-              severity: Medium
-              description: store_category must equal the category in the products table.
-
       - store_price_matches_product_price:
           config:
             meta:
-              title: Store Price Alignment
+              title: Store Price Variance
               category: Business Rule Violations
               severity: Medium
-              description: store_selling_price must be within 20% of selling_price in the products table.
+              description: store_selling_price must be within 20% of the product's standard selling_price.
 
     # --- Column Constraints ---
     columns:

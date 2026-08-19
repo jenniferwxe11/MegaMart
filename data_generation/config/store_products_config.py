@@ -1,9 +1,7 @@
-BRAND_ERROR_RATE = 0.05
-CATEGORY_ERROR_RATE = 0.08
-NAME_ERROR_RATE = 0.15
-PRICE_ERROR_RATE = 0.1
-NATURAL_NAME_VARIATION_RATE = 0.08  # down from ~0.25 across sub-functions
-NATURAL_BRAND_VARIATION_RATE = 0.05  # down from ~0.20
+NATURAL_PRODUCT_NAME_VARIATION_RATE = 0.08
+NATURAL_BRAND_VARIATION_RATE = 0.05
+NATURAL_CATEGORY_VARIATION_RATE = 0.08
+NATURAL_SELLING_PRICE_VARIATION_RATE = 0.10
 
 
 STORE_TYPE_CONFIG = {
@@ -49,4 +47,61 @@ DESCRIPTOR_MAP = {
     "Eco-Friendly": ["Green", "Sustainable"],
     "Gluten-Free": ["Wheat-Free", "Celiac-Friendly"],
     "Low Sugar": ["Reduced Sugar", "Sugar-Free"],
+}
+
+
+CATEGORY_TO_STORE = {
+    "Snacks": [
+        "Chips & Chocolate",
+        "Sweet & Salty Treats",
+        "Tidbits",
+        "Chips",
+        "Snack Food",
+    ],
+    "Beverages": ["Soft Drinks", "Drinks"],
+    "Dairy & Eggs": [
+        "Dairy",
+        "Dairy, Chilled & Eggs",
+        "Chilled",
+        "Milk & Eggs",
+        "Fresh Dairy",
+    ],
+    "Frozen Food": ["Frozen"],
+    "Fresh Produce": ["Vegetables & Fruits", "Fruits & Vegetables"],
+    "Pantry Staples": [
+        "Cupboard Essentials",
+        "Rice, Noodles & Cooking Ingredients",
+        "Cooking Ingredients",
+        "Staples",
+        "Daily Essentials",
+    ],
+    "Household Essentials": [
+        "Household",
+        "Cleaning",
+        "Household Items",
+        "Essentials",
+    ],
+    "Health & Beauty": ["Beauty", "Beauty & Personal Care", "Personal Care"],
+    "Baby Products": ["Mummy & Baby", "Baby", "Baby & Child"],
+    "Canned Goods": ["Canned Food", "Food Cupboard"],
+    "Personal Care": ["Personal Care & Hygiene", "Health & Beauty"],
+    "Meat & Seafood": ["Meat and Seafood"],
+    "Bakery": ["Bread"],
+    "Cleaning Supplies": [
+        "Cleaning",
+        "Household Cleaning",
+    ],
+    "Rice & Noodles": [
+        "Rice & Pasta",
+        "Food Cupboard",
+        "Rice, Noodles & Cooking Ingredients",
+    ],
+    "Breakfast Foods": ["Granolas & Cereals", "Food Cupboard", "Breakfast"],
+    "Electronics & Appliances": ["Electronics"],
+    "Home & Living": ["Home & Living (Kitchenware, Storage, Bedding)", "Home Living"],
+    "Sports, Travel & Leisure": [
+        "Lifestyle & Recreation (Fitness, Toys, Travel)",
+        "Sports & Travel",
+        "Lifestyle",
+    ],
 }
