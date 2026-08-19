@@ -114,7 +114,14 @@ jobs:
         run: pre-commit run --all-files --show-diff-on-failure
 
       - name: Dependency security scan
-        run: pip-audit
+        run: |
+          # sqlparse 0.5.5 is required by dbt-core (<0.6.0).
+          # Ignore known CVEs until dbt supports sqlparse >=0.6.0.
+          pip-audit \
+            --ignore-vuln CVE-2026-71491 \
+            --ignore-vuln CVE-2026-59894 \
+            --ignore-vuln CVE-2026-59893 \
+            --ignore-vuln CVE-2026-54284
 
       - name: Code security scan (Bandit)
         run: |
