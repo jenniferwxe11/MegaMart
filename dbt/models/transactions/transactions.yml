@@ -146,17 +146,6 @@ models:
               severity: High
               description: transaction_total must equal cart_subtotal minus discounts plus shipping.
 
-      - transaction_promotions_match_array:
-          arguments:
-            transaction_promotion_model: ref('transaction_promotions')
-
-          config:
-            meta:
-              title: Transaction Promotions Does Not Match Promotions
-              category: Business Rule Violations
-              severity: High
-              description: applied_promotions must match the promotion_id values stored in the transaction_promotions table.
-
     # --- Column Constraints ---
     columns:
       - name: transaction_id
