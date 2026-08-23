@@ -113,6 +113,9 @@ jobs:
       - name: Run pre-commit hooks (lint, format)
         run: pre-commit run --all-files --show-diff-on-failure
 
+      - name: Upgrade pip
+        run: python -m pip install --upgrade "pip>=26.2"
+
       - name: Dependency security scan
         run: |
           # sqlparse 0.5.5 is required by dbt-core (<0.6.0).
