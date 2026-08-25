@@ -1,3 +1,5 @@
+# dirty_data_generation/context/context_factory.py
+
 from data_generation.config.constants import (
     DATA_END_DATE,
     DATA_START_DATE,
@@ -42,6 +44,7 @@ def build_base_context() -> GenerationContext:
     product_content_quality_df = load_data.load_product_content_quality()
     stockout_events_df = load_data.load_stockout_events()
     stock_snapshots_df = load_data.load_stock_snapshots()
+    inventory_change_events_df = load_data.load_inventory_change_events()
     competitor_products_df = load_data.load_competitor_products()
     competitor_price_history_df = load_data.load_competitor_price_history()
     campaigns_df = transform_data.get_campaigns_df()
@@ -134,7 +137,10 @@ def build_base_context() -> GenerationContext:
             stockout_events_df=stockout_events_df,
             stockout_event_map=data_lookup.get_stockout_event_map(),
         ),
-        stock_snapshots=StockSnapshotContext(stock_snapshots_df=stock_snapshots_df),
+        stock_snapshots=StockSnapshotContext(
+            stock_snapshots_df=stock_snapshots_df,
+            inventory_change_events_df=inventory_change_events_df,
+        ),
         competitor_products=CompetitorProductContext(
             competitor_products_df=competitor_products_df,
             competitor_price_history_df=competitor_price_history_df,
