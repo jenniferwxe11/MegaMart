@@ -1,72 +1,57 @@
-import random
-
-import pandas as pd
-from faker import Faker
+# dirty_data_generation/generators/stock_snapshots_dirty.py
 
 from dirty_data_generation.context.generation_context import GenerationContext
-from dirty_data_generation.registry import register
-from dirty_data_generation.utils.dirty_helpers import (
-    MAX_ERRORS_PER_ROW,
-    duplicate_rows,
+from dirty_data_generation.corruption_rules.stock_snapshots_rules import (
+    duplicate_stock_snapshot,
+    future_week_start_date,
+    invalid_stock_band,
+    invalid_stock_band_status_combination,
+    invalid_stock_status,
+    missing_product_id,
+    missing_stock_band,
+    missing_stock_status,
+    missing_store_id,
+    missing_week_start_date,
+    no_consecutive_duplicate_status,
+    snapshot_outside_product_lifecycle,
+    store_product_snapshot_mismatch,
 )
+from dirty_data_generation.helpers.dirty_utils import apply_corruption
+from dirty_data_generation.registry import register
 from dirty_data_generation.utils.io_utils import save
 
-fake = Faker()
+STOCK_SNAPSHOT_RULES = [
+    # Missing Values
+    (0.03, missing_week_start_date),
+    (0.03, missing_store_id),
+    (0.03, missing_product_id),
+    (0.03, missing_stock_status),
+    (0.03, missing_stock_band),
+    # Accepted Values
+    (0.02, invalid_stock_status),
+    (0.02, invalid_stock_band),
+    # Business Rule Violations
+    (0.02, future_week_start_date),
+    (0.03, duplicate_stock_snapshot),
+    (0.03, snapshot_outside_product_lifecycle),
+    (0.03, no_consecutive_duplicate_status),
+    (0.03, invalid_stock_band_status_combination),
+    # Cross-Entity Consistency
+    (0.02, store_product_snapshot_mismatch),
+]
 
 
 @register("dirty_stock_snapshots")
 def dirty_stock_snapshots(ctx: GenerationContext):
+
     df = ctx.stock_snapshots.stock_snapshots_df.copy()
-    df["error_types"] = [[] for _ in range(len(df))]
 
-    # Sort so we can detect transitions per (store_id, product_id)
-    df = df.sort_values(["store_id", "product_id", "week_start_date"]).reset_index(
-        drop=True
-    )
-
-    for i, _ in df.iterrows():
-        n_errors = len(set(df.at[i, "error_types"]))
-        if n_errors >= MAX_ERRORS_PER_ROW:
-            continue
-
-        # Invalid stock status value
-        if (
-            random.random() < 0.03
-            and "invalid stock status value" not in df.at[i, "error_types"]
-        ):
-            df.at[i, "stock_status"] = random.choice(
-                ["STOCKED", "unavailable", "tbc", "999", "no stock", "0"]
-            )
-            df.at[i, "error_types"].append("invalid stock status value")
-            n_errors += 1
-
-        # Future week_start_date
-        if (
-            random.random() < 0.02
-            and n_errors < MAX_ERRORS_PER_ROW
-            and "future week start date" not in df.at[i, "error_types"]
-        ):
-            df.at[i, "week_start_date"] = pd.Timestamp(
-                fake.future_date(end_date="+10y")
-            )
-
-            df.at[i, "error_types"].append("future week start date")
-            n_errors += 1
-
-        # Missing snapshot — null out stock fields to simulate a dropped week
-        if (
-            random.random() < 0.02
-            and n_errors < MAX_ERRORS_PER_ROW
-            and "missing snapshot data" not in df.at[i, "error_types"]
-        ):
-            df.at[i, "stock_level"] = None
-            df.at[i, "error_types"].append("missing snapshot data")
-
-    # Duplicate rows
-    df = duplicate_rows(
-        df,
-        rate=0.01,
-        error_label="duplicate stock snapshot rows",
-    )
+    for rate, rule in STOCK_SNAPSHOT_RULES:
+        apply_corruption(
+            df=df,
+            rate=rate,
+            corruption=rule,
+            ctx=ctx,
+        )
 
     return save(df, "stock_snapshots_dirty.csv")
