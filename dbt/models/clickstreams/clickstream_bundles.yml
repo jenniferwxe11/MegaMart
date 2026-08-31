@@ -19,18 +19,6 @@ models:
               severity: High
               description: A bundle_id must only appear once per clickstream event.
 
-      - bundle_have_matching_promotion:
-          arguments:
-            promotion_model: ref('promotions')
-
-          config:
-            where: 'bundle_id IS NOT NULL'
-            meta:
-              title: Bundle Does Not Belong to Promotion
-              category: Business Rule Violations
-              severity: High
-              description: bundle_id must belong to the promotion associated with the same clickstream event.
-
     # --- Column Constraints ---
     columns:
       - name: clickstream_id

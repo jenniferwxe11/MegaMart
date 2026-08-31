@@ -645,7 +645,7 @@ models:
           arguments:
             expression: >
               (
-                event_type != 'Payment_Successful'
+                event_type != 'Payment Successful'
                 OR (
                   purchased_items IS NOT NULL
                   AND COALESCE(array_length(purchased_items), 0) > 0
