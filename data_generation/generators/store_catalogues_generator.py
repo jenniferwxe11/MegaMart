@@ -13,7 +13,7 @@ from data_generation.config.store_products_config import (
 )
 from data_generation.context.generation_context import GenerationContext
 from data_generation.registry import register
-from data_generation.services.products.store_catalogue_service import (
+from data_generation.services.stores.store_catalogue_service import (
     inject_brand_variation,
     inject_category_variation,
     inject_name_variation,

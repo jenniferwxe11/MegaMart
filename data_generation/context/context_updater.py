@@ -1,3 +1,5 @@
+# data_generation/context/context_updater.py
+
 from data_generation.context.generation_context import (
     BundleContext,
     CampaignAssignmentContext,

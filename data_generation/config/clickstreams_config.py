@@ -180,7 +180,7 @@ SEASONAL_UPLIFT: dict[str, dict[str, Any]] = {
         "extra_events": (0, 1),
         "atc_mult": (1.02, 1.08),
         "checkout_mult": (1.08, 1.12),
-        "conversion_mult": (1.08, 1.02),
+        "conversion_mult": (1.02, 1.08),
     },
     "Weekend": {
         "extra_events": (1, 3),
@@ -450,4 +450,52 @@ EVENT_PAGE_MAPPING = {
     "Payment Attempt": "/payment",
     "Payment Successful": "/payment/success",
     "Payment Failed": "/payment/fail",
+}
+
+
+CART_STATE_PRESERVING_EVENTS = (
+    "Home View",
+    "Category View",
+    "Search View",
+    "Product View",
+    "Cart View",
+    "Checkout Start",
+    "Payment Attempt",
+    "Payment Successful",
+    "Payment Failed",
+)
+
+
+PRODUCT_EVENTS = {
+    "Product View",
+    "Add to Cart",
+    "Remove from Cart",
+}
+
+
+NON_PRODUCT_EVENTS = {
+    "Home View",
+    "Category View",
+    "Search View",
+    "Cart View",
+    "Checkout Start",
+    "Payment Attempt",
+    "Payment Successful",
+    "Payment Failed",
+}
+
+
+CATEGORY_EVENTS = {
+    "Product View",
+    "Add to Cart",
+    "Remove from Cart",
+    "Category View",
+}
+
+
+SCROLL_EVENTS = {
+    "Home View",
+    "Search View",
+    "Category View",
+    "Product View",
 }
