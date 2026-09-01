@@ -1,0 +1,136 @@
+version: 2
+
+models:
+  # --- COMPETITOR PRICE HISTORY ---
+  - name: competitor_price_history
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - competitor
+              - scraped_product_name
+              - update_timestamp
+
+          config:
+            meta:
+              title: Duplicate Competitor Product at the Same Scrape Timestamp
+              category: Business Rule Violations
+              severity: High
+              description: A competitor product must only appear once per competitor and update_timestamp.
+
+    # --- Column Constraints ---
+    columns:
+      - name: competitor
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Competitor
+                  category: Missing Values
+                  severity: High
+                  description: competitor is required.
+
+      - name: product_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                where: "product_id IS NOT NULL"
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: scraped_product_name
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Scraped Product Name
+                  category: Missing Values
+                  severity: Medium
+                  description: scraped_product_name is required.
+
+      - name: scraped_category
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Scraped Category
+                  category: Missing Values
+                  severity: Medium
+                  description: scraped_category is required.
+
+      - name: scraped_price
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Scraped Price
+                  category: Missing Values
+                  severity: High
+                  description: scraped_price is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Scraped Price Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: scraped_price must be more than 0 and less than 100000.
+
+      - name: has_active_promo
+        tests:
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+              config:
+                meta:
+                  title: Invalid Active Promotion Indicator
+                  category: Data Quality
+                  severity: Low
+                  description: has_active_promo must either be TRUE or FALSE.
+
+      - name: update_timestamp
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Update Timestamp
+                  category: Missing Values
+                  severity: High
+                  description: update_timestamp is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: TIMESTAMP
+
+              config:
+                meta:
+                  title: Invalid Update Timestamp Type
+                  category: Date Type
+                  severity: Low
+                  description: update_timestamp must be stored as a TIMESTAMP.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_timestamp()"
+
+              config:
+                meta:
+                  title: Future Update Timestamp
+                  category: Date Issues
+                  severity: Medium
+                  description: update_timestamp must not be in the future.

@@ -1,0 +1,1075 @@
+version: 2
+
+models:
+  # --- CLICKSTREAMS ---
+  - name: clickstreams
+
+    # --- Business Rules ---
+    tests:
+      # --- 0. Cross table validation ---
+      - customer_segment_matches_customer_table:
+          arguments:
+            customer_model: ref('customers')
+
+          config:
+            meta:
+              title: Customer Segment Does Not Match Customer
+              category: Business Rule Violations
+              severity: Medium
+              description: customer_segment must match the customer's assigned customer_segment.
+
+      - device_category_matches_customer_table:
+          arguments:
+            customer_model: ref('customers')
+
+          config:
+            meta:
+              title: Device Category Does Not Match Customer
+              category: Business Rule Violations
+              severity: Medium
+              description: device_category must match the customer's registered device_category.
+
+      - product_information_matches_product_table:
+          arguments:
+            product_model: ref('products')
+
+          config:
+            meta:
+              title: Product Information Does Not Match Product
+              category: Business Rule Violations
+              severity: Medium
+              description: product_name and category must match referenced product_id.
+
+      # --- 1. Campaign Logic ---
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              NOT has_treatment_campaign
+              OR array_length(campaign_ids) > 0
+
+          config:
+            meta:
+              title: Treatment Campaign without Campaign
+              category: Business Rule Violations
+              severity: High
+              description: campaign_ids must be populated when has_treatment_campaign is TRUE.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              COALESCE(array_length(campaign_ids),0)=0
+              OR has_treatment_campaign
+              OR has_control_campaign
+
+          config:
+            meta:
+              title: Campaign IDs Missing Indicator
+              category: Business Rule Violations
+              severity: High
+              description: >
+                When campaign_ids is populated, at least one campaign indicator
+                (has_treatment_campaign or has_control_campaign) must be TRUE.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              NOT (
+                  has_treatment_campaign
+                  AND has_control_campaign
+              )
+
+          config:
+            meta:
+              title: Invalid Campaign Treatment Control Indicator
+              category: Business Rule Violations
+              severity: High
+              description: has_treatment_campaign or has_control_campaign must not be TRUE at the same time.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              NOT has_control_campaign
+              OR COALESCE(array_length(campaign_ids),0)>0
+
+          config:
+            meta:
+              title: Control Campaign without Campaign
+              category: Business Rule Violations
+              severity: High
+              description: campaign_ids must be populated when has_control_campaign is TRUE.
+
+      # --- 2. Promotion & Bundle Logic ---
+      - product_view_product_id_equals_promotion_target_id:
+          arguments:
+            promotion_model: ref('promotions')
+
+          config:
+            meta:
+              title: Promotion Target Does Not Match Product
+              category: Business Rule Violations
+              severity: High
+              description: For product view events, promotion_target_id must be equal to product_id.
+
+      - product_view_category_equals_promotion_target_id:
+          arguments:
+            promotion_model: ref('promotions')
+
+          config:
+            meta:
+              title: Promotion Target Does Not Match Category
+              category: Business Rule Violations
+              severity: High
+              description: For product view events, promotion_target_id must be equal to category.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              COALESCE(array_length(bundle_ids),0)=0
+              OR COALESCE(array_length(promotion_ids),0)>0
+
+          config:
+            meta:
+              title: Bundle Without Promotion
+              category: Business Rule Violations
+              severity: High
+              description: promotion_ids must be populated when bundle_ids is populated.
+
+      - bundle_referenced_must_belong_to_promotion:
+          arguments:
+            promotion_model: ref('promotions')
+
+          config:
+            where: >
+              COALESCE(array_length(bundle_ids),0)>0
+              AND COALESCE(array_length(promotion_ids),0)>0
+            meta:
+              title: Invalid Bundle on Promotion
+              category: Business Rule Violations
+              severity: High
+              description: Every bundle_id referenced must belong to one of the promotion_ids referenced in the same event.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type IN (
+                'Product View',
+                'Add to Cart',
+                'Remove from Cart'
+              )
+              OR COALESCE(array_length(bundle_ids),0)=0
+
+          config:
+            meta:
+              title: Bundle ID on Non Product Event
+              category: Business Rule Violations
+              severity: High
+              description: For non product related events, bundle_ids must be NULL.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type IN (
+                'Product View',
+                'Add to Cart',
+                'Remove from Cart'
+              )
+              OR COALESCE(array_length(promotion_ids),0)=0
+
+          config:
+            meta:
+              title: Promotion ID on Non Product Event
+              category: Business Rule Violations
+              severity: High
+              description: For non product related events, promotion_ids must be NULL.
+
+      # --- 3. Event Content ---
+      - first_event_matches_landing_behaviour:
+          config:
+            meta:
+              title: First Event Does Not Match Landing Behaviour
+              category: Business Rule Violations
+              severity: High
+              description: First event must match the landing behaviour of the session.
+
+      - valid_transition_between_adjacent_events:
+          config:
+            meta:
+              title: Invalid Event Transition
+              category: Business Rule Violations
+              severity: High
+              description: Only valid events must follow after previous events.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type IN (
+                'Home View',
+                'Category View',
+                'Search View',
+                'Product View'
+              )
+              OR event_order != 1
+
+          config:
+            meta:
+              title: Invalid First Event
+              category: Business Rule Violations
+              severity: High
+              description: First event must be a valid event.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type NOT IN (
+                'Product View',
+                'Add to Cart',
+                'Remove from Cart'
+              )
+              OR product_id IS NOT NULL
+
+          config:
+            meta:
+              title: Product Event Missing Product ID
+              category: Business Rule Violations
+              severity: High
+              description: Product related events must have a product_id.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type IN (
+                'Product View',
+                'Add to Cart',
+                'Remove from Cart'
+              )
+              OR product_id IS NULL
+
+          config:
+            meta:
+              title: Non Product Event with Product ID
+              category: Business Rule Violations
+              severity: High
+              description: Non product related events must not have a product_id.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type NOT IN (
+                'Product View',
+                'Add to Cart',
+                'Remove from Cart'
+              )
+              OR product_name IS NOT NULL
+
+          config:
+            meta:
+              title: Product Event Missing Product Name
+              category: Business Rule Violations
+              severity: High
+              description: Product related events must have a product_name.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type IN (
+                'Product View',
+                'Add to Cart',
+                'Remove from Cart'
+              )
+              OR product_name IS NULL
+
+          config:
+            meta:
+              title: Non Product Event with Product Name
+              category: Business Rule Violations
+              severity: High
+              description: Non product related events must not have a product_name.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type NOT IN (
+                'Product View',
+                'Add to Cart',
+                'Remove from Cart',
+                'Category View'
+              )
+              OR category IS NOT NULL
+
+          config:
+            meta:
+              title: Category Event Missing Category
+              category: Business Rule Violations
+              severity: High
+              description: Category related events must have a category.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type IN (
+                'Product View',
+                'Add to Cart',
+                'Remove from Cart',
+                'Category View'
+              )
+              OR category IS NULL
+
+          config:
+            meta:
+              title: Non Category Event with Category
+              category: Business Rule Violations
+              severity: High
+              description: Non category related events must not have a category.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type NOT IN (
+                'Home View',
+                'Search View',
+                'Category View',
+                'Product View'
+              )
+              OR scroll_depth IS NOT NULL
+
+          config:
+            meta:
+              title: Scroll Event Missing Scroll Depth
+              category: Business Rule Violations
+              severity: High
+              description: Scroll related events must have a scroll_depth.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type IN (
+                'Home View',
+                'Search View',
+                'Category View',
+                'Product View'
+              )
+              OR scroll_depth IS NULL
+
+          config:
+            meta:
+              title: Non Scroll Event with Scroll Depth
+              category: Business Rule Violations
+              severity: High
+              description: Non scroll related events must not have a scroll_depth.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Home View'
+              OR STARTS_WITH(page, '/home')
+
+          config:
+            meta:
+              title: Invalid Home View Page
+              category: Business Rule Violations
+              severity: High
+              description: Home view event must be on a home page.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Search View'
+              OR REGEXP_CONTAINS(
+                page,
+                r'^/search\?q=.+'
+              )
+
+          config:
+            meta:
+              title: Search View Missing Search Term
+              category: Business Rule Violations
+              severity: High
+              description: Search view event must have a page in the format /search?q=<search_term>.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Category View'
+              OR STARTS_WITH(page, '/category/')
+
+          config:
+            meta:
+              title: Invalid Category View Page
+              category: Business Rule Violations
+              severity: High
+              description: Category view event must be on a category page.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Product View'
+              OR STARTS_WITH(page, '/product/')
+
+          config:
+            meta:
+              title: Invalid Product View Page
+              category: Business Rule Violations
+              severity: High
+              description: Product view event must be on a product page.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Add to Cart'
+              OR STARTS_WITH(page, '/add_to_cart/')
+
+          config:
+            meta:
+              title: Invalid Add to Cart Page
+              category: Business Rule Violations
+              severity: High
+              description: Add to Cart event must be on an add_to_cart page.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Remove from Cart'
+              OR STARTS_WITH(page, '/remove_from_cart/')
+
+          config:
+            meta:
+              title: Invalid Remove from Cart Page
+              category: Business Rule Violations
+              severity: High
+              description: Remove from Cart event must be on a remove_from_cart page.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Cart View'
+              OR STARTS_WITH(page, '/cart')
+
+          config:
+            meta:
+              title: Invalid Cart View Page
+              category: Business Rule Violations
+              severity: High
+              description: Cart view event must be on a cart page.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Checkout Start'
+              OR STARTS_WITH(page, '/checkout')
+
+          config:
+            meta:
+              title: Invalid Checkout Start Page
+              category: Business Rule Violations
+              severity: High
+              description: Checkout start event must be on a checkout page.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Payment Attempt'
+              OR STARTS_WITH(page, '/payment')
+
+          config:
+            meta:
+              title: Invalid Payment Attempt Page
+              category: Business Rule Violations
+              severity: High
+              description: Payment attempt event must be on a payment page.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Payment Successful'
+              OR STARTS_WITH(page, '/payment/success')
+
+          config:
+            meta:
+              title: Invalid Payment Successful Page
+              category: Business Rule Violations
+              severity: High
+              description: Payment successful event must be on a payment success page.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Payment Failed'
+              OR STARTS_WITH(page, '/payment/fail')
+
+          config:
+            meta:
+              title: Invalid Payment Failed Page
+              category: Business Rule Violations
+              severity: High
+              description: Payment failed event must be on a payment fail page.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type != 'Product View'
+              OR stock_status IS NOT NULL
+
+          config:
+            meta:
+              title: Product View Missing Stock Status
+              category: Business Rule Violations
+              severity: High
+              description: Product view event must have a stock_status.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              event_type = 'Product View'
+              OR stock_status IS NULL
+
+          config:
+            meta:
+              title: Non Product View with Stock Status
+              category: Business Rule Violations
+              severity: High
+              description: Non product view event must not have a stock_status.
+
+      # --- 4. Session Behaviour ---
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - session_id
+              - event_order
+
+          config:
+            meta:
+              title: Duplicate Clickstream Event
+              category: Business Rule Violations
+              severity: High
+              description: A clickstream event must only appear once per session_id and event_order.
+
+      - bounce_sessions_contain_exactly_one_event:
+          config:
+            meta:
+              title: Bounce Session Contains Exactly One Event
+              category: Business Rule Violations
+              severity: High
+              description: There must only be one event in a session when bounce_flag is 1.
+
+      - sequential_event_order:
+          config:
+            meta:
+              title: Non Sequential Session Event Order
+              category: Business Rule Violations
+              severity: High
+              description: Session event must have a sequential event_order starting from 1.
+
+      - sequential_event_timestamp:
+          config:
+            meta:
+              title: Non Chronological Session Event Timestamp
+              category: Business Rule Violations
+              severity: High
+              description: event_timestamp must increase chronologically within a session.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+             event_order = 1
+             OR bounce_flag = 0
+
+          config:
+            meta:
+              title: Bounce Only for First Event
+              category: Business Rule Violations
+              severity: High
+              description: event_order must be 1 when bounce_flag is 1.
+
+      # --- 5. Cart Behaviour ---
+      - add_to_cart_increases_cart_content_by_product:
+          config:
+            meta:
+              title: Add to Cart Does Not Increase Cart Content by Product
+              category: Business Rule Violations
+              severity: High
+              description: Add to Cart event must increase cart_content by the product_id added.
+
+      - remove_from_cart_reduces_cart_content_by_product:
+          config:
+            meta:
+              title: Remove from Cart Does Not Reduce Cart Content by Product
+              category: Business Rule Violations
+              severity: High
+              description: Remove from Cart event must reduce cart_content by the product_id added.
+
+      - payment_successful_reduces_cart_content_by_purchased_items:
+          config:
+            meta:
+              title: Payment Successful Does Not Reduce Cart Content by Purchased Product
+              category: Business Rule Violations
+              severity: High
+              description: Payment successful event must reduce cart_content by purchased Products.
+
+      - payment_failed_preserves_cart:
+          config:
+            meta:
+              title: Payment Failed Does Not Preserve Cart Content
+              category: Business Rule Violations
+              severity: High
+              description: Payment failed event must preserve cart_content.
+
+      - purchased_item_subset_previous_cart_content:
+          config:
+            meta:
+              title: Purchased Items Does Not Exist in Previous Cart Content
+              category: Business Rule Violations
+              severity: High
+              description: products in purchased_items must exist in previous cart_content.
+
+      - cart_content_matches_previous_after_non_cart_events:
+          config:
+            meta:
+              title: Cart Content Does Not Match Previous After Non Cart Events
+              category: Business Rule Violations
+              severity: High
+              description: cart_content must match previous cart_content after non cart events.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              COALESCE(array_length(cart_content),0)=cart_size
+
+          config:
+            meta:
+              title: Cart Size Does Not Reflect Cart Content
+              category: Business Rule Violations
+              severity: High
+              description: cart_size must equal number of products in cart_content.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              (
+                event_type != 'Payment Successful'
+                OR (
+                  purchased_items IS NOT NULL
+                  AND COALESCE(array_length(purchased_items), 0) > 0
+                )
+              )
+
+          config:
+            meta:
+              title: No Purchased Items in Payment Successful
+              category: Business Rule Violations
+              severity: High
+              description: purchased_items must not be empty for payment successful events.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              purchased_items IS NULL
+              OR COALESCE(array_length(purchased_items),0)=0
+              OR event_type != 'Payment Failed'
+
+          config:
+            meta:
+              title: Purchased Items in Payment Failed
+              category: Business Rule Violations
+              severity: High
+              description: purchased_items must be empty for payment failed events.
+
+    # --- Column Constraints ---
+    columns:
+      - name: clickstream_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Clickstream ID
+                  category: Missing Values
+                  severity: High
+                  description: clickstream_id is required.
+
+          - unique:
+              config:
+                meta:
+                  title: Duplicate Clickstream ID
+                  category: Duplicate Records
+                  severity: High
+                  description: clickstream_id must be unique.
+
+      - name: session_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Session ID
+                  category: Missing Values
+                  severity: High
+                  description: session_id is required.
+
+      - name: customer_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Customer ID
+                  category: Missing Values
+                  severity: High
+                  description: customer_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('customers')
+                field: customer_id
+
+              config:
+                meta:
+                  title: Invalid Customer Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: customer_id must exist in the customers table.
+
+      - name: customer_segment
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Customer Segment
+                  category: Missing Values
+                  severity: High
+                  description: customer_segment is required.
+
+          - accepted_values:
+              arguments:
+                values:
+                  [
+                    "New Customers",
+                    "Active Customers",
+                    "Churn Risk Customers",
+                    "High Spenders",
+                    "Budget Shoppers",
+                  ]
+
+              config:
+                meta:
+                  title: Invalid Customer Segment
+                  category: Data Quality
+                  severity: Low
+                  description: customer_segment must be one of the supported values.
+
+      - name: campaign_ids
+        tests: []
+
+      - name: has_treatment_campaign
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Treatment Campaign Indicator
+                  category: Missing Values
+                  severity: Low
+                  description: has_treatment_campaign is required.
+
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+              config:
+                meta:
+                  title: Invalid Treatment Campaign Indicator
+                  category: Data Quality
+                  severity: Low
+                  description: has_treatment_campaign must either be TRUE or FALSE.
+
+      - name: has_control_campaign
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Control Campaign Indicator
+                  category: Missing Values
+                  severity: Low
+                  description: has_control_campaign is required.
+
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+              config:
+                meta:
+                  title: Invalid Control Campaign Indicator
+                  category: Data Quality
+                  severity: Low
+                  description: has_control_campaign must either be TRUE or FALSE.
+
+      - name: device_category
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Device Category
+                  category: Missing Values
+                  severity: Low
+                  description: device_category is required.
+
+          - accepted_values:
+              arguments:
+                values: ["Mobile", "Desktop", "Tablet"]
+
+              config:
+                meta:
+                  title: Invalid Device Category
+                  category: Data Quality
+                  severity: Low
+                  description: device_category must be one of the supported values.
+
+      - name: referrer
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Referrer
+                  category: Missing Values
+                  severity: Medium
+                  description: referrer is required.
+
+          - accepted_values:
+              arguments:
+                values:
+                  ["organic_search", "direct", "social_media", "email", "unknown"]
+
+              config:
+                meta:
+                  title: Invalid Referrer
+                  category: Data Quality
+                  severity: Low
+                  description: referrer must be one of the supported values.
+
+      - name: location
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Location
+                  category: Missing Values
+                  severity: Low
+                  description: location is required.
+
+          - relationships:
+              arguments:
+                to: ref('region_area_mapping')
+                field: area
+
+              config:
+                meta:
+                  title: Invalid Location Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: location must exist in the area_region table.
+
+      - name: event_timestamp
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Event Timestamp
+                  category: Missing Values
+                  severity: High
+                  description: event_timestamp is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: TIMESTAMP
+
+              config:
+                meta:
+                  title: Invalid Event Timestamp Type
+                  category: Date Type
+                  severity: Low
+                  description: event_timestamp must be stored as a TIMESTAMP.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_timestamp()"
+
+              config:
+                meta:
+                  title: Future Event Timestamp
+                  category: Date Issues
+                  severity: Medium
+                  description: event_timestamp must not be in the future.
+
+      - name: event_order
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Event Order
+                  category: Missing Values
+                  severity: High
+                  description: event_order is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Event Order Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: event_order must be between 1 and 100000 inclusive.
+
+      - name: event_type
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Event Type
+                  category: Missing Values
+                  severity: High
+                  description: event_type is required.
+
+          - accepted_values:
+              arguments:
+                values:
+                  - "Home View"
+                  - "Category View"
+                  - "Search View"
+                  - "Product View"
+                  - "Cart View"
+                  - "Add to Cart"
+                  - "Remove from Cart"
+                  - "Checkout Start"
+                  - "Payment Attempt"
+                  - "Payment Successful"
+                  - "Payment Failed"
+
+              config:
+                meta:
+                  title: Invalid Event Type
+                  category: Data Quality
+                  severity: Low
+                  description: event_type must be one of the supported values.
+
+      - name: page
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Page
+                  category: Missing Values
+                  severity: High
+                  description: page is required.
+
+      - name: scroll_depth
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100
+                strictly: false
+
+              config:
+                meta:
+                  title: Scroll Depth Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: scroll_depth must be between 0 and 100 inclusive.
+
+      - name: product_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: product_name
+        tests: []
+
+      - name: category
+        tests: []
+
+      - name: promotion_ids
+        tests: []
+
+      - name: bundle_ids
+        tests: []
+
+      - name: bounce_flag
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Bounce Flag
+                  category: Missing Values
+                  severity: High
+                  description: bounce_flag is required.
+
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [0, 1]
+
+              config:
+                meta:
+                  title: Invalid Bounce Flag
+                  category: Data Quality
+                  severity: Low
+                  description: bounce_flag must be one of the supported values.
+
+      - name: cart_size
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Cart Size
+                  category: Missing Values
+                  severity: High
+                  description: cart_size is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Cart Size Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: cart_size must be between 0 and 100000 inclusive.
+
+      - name: cart_content
+        tests: []
+
+      - name: purchased_items
+        tests: []
+
+      - name: stock_status
+        tests:
+          - accepted_values:
+              arguments:
+                values:
+                  [
+                    "Out of Stock",
+                    "Low Stock",
+                    "Limited Stock",
+                    "In Stock",
+                    "Overstocked",
+                  ]
+
+              config:
+                meta:
+                  title: Invalid Stock Status
+                  category: Data Quality
+                  severity: Low
+                  description: stock_status must be one of the supported values.

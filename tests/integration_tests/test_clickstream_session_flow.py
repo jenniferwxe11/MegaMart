@@ -1,4 +1,5 @@
 import random
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -24,17 +25,19 @@ def test_clickstream_session_flow_get_location_home_area(ctx):
     Integration contract: get_location() must return the customer's
     home area ~80% of the time.
     """
+    random.seed(42)
+
     customer = _build_customer_with_location(ctx)
     customer_id = customer["customer_id"]
     cust_area = customer["area"]
-    hits, trials = 0, 100
+    hits, trials = 0, 1000
     for _ in range(trials):
         result = get_location(ctx, customer_id)
         if result == cust_area:
             hits += 1
     ratio = hits / trials
     assert 0.7 <= ratio <= 0.9, (
-        f"Expected home area probability 0.7-0.9, got {ratio:.2f} "
+        f"Expected home area probability around 80%, got {ratio:.2f} "
         f"for customer {customer_id} in area {cust_area!r}"
     )
 
@@ -260,75 +263,98 @@ def test_clickstream_session_flow_attempt_reactivation_returns_none_or_future_ti
 
 
 def test_clickstream_session_flow_attempt_reactivation_treatment_increases_reactivation_rate(
-    ctx, seed: int = 42, N=1000
+    ctx, seed: int = 42, N: int = 5000
 ):
     """
-    Integration contract: a customer in an active Treatment campaign
-    must reactivate at a higher rate than a non-campaign customer.
+    Integration contract:
+    A treatment campaign should increase the reactivation rate for the
+    same customer under identical conditions.
     """
-    assign_df = ctx.campaign_assignments.campaign_assignments_df
-    campaigns_df = ctx.campaigns.campaigns_df
+
     customers_df = ctx.customers.customers_df
 
-    treatment_rows = assign_df[assign_df["assignment_group"] == "Treatment"]
-    if treatment_rows.empty:
-        pytest.skip("No treatment assignments")
-
-    row = treatment_rows.sample(n=1, random_state=seed).iloc[0]
-
-    customer_id = row["customer_id"]
-    cust = customers_df[customers_df["customer_id"] == customer_id].iloc[0]
-    campaign = campaigns_df[campaigns_df["campaign_id"] == row["campaign_id"]].iloc[0]
-
-    mid_campaign = (
-        campaign["start_date"] + (campaign["end_date"] - campaign["start_date"]) / 2
+    customer = (
+        customers_df[customers_df["customer_type"].isin(["Online Only", "Omnichannel"])]
+        .sample(n=1, random_state=seed)
+        .iloc[0]
     )
-    last_active = mid_campaign - pd.Timedelta(days=25)
 
-    reactivations_treatment = sum(
-        1
-        for _ in range(N)
-        if attempt_reactivation(
+    customer_id = customer["customer_id"]
+
+    current_time = pd.Timestamp("2025-07-15")
+    last_active = current_time - pd.Timedelta(days=25)
+
+    treatment_campaign = pd.DataFrame(
+        {
+            "assignment_group": ["Treatment"],
+            "start_date": [current_time - pd.Timedelta(days=5)],
+            "end_date": [current_time + pd.Timedelta(days=10)],
+        }
+    )
+
+    with patch(
+        "data_generation.services.clickstreams.clickstream_session_service.get_active_campaigns",
+        return_value=None,
+    ) as mock_lookup:
+
+        attempt_reactivation(
             ctx,
             activity_multiplier=3,
             customer_id=customer_id,
-            current_time=mid_campaign,
+            current_time=current_time,
             last_active_time=last_active,
-            customer_segment=cust["customer_segment"],
+            customer_segment=customer["customer_segment"],
             cart_content=[],
         )
-        is not None
-    )
 
-    # Non campaign customer: use a customer_id not in any campaign
-    all_campaign_ids = set(assign_df["customer_id"])
-    non_campaign_customers = customers_df[
-        customers_df["customer_type"].isin(["Online Only", "Omnichannel"])
-        & ~customers_df["customer_id"].isin(all_campaign_ids)
-    ]
-    if non_campaign_customers.empty:
-        pytest.skip("All digital customers have campaign assignments")
+        assert mock_lookup.called
 
-    nc_cust = non_campaign_customers.sample(n=1, random_state=seed).iloc[0]
+    #
+    # Baseline (no campaign)
+    #
 
-    reactivations_no_campaign = sum(
-        1
-        for _ in range(N)
-        if attempt_reactivation(
-            ctx,
-            activity_multiplier=3,
-            customer_id=nc_cust["customer_id"],
-            current_time=mid_campaign,
-            last_active_time=last_active,
-            customer_segment=nc_cust["customer_segment"],
-            cart_content=[],
+    with patch(
+        "data_generation.services.clickstreams.clickstream_session_service.get_active_campaigns",
+        return_value=None,
+    ):
+        baseline = sum(
+            attempt_reactivation(
+                ctx,
+                activity_multiplier=3,
+                customer_id=customer_id,
+                current_time=current_time,
+                last_active_time=last_active,
+                customer_segment=customer["customer_segment"],
+                cart_content=[],
+            )
+            is not None
+            for _ in range(N)
         )
-        is not None
-    )
 
-    assert reactivations_treatment >= reactivations_no_campaign, (
-        f"Treatment reactivations ({reactivations_treatment}) should be >= "
-        f"no-campaign reactivations ({reactivations_no_campaign})"
+    #
+    # Treatment campaign
+    #
+    with patch(
+        "data_generation.services.clickstreams.clickstream_session_service.get_active_campaigns",
+        return_value=treatment_campaign,
+    ):
+        treatment = sum(
+            attempt_reactivation(
+                ctx,
+                activity_multiplier=3,
+                customer_id=customer_id,
+                current_time=current_time,
+                last_active_time=last_active,
+                customer_segment=customer["customer_segment"],
+                cart_content=[],
+            )
+            is not None
+            for _ in range(N)
+        )
+
+    assert treatment > baseline, (
+        f"Treatment reactivations ({treatment}) should be greater than "
+        f"baseline ({baseline})"
     )
 
 

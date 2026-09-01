@@ -1,0 +1,99 @@
+version: 2
+
+models:
+  # --- BUNDLES ---
+  - name: bundles
+
+    # --- Business Rules ---
+    tests:
+      - no_duplicate_category_inside_categories:
+          config:
+            where: 'categories IS NOT NULL'
+            meta:
+              title: Duplicate Category inside Categories
+              category: Business Rule Violations
+              severity: Medium
+              description: categories must not have duplicated category.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "array_length(categories) > 0"
+
+          config:
+            meta:
+              title: Empty Categories
+              category: Missing Values
+              severity: High
+              description: Each bundle must contain at least one category.
+
+    # --- Column Constraints ---
+    columns:
+      - name: bundle_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Bundle ID
+                  category: Missing Values
+                  severity: High
+                  description: bundle_id is required.
+
+          - unique:
+              config:
+                meta:
+                  title: Duplicate Bundle ID
+                  category: Duplicate Records
+                  severity: High
+                  description: bundle_id must be unique.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^BUNDLE[0-9]{3,}$"
+
+              config:
+                meta:
+                  title: Invalid Bundle ID Format
+                  category: Formatting
+                  severity: High
+                  description: bundle_id must follow the expected format.
+
+      - name: bundle_name
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Bundle Name
+                  category: Missing Values
+                  severity: Low
+                  description: bundle_name is required.
+
+      - name: bundle_type
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Bundle Type
+                  category: Missing Values
+                  severity: High
+                  description: bundle_type is required.
+
+          - accepted_values:
+              arguments:
+                values: ["Buy One, Get One", "Set", "2 For X", "Buy N Save X"]
+
+              config:
+                meta:
+                  title: Invalid Bundle Type
+                  category: Data Quality
+                  severity: High
+                  description: bundle_type must be one of the supported values.
+
+      - name: categories
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Empty Categories
+                  category: Business Rule Violations
+                  severity: High
+                  description: Each bundle must contain at least one category.

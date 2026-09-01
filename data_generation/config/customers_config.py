@@ -14,6 +14,19 @@ SEASONAL_PEAK_MONTHS = {
 }
 
 
+MEMBER_CUSTOMERS = (
+    "Retail Members",
+    "Online Only",
+    "Omnichannel",
+)
+
+
+DIGITAL_CUSTOMERS = (
+    "Online Only",
+    "Omnichannel",
+)
+
+
 TARGET_SEGMENT = {
     "New Customers": 0.2,
     "Active Customers": 0.5,

@@ -1,0 +1,291 @@
+version: 2
+
+models:
+  # --- CAMPAIGNS ---
+  - name: campaigns
+
+    # --- Business Rules ---
+    tests:
+      - no_duplicate_channel_inside_channels:
+          config:
+            where: 'channels IS NOT NULL'
+            meta:
+              title: Duplicate Channel inside Channels
+              category: Business Rule Violations
+              severity: Medium
+              description: channels should not have duplicated channel.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "start_date <= end_date"
+
+          config:
+            meta:
+              title: Invalid Campaign Period
+              category: Business Rule Violations
+              severity: High
+              description: end_date must occur on or after start_date.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              starts_with(campaign_name, 'MegaMart')
+
+          config:
+            meta:
+              title: Invalid Campaign Name
+              category: Business Rule Violations
+              severity: Medium
+              description: campaign_name must start with 'MegaMart'.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              (campaign_type = 'Seasonal' AND season IS NOT NULL)
+              OR
+              (campaign_type != 'Seasonal' AND season IS NULL)
+
+          config:
+            meta:
+              title: Season and Campaign Type Consistency
+              category: Business Rule Violations
+              severity: High
+              description: >
+                season must be populated for seasonal campaign and
+                NULL for all other campaign types.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              array_length(channels) > 0
+
+          config:
+            meta:
+              title: Campaign without Marketing Channels
+              category: Business Rule Violations
+              severity: Medium
+              description: Campaign must contain at least one marketing channel.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              status != 'Completed'
+              OR end_date <= current_date()
+
+          config:
+            meta:
+              title: Completed Record with Future End Date
+              category: Business Rule Violations
+              severity: High
+              description: Completed campaigns must not have an end_date in the future.
+
+    # --- Column Constraints ---
+    columns:
+      - name: campaign_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Campaign ID
+                  category: Missing Values
+                  severity: High
+                  description: campaign_id is required.
+
+          - unique:
+              config:
+                meta:
+                  title: Duplicate Campaign ID
+                  category: Duplicate Records
+                  severity: High
+                  description: campaign_id must be unique.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^CAMP[0-9]{3,}$"
+
+              config:
+                meta:
+                  title: Invalid Campaign ID Format
+                  category: Formatting
+                  severity: High
+                  description: campaign_id must follow the expected format.
+
+      - name: campaign_name
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Campaign Name
+                  category: Missing Values
+                  severity: High
+                  description: campaign_name is required.
+
+      - name: campaign_type
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Campaign Type
+                  category: Missing Values
+                  severity: High
+                  description: campaign_type is required.
+
+          - accepted_values:
+              arguments:
+                values: ["Acquisition", "Retention", "Clearance", "Seasonal"]
+
+              config:
+                meta:
+                  title: Invalid Campaign Type
+                  category: Data Quality
+                  severity: Low
+                  description: campaign_type must be one of the supported values.
+
+      - name: target_segment
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Target Segment
+                  category: Missing Values
+                  severity: High
+                  description: target_segment is required.
+
+          - accepted_values:
+              arguments:
+                values:
+                  [
+                    "New Customers",
+                    "Active Customers",
+                    "Churn Risk Customers",
+                    "High Spenders",
+                    "Budget Shoppers",
+                  ]
+
+              config:
+                meta:
+                  title: Invalid Target Segment
+                  category: Data Quality
+                  severity: Low
+                  description: target_segment must be one of the supported values.
+
+      - name: season
+        tests: []
+
+      - name: channels
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Channels
+                  category: Missing Values
+                  severity: High
+                  description: channels is required.
+
+      - name: start_date
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Start Date
+                  category: Missing Values
+                  severity: High
+                  description: start_date is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Start Date Type
+                  category: Date Type
+                  severity: Low
+                  description: start_date must be stored as a DATE.
+
+      - name: end_date
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing End Date
+                  category: Missing Values
+                  severity: High
+                  description: end_date is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid End Date Type
+                  category: Date Type
+                  severity: Low
+                  description: end_date must be stored as a DATE.
+
+      - name: budget
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Budget
+                  category: Missing Values
+                  severity: High
+                  description: budget is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 10000000
+                strictly: true
+
+              config:
+                meta:
+                  title: Budget Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: budget must be more than 0 and less than 10000000.
+
+      - name: is_ab_test
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing A/B Test Indicator
+                  category: Missing Values
+                  severity: High
+                  description: is_ab_test is required.
+
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+              config:
+                meta:
+                  title: Invalid Is A/B Test Indicator
+                  category: Data Quality
+                  severity: Low
+                  description: is_ab_test must either be TRUE or FALSE.
+
+      - name: status
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Status
+                  category: Missing Values
+                  severity: High
+                  description: status is required.
+
+          - accepted_values:
+              arguments:
+                values: ["Planned", "Active", "Completed", "Cancelled"]
+
+              config:
+                meta:
+                  title: Invalid Status
+                  category: Data Quality
+                  severity: Low
+                  description: status must be one of the supported values.

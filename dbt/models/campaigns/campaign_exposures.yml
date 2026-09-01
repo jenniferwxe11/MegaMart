@@ -1,0 +1,522 @@
+version: 2
+
+models:
+  # --- CAMPAIGN EXPOSURES ---
+  - name: campaign_exposures
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - customer_id
+              - campaign_id
+              - channel
+
+          config:
+            meta:
+              title: Duplicate Campaign Exposure
+              category: Business Rule Violations
+              severity: High
+              description: A campaign exposure must only appear once per campaign, customer, and channel.
+
+      - customer_campaign_pair_exist_in_campaign_assignments:
+          arguments:
+            campaign_assignment_model: ref('campaign_assignments')
+
+          config:
+            meta:
+              title: Customer Campaign Pair Does Not Exist in Campaign Assignments
+              category: Business Rule Violations
+              severity: Medium
+              description: customer_id, campaign_id pair must exist in the campaign_assignments table.
+
+      - channel_matches_campaign_channels:
+          arguments:
+            campaign_model: ref('campaigns')
+
+          config:
+            meta:
+              title: Channel Does Not Match Campaign Channels
+              category: Business Rule Violations
+              severity: Medium
+              description: channel must be one of the channels configured for the campaign.
+
+      - device_platform_equals_customer_device_platform:
+          arguments:
+            customer_model: ref('customers')
+
+          config:
+            meta:
+              title: Device Platform Does Not Equal Customer Device Platform
+              category: Business Rule Violations
+              severity: Medium
+              description: device_platform must equal the customer's device_platform.
+
+      - control_group_exposure_rule:
+          config:
+            meta:
+              title: Invalid Control Group Exposure
+              category: Business Rule Violations
+              severity: Medium
+              description: Control group must follow exposure rule set.
+
+      - assignment_group_equals_campaign_assignment_group:
+          arguments:
+            campaign_assignment_model: ref('campaign_assignments')
+
+          config:
+            meta:
+              title: Assignment Group Does Not Equal Campaign Assignment Group
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                assignment_group must equal the corresponding assignment_group
+                in the campaign_assignments table.
+
+      - cost_per_msg_matches_channel_cost:
+          config:
+            meta:
+              title: Invalid Cost Per Message
+              category: Business Rule Violations
+              severity: High
+              description: >
+                cost_per_msg must equal the configured cost for the
+                campaign channel when exposed is TRUE, and must be
+                0 when exposed is FALSE.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              exposed_time IS NOT NULL
+              OR COALESCE(exposed, FALSE) IS FALSE
+
+          config:
+            meta:
+              title: Exposed Indicator without Exposed Time
+              category: Business Rule Violations
+              severity: Medium
+              description: exposed_time must not be NULL when exposed is TRUE.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              exposed_time IS NULL
+              OR COALESCE(exposed, TRUE) IS TRUE
+
+          config:
+            meta:
+              title: Exposed Time without Exposure Indicator
+              category: Business Rule Violations
+              severity: Medium
+              description: exposed_time must be NULL when exposed is FALSE.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              COALESCE(opened, FALSE) IS FALSE
+              OR COALESCE(exposed, TRUE) IS TRUE
+
+          config:
+            meta:
+              title: Opened without Exposure
+              category: Business Rule Violations
+              severity: Medium
+              description: opened can only be TRUE when exposed is TRUE.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              COALESCE(clicked, FALSE) IS FALSE
+              OR COALESCE(opened, TRUE) IS TRUE
+              OR channel IN ('Paid Advertisements', 'In-App')
+
+          config:
+            meta:
+              title: Clicked without Open
+              category: Business Rule Violations
+              severity: High
+              description: >
+                For direct messaging channels (Email, SMS, and Push Notifications),
+                clicked can only be TRUE when opened is TRUE.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              channel NOT IN ('Paid Advertisements', 'In-App')
+              OR COALESCE(opened, FALSE) IS FALSE
+
+          config:
+            meta:
+              title: Opened Event on Exposure Only Channel
+              category: Business Rule Violations
+              severity: High
+              description: >
+                Exposure only channels (Paid Advertisements and In-App)
+                must not record opened events.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              opened_time IS NOT NULL
+              OR COALESCE(opened, FALSE) IS FALSE
+
+          config:
+            meta:
+              title: Opened Indicator without Opened Time
+              category: Business Rule Violations
+              severity: Medium
+              description: opened must be FALSE when opened_time is NULL.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              opened_time IS NULL
+              OR opened_time >= exposed_time
+
+          config:
+            meta:
+              title: Opened Time before Exposed Time
+              category: Business Rule Violations
+              severity: High
+              description: opened_time must occur on or after exposed_time.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              clicked_time IS NOT NULL
+              OR COALESCE(clicked, FALSE) IS FALSE
+
+          config:
+            meta:
+              title: Clicked Indicator without Clicked Time
+              category: Business Rule Violations
+              severity: Medium
+              description: clicked must be FALSE when clicked_time is NULL.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              clicked_time IS NULL
+              OR clicked_time >= opened_time
+
+          config:
+            meta:
+              title: Clicked Time before Opened Time
+              category: Business Rule Violations
+              severity: High
+              description: clicked_time must occur on or after opened_time.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              clicked_time IS NULL
+              OR clicked_time >= exposed_time
+              OR channel IN ('Paid Advertisements', 'In-App')
+
+          config:
+            meta:
+              title: Clicked Time before Exposed Time
+              category: Business Rule Violations
+              severity: High
+              description: >
+                For direct messaging channels (Email, SMS, and Push Notifications),
+                clicked_time must occur on or after exposed_time.
+
+    # --- Column Constraints ---
+    columns:
+      - name: customer_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Customer ID
+                  category: Missing Values
+                  severity: High
+                  description: customer_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('customers')
+                field: customer_id
+
+              config:
+                meta:
+                  title: Invalid Customer Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: customer_id must exist in the customers table.
+
+      - name: campaign_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Campaign ID
+                  category: Missing Values
+                  severity: High
+                  description: campaign_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('campaigns')
+                field: campaign_id
+
+              config:
+                meta:
+                  title: Invalid Campaign Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: campaign_id must exist in the campaigns table.
+
+      - name: channel
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Channel
+                  category: Missing Values
+                  severity: High
+                  description: channel is required.
+
+          - accepted_values:
+              arguments:
+                values:
+                  [
+                    "Paid Advertisements",
+                    "Email",
+                    "SMS",
+                    "Push Notifications",
+                    "In-App",
+                  ]
+
+              config:
+                meta:
+                  title: Invalid Channel
+                  category: Data Quality
+                  severity: Low
+                  description: channel must be one of the supported values.
+
+      - name: assignment_group
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Assignment Group
+                  category: Missing Values
+                  severity: High
+                  description: assignment_group is required.
+
+          - accepted_values:
+              arguments:
+                values: ["Treatment", "Control"]
+
+              config:
+                meta:
+                  title: Invalid Assignment Group
+                  category: Data Quality
+                  severity: Low
+                  description: assignment_group must be one of the supported values.
+
+      - name: eligible
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Eligible
+                  category: Missing Values
+                  severity: High
+                  description: eligible is required.
+
+          - dbt_utils.expression_is_true:
+                arguments:
+                  expression: "= TRUE"
+
+                config:
+                  meta:
+                    title: Invalid Eligible Indicator
+                    category: Business Rule Violations
+                    severity: Medium
+                    description: eligible must always be TRUE.
+
+      - name: exposed
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Exposed
+                  category: Missing Values
+                  severity: High
+                  description: exposed is required.
+
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+              config:
+                meta:
+                  title: Invalid Exposed Indicator
+                  category: Data Quality
+                  severity: Low
+                  description: exposed must either be TRUE or FALSE.
+
+      - name: exposed_time
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: TIMESTAMP
+
+              config:
+                meta:
+                  title: Invalid Exposed Time Type
+                  category: Date Type
+                  severity: Low
+                  description: exposed_time must be stored as a TIMESTAMP.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_timestamp()"
+
+              config:
+                meta:
+                  title: Future Exposed Time
+                  category: Date Issues
+                  severity: Medium
+                  description: exposed_time must not be in the future.
+
+      - name: opened
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Opened
+                  category: Missing Values
+                  severity: High
+                  description: opened is required.
+
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+              config:
+                meta:
+                  title: Invalid Opened Indicator
+                  category: Data Quality
+                  severity: Low
+                  description: opened must either be TRUE or FALSE.
+
+      - name: opened_time
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: TIMESTAMP
+
+              config:
+                meta:
+                  title: Invalid Opened Time Type
+                  category: Date Type
+                  severity: Low
+                  description: opened_time must be stored as a TIMESTAMP.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_timestamp()"
+
+              config:
+                meta:
+                  title: Future Opened Time
+                  category: Date Issues
+                  severity: Medium
+                  description: opened_time must not be in the future.
+
+      - name: clicked
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Clicked
+                  category: Missing Values
+                  severity: High
+                  description: clicked is required.
+
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+              config:
+                meta:
+                  title: Invalid Clicked Indicator
+                  category: Data Quality
+                  severity: Low
+                  description: clicked must either be TRUE or FALSE.
+
+      - name: clicked_time
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: TIMESTAMP
+
+              config:
+                meta:
+                  title: Invalid Clicked Time Type
+                  category: Date Type
+                  severity: Low
+                  description: clicked_time must be stored as a TIMESTAMP.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_timestamp()"
+
+              config:
+                meta:
+                  title: Future Clicked Time
+                  category: Date Issues
+                  severity: Medium
+                  description: clicked_time must not be in the future.
+
+      - name: device_platform
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Device Platform
+                  category: Missing Values
+                  severity: High
+                  description: device_platform is required.
+
+          - accepted_values:
+              arguments:
+                values: ["iOS", "Android", "Web"]
+
+              config:
+                meta:
+                  title: Invalid Device Platform
+                  category: Data Quality
+                  severity: Low
+                  description: device_platform must be one of the supported values.
+
+      - name: cost_per_msg
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Cost Per Message
+                  category: Missing Values
+                  severity: High
+                  description: cost_per_msg is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Cost Per Message Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: cost_per_msg must be more than 0 and less than 100000.

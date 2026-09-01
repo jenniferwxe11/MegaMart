@@ -180,7 +180,7 @@ SEASONAL_UPLIFT: dict[str, dict[str, Any]] = {
         "extra_events": (0, 1),
         "atc_mult": (1.02, 1.08),
         "checkout_mult": (1.08, 1.12),
-        "conversion_mult": (1.08, 1.02),
+        "conversion_mult": (1.02, 1.08),
     },
     "Weekend": {
         "extra_events": (1, 3),
@@ -396,22 +396,25 @@ VALID_EVENT_TRANSITIONS: dict[str, dict[str, float]] = {
         "Cart View": 0.1,
     },
     "Add to Cart": {
-        "Cart View": 0.4,
-        "Product View": 0.3,
+        "Cart View": 0.35,
+        "Product View": 0.25,
         "Category View": 0.2,
         "Home View": 0.1,
+        "Search View": 0.1,
     },
     "Cart View": {
         "Checkout Start": 0.35,
-        "Product View": 0.25,
+        "Product View": 0.2,
         "Remove from Cart": 0.15,
-        "Home View": 0.15,
+        "Home View": 0.1,
         "Category View": 0.1,
+        "Search View": 0.1,
     },
     "Remove from Cart": {
-        "Cart View": 0.5,
-        "Product View": 0.3,
+        "Cart View": 0.45,
+        "Product View": 0.25,
         "Home View": 0.2,
+        "Category View": 0.1,
     },
     "Checkout Start": {
         "Payment Attempt": 0.7,
@@ -422,7 +425,11 @@ VALID_EVENT_TRANSITIONS: dict[str, dict[str, float]] = {
         "Payment Successful": 0.9,
         "Payment Failed": 0.1,
     },
-    "Payment Successful": {"Home View": 0.6, "Category View": 0.4},
+    "Payment Successful": {
+        "Home View": 0.45,
+        "Category View": 0.3,
+        "Product View": 0.25,
+    },
     "Payment Failed": {
         "Payment Attempt": 0.5,
         "Cart View": 0.3,
@@ -443,4 +450,52 @@ EVENT_PAGE_MAPPING = {
     "Payment Attempt": "/payment",
     "Payment Successful": "/payment/success",
     "Payment Failed": "/payment/fail",
+}
+
+
+CART_STATE_PRESERVING_EVENTS = (
+    "Home View",
+    "Category View",
+    "Search View",
+    "Product View",
+    "Cart View",
+    "Checkout Start",
+    "Payment Attempt",
+    "Payment Successful",
+    "Payment Failed",
+)
+
+
+PRODUCT_EVENTS = {
+    "Product View",
+    "Add to Cart",
+    "Remove from Cart",
+}
+
+
+NON_PRODUCT_EVENTS = {
+    "Home View",
+    "Category View",
+    "Search View",
+    "Cart View",
+    "Checkout Start",
+    "Payment Attempt",
+    "Payment Successful",
+    "Payment Failed",
+}
+
+
+CATEGORY_EVENTS = {
+    "Product View",
+    "Add to Cart",
+    "Remove from Cart",
+    "Category View",
+}
+
+
+SCROLL_EVENTS = {
+    "Home View",
+    "Search View",
+    "Category View",
+    "Product View",
 }

@@ -1,0 +1,250 @@
+version: 2
+
+models:
+  # --- TRANSACTION ITEMS ---
+  - name: transaction_items
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - transaction_id
+              - product_id
+
+          config:
+            meta:
+              title: Duplicate Product in Transaction
+              category: Business Rule Violations
+              severity: High
+              description: A product must only appear once per transaction, regardless of quantity.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "ABS(item_subtotal - (unit_price * quantity)) < 0.01"
+
+          config:
+            meta:
+              title: Item Subtotal Calculation Failed
+              category: Business Rule Violations
+              severity: High
+              description: item_subtotal must equal unit_price * quantity within a rounding tolerance of 0.01.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "item_discount <= item_subtotal"
+
+          config:
+            meta:
+              title: Item Discount Exceeds Item Subtotal
+              category: Business Rule Violations
+              severity: High
+              description: item_discount must be less than or equal to item_subtotal.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              ABS(
+                final_item_price -
+                (item_subtotal - item_discount)
+              ) < 0.01
+
+          config:
+            meta:
+              title: Final Item Price Reconciliation Failed
+              category: Business Rule Violations
+              severity: High
+              description: final_item_price does not reconcile with item_subtotal and item_discount.
+
+      - transaction_item_product_name_matches_products:
+          arguments:
+            product_model: ref('products')
+
+          config:
+            meta:
+              title: Product Information Does Not Match Products Table
+              category: Business Rule Violations
+              severity: High
+              description: >
+                product_name and category must match product_name and category in the products table for the given product_id.
+
+    # --- Column Constraints ---
+    columns:
+      - name: transaction_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Transaction ID
+                  category: Missing Values
+                  severity: High
+                  description: transaction_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('transactions')
+                field: transaction_id
+
+              config:
+                meta:
+                  title: Invalid Transaction Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: transaction_id must exist in the transactions table.
+
+      - name: product_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product ID
+                  category: Missing Values
+                  severity: High
+                  description: product_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: product_name
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product Name
+                  category: Missing Values
+                  severity: High
+                  description: product_name is required.
+
+      - name: category
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Category
+                  category: Missing Values
+                  severity: High
+                  description: category is required.
+
+      - name: quantity
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Quantity
+                  category: Missing Values
+                  severity: High
+                  description: quantity is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Quantity Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: quantity must be between 1 and 100000 inclusive.
+
+      - name: unit_price
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Unit Price
+                  category: Missing Values
+                  severity: High
+                  description: unit_price is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Unit Price Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: unit_price must be more than 0 and less than 100000.
+
+      - name: item_subtotal
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Item Subtotal
+                  category: Missing Values
+                  severity: High
+                  description: item_subtotal is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Item Subtotal Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: item_subtotal must be more than 0 and less than 100000.
+
+      - name: item_discount
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Item Discount
+                  category: Missing Values
+                  severity: High
+                  description: item_discount is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Item Discount Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: item_discount must be between 0 and 100000 inclusive.
+
+      - name: final_item_price
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Final Item Price
+                  category: Missing Values
+                  severity: High
+                  description: final_item_price is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Final Item Price Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: final_item_price must be more than 0 and less than 100000.

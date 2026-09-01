@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  # --- CLICKSTREAM CAMPAIGNS ---
+  - name: clickstream_campaigns
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - clickstream_id
+              - campaign_id
+
+          config:
+            meta:
+              title: Duplicate Clickstream Campaign
+              category: Business Rule Violations
+              severity: High
+              description: A campaign_id must only appear once per clickstream event.
+
+    # --- Column Constraints ---
+    columns:
+      - name: clickstream_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Clickstream ID
+                  category: Missing Values
+                  severity: High
+                  description: clickstream_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('clickstreams')
+                field: clickstream_id
+
+              config:
+                meta:
+                  title: Invalid Clickstream Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: clickstream_id must exist in the clickstreams table.
+
+
+      - name: campaign_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Campaign ID
+                  category: Missing Values
+                  severity: High
+                  description: campaign_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('campaigns')
+                field: campaign_id
+
+              config:
+                meta:
+                  title: Invalid Campaign Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: campaign_id must exist in the campaigns table.

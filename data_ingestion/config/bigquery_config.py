@@ -1,3 +1,5 @@
+# data_ingestion/config/bigquery_config.py
+
 """
 BigQuery configuration.
 
@@ -13,6 +15,7 @@ Defaults are intended for local development.
 """
 
 import os
+from pathlib import Path
 
 from data_ingestion.config.schemas import (
     BUNDLE_ITEMS_SCHEMA,
@@ -44,98 +47,102 @@ PROJECT_ID = os.getenv(
     "mega-mart-storage",
 )
 
-RAW_DATASET = os.getenv(
-    "BIGQUERY_DATASET",
-    "raw_dev",
-)
+BIGQUERY_DATASET = "synthetic_dirty"
+BIGQUERY_LOCATION = "asia-southeast1"
+BASE_DIR = Path(__file__).resolve().parents[2]
+
 
 TABLES = {
     "customers": {
-        "csv": "dirty_data_generation/dirty_data/customers_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/customers_dirty.csv",
         "schema": CUSTOMERS_SCHEMA,
     },
     "stores": {
-        "csv": "data_generation/raw_data/stores_raw.csv",
+        "csv": BASE_DIR / "data_generation/raw_data/stores_raw.csv",
         "schema": STORES_SCHEMA,
     },
     "products": {
-        "csv": "dirty_data_generation/dirty_data/products_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/products_dirty.csv",
         "schema": PRODUCTS_SCHEMA,
     },
     "store_catalogues": {
-        "csv": "dirty_data_generation/dirty_data/store_catalogues_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/store_catalogues_dirty.csv",
         "schema": STORE_CATALOGUES_SCHEMA,
     },
     "product_lifecycles": {
-        "csv": "data_generation/raw_data/product_lifecycles_raw.csv",
+        "csv": BASE_DIR / "data_generation/raw_data/product_lifecycles_raw.csv",
         "schema": PRODUCT_LIFECYCLES_SCHEMA,
     },
     "product_content_quality": {
-        "csv": "dirty_data_generation/dirty_data/product_content_quality_dirty.csv",
+        "csv": BASE_DIR
+        / "dirty_data_generation/dirty_data/product_content_quality_dirty.csv",
         "schema": PRODUCT_CONTENT_QUALITY_SCHEMA,
     },
     "stockout_events": {
-        "csv": "data_generation/raw_data/stockout_events_raw.csv",
+        "csv": BASE_DIR / "data_generation/raw_data/stockout_events_raw.csv",
         "schema": STOCKOUT_EVENTS_SCHEMA,
     },
     "stock_snapshots": {
-        "csv": "dirty_data_generation/dirty_data/stock_snapshots_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/stock_snapshots_dirty.csv",
         "schema": STOCK_SNAPSHOTS_SCHEMA,
     },
     "inventory_change_events": {
-        "csv": "data_generation/raw_data/inventory_change_events_raw.csv",
+        "csv": BASE_DIR / "data_generation/raw_data/inventory_change_events_raw.csv",
         "schema": INVENTORY_CHANGE_EVENTS_SCHEMA,
     },
     "competitor_products": {
-        "csv": "data_generation/raw_data/competitor_products_raw.csv",
+        "csv": BASE_DIR / "data_generation/raw_data/competitor_products_raw.csv",
         "schema": COMPETITOR_PRODUCTS_SCHEMA,
     },
     "competitor_price_history": {
-        "csv": "dirty_data_generation/dirty_data/competitor_price_history_dirty.csv",
+        "csv": BASE_DIR
+        / "dirty_data_generation/dirty_data/competitor_price_history_dirty.csv",
         "schema": COMPETITOR_PRICE_HISTORY_SCHEMA,
     },
     "campaigns": {
-        "csv": "dirty_data_generation/dirty_data/campaigns_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/campaigns_dirty.csv",
         "schema": CAMPAIGNS_SCHEMA,
     },
     "campaign_assignments": {
-        "csv": "data_generation/raw_data/campaign_assignments_raw.csv",
+        "csv": BASE_DIR / "data_generation/raw_data/campaign_assignments_raw.csv",
         "schema": CAMPAIGN_ASSIGNMENTS_SCHEMA,
     },
     "campaign_exposures": {
-        "csv": "dirty_data_generation/dirty_data/campaign_exposures_dirty.csv",
+        "csv": BASE_DIR
+        / "dirty_data_generation/dirty_data/campaign_exposures_dirty.csv",
         "schema": CAMPAIGN_EXPOSURES_SCHEMA,
     },
     "bundles": {
-        "csv": "dirty_data_generation/dirty_data/bundles_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/bundles_dirty.csv",
         "schema": BUNDLES_SCHEMA,
     },
     "bundle_items": {
-        "csv": "data_generation/raw_data/bundle_items_raw.csv",
+        "csv": BASE_DIR / "data_generation/raw_data/bundle_items_raw.csv",
         "schema": BUNDLE_ITEMS_SCHEMA,
     },
     "bundle_pricings": {
-        "csv": "dirty_data_generation/dirty_data/bundle_pricings_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/bundle_pricings_dirty.csv",
         "schema": BUNDLE_PRICINGS_SCHEMA,
     },
     "promotions": {
-        "csv": "dirty_data_generation/dirty_data/promotions_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/promotions_dirty.csv",
         "schema": PROMOTIONS_SCHEMA,
     },
     "clickstreams": {
-        "csv": "dirty_data_generation/dirty_data/clickstreams_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/clickstreams_dirty.csv",
         "schema": CLICKSTREAM_SCHEMA,
     },
     "transactions": {
-        "csv": "dirty_data_generation/dirty_data/transactions_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/transactions_dirty.csv",
         "schema": TRANSACTIONS_SCHEMA,
     },
     "transaction_items": {
-        "csv": "dirty_data_generation/dirty_data/transaction_items_dirty.csv",
+        "csv": BASE_DIR
+        / "dirty_data_generation/dirty_data/transaction_items_dirty.csv",
         "schema": TRANSACTION_ITEMS_SCHEMA,
     },
     "product_reviews": {
-        "csv": "dirty_data_generation/dirty_data/product_reviews_dirty.csv",
+        "csv": BASE_DIR / "dirty_data_generation/dirty_data/product_reviews_dirty.csv",
         "schema": PRODUCT_REVIEWS_SCHEMA,
     },
 }

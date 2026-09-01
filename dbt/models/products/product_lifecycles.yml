@@ -1,0 +1,233 @@
+version: 2
+
+models:
+  # --- PRODUCT LIFECYCLE ---
+  - name: product_lifecycles
+
+    # --- Business Rules ---
+    tests:
+      - single_current_product_lifecycle_version:
+          config:
+            meta:
+              title: Multiple Current Versions
+              category: Business Rule Violations
+              severity: High
+              description: Every product must have only one current lifecycle version.
+
+      - non_overlapping_product_lifecycle_versions:
+          config:
+            meta:
+              title: Overlapping Validity Periods
+              category: Business Rule Violations
+              severity: High
+              description: Lifecycle versions for a product must not overlap.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              discontinuation_date IS NULL
+              OR discontinuation_date >= launch_date
+
+          config:
+            meta:
+              title: Discontinuation Date before Launch Date
+              category: Business Rule Violations
+              severity: High
+              description: discontinuation_date must occur on or after launch_date.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              discontinuation_date IS NOT NULL
+              OR status != 'Discontinued'
+
+          config:
+            meta:
+              title: Missing Discontinuation Date
+              category: Missing Values
+              severity: High
+              description: discontinuation_date must be populated when status is 'Discontinued'.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "valid_from >= launch_date"
+
+          config:
+            meta:
+              title: Valid From before Launch Date
+              category: Business Rule Violations
+              severity: High
+              description: valid_from must occur on or after launch_date.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              valid_to IS NULL
+              OR valid_to >= valid_from
+
+          config:
+            meta:
+              title: Invalid Validity Period
+              category: Business Rule Violations
+              severity: High
+              description: valid_to must occur on or after valid_from.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              COALESCE(is_current, FALSE) is FALSE
+              OR valid_to IS NULL
+
+          config:
+            meta:
+              title: Current Record with End Date
+              category: Business Rule Violations
+              severity: High
+              description: valid_to must be NULL when is_current is TRUE.
+
+    # --- Column Constraints ---
+    columns:
+      - name: product_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product ID
+                  category: Missing Values
+                  severity: Medium
+                  description: product_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: status
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Status
+                  category: Missing Values
+                  severity: High
+                  description: status is required.
+
+          - accepted_values:
+              arguments:
+                values:
+                  ["New", "Active", "Phasing Out", "Discontinued", "Seasonal"]
+
+              config:
+                meta:
+                  title: Invalid Status
+                  category: Data Quality
+                  severity: High
+                  description: status must be one of the supported values.
+
+      - name: launch_date
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Launch Date
+                  category: Missing Values
+                  severity: High
+                  description: launch_date is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Launch Date Type
+                  category: Date Type
+                  severity: Medium
+                  description: launch_date must be stored as a DATE.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_date()"
+
+              config:
+                meta:
+                  title: Future Launch Date
+                  category: Date Issues
+                  severity: High
+                  description: launch_date must not be in the future.
+
+      - name: discontinuation_date
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Discontinuation Date Type
+                  category: Date Type
+                  severity: Medium
+                  description: discontinuation_date must be stored as a DATE.
+
+      - name: valid_from
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Valid From
+                  category: Missing Values
+                  severity: High
+                  description: valid_from is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Valid From Type
+                  category: Date Type
+                  severity: Medium
+                  description: valid_from must be stored as a DATE.
+
+      - name: valid_to
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Valid To Type
+                  category: Date Type
+                  severity: Medium
+                  description: valid_to must be stored as a DATE.
+
+      - name: is_current
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Current Status
+                  category: Missing Values
+                  severity: Medium
+                  description: is_current is required.
+
+          - accepted_values:
+              arguments:
+                quote: false
+                values: [true, false]
+
+              config:
+                meta:
+                  title: Invalid Current Status
+                  category: Data Quality
+                  severity: Medium
+                  description: is_current must either be TRUE or FALSE.

@@ -6,7 +6,7 @@ import numpy as np
 from faker import Faker
 
 from dirty_data_generation.config.constants import (
-    CLEAN_TABLES,
+    CLEAN_SOURCE_TABLES,
     DIRTY_DIR,
     DIRTY_PLAN,
 )
@@ -42,7 +42,7 @@ def run_dirty_generation():
     print(f"\nOUTPUT DIRECTORY: {DIRTY_DIR}\n")
 
     print("TABLES LEFT CLEAN (no dirty version needed):")
-    for t in CLEAN_TABLES:
+    for t in CLEAN_SOURCE_TABLES:
         print(f"  ✓ {t}")
 
     print("\nGENERATING TABLES:")

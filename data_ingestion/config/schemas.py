@@ -1,3 +1,5 @@
+# data_ingestion/config/schemas.py
+
 from google.cloud import bigquery
 
 BUNDLE_ITEMS_SCHEMA = [
@@ -18,7 +20,7 @@ BUNDLES_SCHEMA = [
     bigquery.SchemaField("bundle_id", "STRING"),
     bigquery.SchemaField("bundle_name", "STRING"),
     bigquery.SchemaField("bundle_type", "STRING"),
-    bigquery.SchemaField("categories", "STRING"),
+    bigquery.SchemaField("categories", "STRING", mode="REPEATED"),
 ]
 CAMPAIGN_ASSIGNMENTS_SCHEMA = [
     bigquery.SchemaField("campaign_id", "STRING"),
@@ -47,11 +49,11 @@ CAMPAIGNS_SCHEMA = [
     bigquery.SchemaField("campaign_type", "STRING"),
     bigquery.SchemaField("target_segment", "STRING"),
     bigquery.SchemaField("season", "STRING"),
-    bigquery.SchemaField("channels", "STRING"),
+    bigquery.SchemaField("channels", "STRING", mode="REPEATED"),
     bigquery.SchemaField("start_date", "DATE"),
     bigquery.SchemaField("end_date", "DATE"),
     bigquery.SchemaField("budget", "INTEGER"),
-    bigquery.SchemaField("is_ab_test", "STRING"),
+    bigquery.SchemaField("is_ab_test", "BOOL"),
     bigquery.SchemaField("status", "STRING"),
 ]
 CLICKSTREAM_SCHEMA = [
@@ -59,7 +61,7 @@ CLICKSTREAM_SCHEMA = [
     bigquery.SchemaField("session_id", "STRING"),
     bigquery.SchemaField("customer_id", "STRING"),
     bigquery.SchemaField("customer_segment", "STRING"),
-    bigquery.SchemaField("campaign_ids", "STRING"),
+    bigquery.SchemaField("campaign_ids", "STRING", mode="REPEATED"),
     bigquery.SchemaField("has_treatment_campaign", "BOOL"),
     bigquery.SchemaField("has_control_campaign", "BOOL"),
     bigquery.SchemaField("device_category", "STRING"),
@@ -73,12 +75,12 @@ CLICKSTREAM_SCHEMA = [
     bigquery.SchemaField("product_id", "STRING"),
     bigquery.SchemaField("product_name", "STRING"),
     bigquery.SchemaField("category", "STRING"),
-    bigquery.SchemaField("promotion_ids", "STRING"),
-    bigquery.SchemaField("bundle_ids", "STRING"),
-    bigquery.SchemaField("bounce_flag", "STRING"),
+    bigquery.SchemaField("promotion_ids", "STRING", mode="REPEATED"),
+    bigquery.SchemaField("bundle_ids", "STRING", mode="REPEATED"),
+    bigquery.SchemaField("bounce_flag", "INTEGER"),
     bigquery.SchemaField("cart_size", "INTEGER"),
-    bigquery.SchemaField("cart_content", "STRING"),
-    bigquery.SchemaField("purchased_items", "STRING"),
+    bigquery.SchemaField("cart_content", "STRING", mode="REPEATED"),
+    bigquery.SchemaField("purchased_items", "STRING", mode="REPEATED"),
     bigquery.SchemaField("stock_status", "STRING"),
 ]
 COMPETITOR_PRICE_HISTORY_SCHEMA = [
@@ -87,7 +89,7 @@ COMPETITOR_PRICE_HISTORY_SCHEMA = [
     bigquery.SchemaField("scraped_product_name", "STRING"),
     bigquery.SchemaField("scraped_category", "STRING"),
     bigquery.SchemaField("scraped_price", "FLOAT"),
-    bigquery.SchemaField("has_active_promo", "STRING"),
+    bigquery.SchemaField("has_active_promo", "BOOL"),
     bigquery.SchemaField("update_timestamp", "TIMESTAMP"),
 ]
 COMPETITOR_PRODUCTS_SCHEMA = [
@@ -108,7 +110,6 @@ CUSTOMERS_SCHEMA = [
     bigquery.SchemaField("area", "STRING"),
     bigquery.SchemaField("region", "STRING"),
     bigquery.SchemaField("signup_date", "DATE"),
-    bigquery.SchemaField("loyalty_points", "INTEGER"),
     bigquery.SchemaField("customer_segment", "STRING"),
     bigquery.SchemaField("email_marketing_opt_in", "BOOL"),
     bigquery.SchemaField("sms_marketing_opt_in", "BOOL"),

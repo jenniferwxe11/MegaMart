@@ -1,0 +1,141 @@
+version: 2
+
+models:
+  # --- BUNDLE ITEMS ---
+  - name: bundle_items
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - bundle_id
+              - product_id
+
+          config:
+            meta:
+              title: Duplicate Product within Bundle
+              category: Business Rule Violations
+              severity: High
+              description: Each bundle-product combination must be unique.
+
+      - bundle_categories_match_items:
+          arguments:
+            bundle_model: ref('bundles')
+            product_model: ref('products')
+
+          config:
+            meta:
+              title: Bundle Category Does Not Match Items
+              category: Business Rule Violations
+              severity: Medium
+              description: Bundle categories must match the categories of the items in the bundle.
+
+      - bundle_item_quantity_matches_type:
+          arguments:
+            bundle_model: ref('bundles')
+
+          config:
+            meta:
+              title: Bundle Quantity Does Not Match Bundle Type
+              category: Business Rule Violations
+              severity: High
+              description: >
+                Bundle item quantities must follow the quantity rules defined
+                by the bundle type and bundle name.
+
+      - set_bundle_requires_multiple_categories:
+          arguments:
+            bundle_model: ref('bundles')
+            product_model: ref('products')
+
+          config:
+            meta:
+              title: Set Bundle Does Not Span Multiple Categories
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                Set bundles must contain products from at least two distinct categories.
+
+      - bundle_type_category_consistency:
+          arguments:
+            bundle_model: ref('bundles')
+            product_model: ref('products')
+
+          config:
+            meta:
+              title: Bundle Type Does Not Match Item Categories
+              category: Business Rule Violations
+              severity: Medium
+              description: >
+                Non-Set bundles must contain products from a single category,
+                while Set bundles may contain products from multiple categories.
+
+    # --- Column Constraints ---
+    columns:
+      - name: bundle_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Bundle ID
+                  category: Missing Values
+                  severity: High
+                  description: bundle_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('bundles')
+                field: bundle_id
+
+              config:
+                meta:
+                  title: Invalid Bundle Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: bundle_id must exist in the bundles table.
+
+      - name: product_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product ID
+                  category: Missing Values
+                  severity: High
+                  description: product_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: quantity
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Quantity
+                  category: Missing Values
+                  severity: High
+                  description: quantity is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Quantity Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: quantity must be between 1 and 100000 inclusive.

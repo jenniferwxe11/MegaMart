@@ -1,0 +1,159 @@
+version: 2
+
+models:
+  # --- STOCKOUT EVENTS ---
+  - name: stockout_events
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - store_id
+              - product_id
+              - stockout_start_date
+
+          config:
+            meta:
+              title: Duplicate Stockout Event
+              category: Business Rule Violations
+              severity: High
+              description: Each store product must have at most one stockout event starting on a given date.
+
+      - non_overlapping_stockout_windows:
+          config:
+            meta:
+              title: Overlapping Stockout Periods
+              category: Business Rule Violations
+              severity: High
+              description: Stockout period must not overlap for a product in the same store.
+
+      - stockout_period_within_product_lifecycle:
+          config:
+            meta:
+              title: Stockout Period Outside Product Lifecycle
+              category: Business Rule Violations
+              severity: High
+              description: Stockout events must only occur during a product's active lifecycle.
+
+      - discontinuation_period_matches_stockout_period:
+          config:
+            meta:
+              title: Discontinuation Date Does Not Match Stockout Start
+              category: Business Rule Violations
+              severity: High
+              description: The final stockout event for a discontinued product must begin on its discontinuation_date.
+
+      - discontinued_product_has_current_stockout_event:
+          config:
+            meta:
+              title: Invalid Stockout Event for Discontinued Product
+              category: Business Rule Violations
+              severity: High
+              description: >
+                Current stockout events for discontinued products must start on
+                discontinuation_date and have a NULL stockout_end_date.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              stockout_end_date IS NULL
+              OR stockout_end_date >= stockout_start_date
+
+          config:
+            meta:
+              title: Invalid Stockout Period
+              category: Date Issues
+              severity: High
+              description: stockout_end_date must occur on or after stockout_start_date.
+
+    # --- Column Constraints ---
+    columns:
+      - name: store_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store ID
+                  category: Missing Values
+                  severity: High
+                  description: store_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('stores')
+                field: store_id
+
+              config:
+                meta:
+                  title: Invalid Store Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: store_id must exist in the stores table.
+
+      - name: product_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product ID
+                  category: Missing Values
+                  severity: High
+                  description: product_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: stockout_start_date
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Stockout Start Date
+                  category: Missing Values
+                  severity: High
+                  description: stockout_start_date is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Stockout Start Date Type
+                  category: Date Type
+                  severity: Low
+                  description: stockout_start_date must be stored as a DATE.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_date()"
+
+              config:
+                meta:
+                  title: Future Stockout Start Date
+                  category: Date Issues
+                  severity: Medium
+                  description: stockout_start_date must not be in the future.
+
+      - name: stockout_end_date
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Stockout End Date Type
+                  category: Date Type
+                  severity: Low
+                  description: stockout_end_date must be stored as a DATE.

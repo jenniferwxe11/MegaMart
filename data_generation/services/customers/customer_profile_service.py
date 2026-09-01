@@ -20,6 +20,27 @@ from data_generation.services.region_areas.region_area_service import (
 )
 
 fake = Faker()
+USED_EMAILS = set()
+
+
+def generate_unique_username_email():
+    while True:
+        email = f"{fake.user_name()}@{fake.safe_domain_name()}".lower()
+        if email not in USED_EMAILS:
+            USED_EMAILS.add(email)
+            return email
+
+
+def generate_unique_email(first_name, last_name):
+    base = f"{first_name}.{last_name}".lower()
+
+    while True:
+        suffix = "" if random.random() < 0.7 else str(random.randint(1, 9999))
+        email = f"{base}{suffix}@{fake.safe_domain_name()}"
+
+        if email not in USED_EMAILS:
+            USED_EMAILS.add(email)
+            return email
 
 
 def sample_signup_date():
@@ -79,7 +100,6 @@ def generate_customer_profile(ctx, customer_type):
     area = None
     region = None
     signup_date = None
-    loyalty_points = 0
     customer_segment = None
     email_marketing_opt_in = None
     sms_marketing_opt_in = None
@@ -102,9 +122,8 @@ def generate_customer_profile(ctx, customer_type):
         # -------------------------------------
 
         if customer_type == "Retail Members":
-            email = f"{fake.user_name()}@{fake.safe_domain_name()}"
+            email = generate_unique_username_email()
             signup_date = sample_signup_date() if random.random() < 0.97 else None
-            loyalty_points = 0
 
         # -----------------------------------------------------
         # ONLINE ONLY CUSTOMERS:
@@ -117,13 +136,11 @@ def generate_customer_profile(ctx, customer_type):
             first_name = fake.first_name()
             last_name = fake.last_name()
             name = first_name + " " + last_name
-            email = f"{first_name}.{last_name}@{fake.safe_domain_name()}".lower()
+            email = generate_unique_email(first_name, last_name)
             gender = random.choice(["Female", "Male"])
             region, area = get_random_region_area(ctx)
-            signup_date = sample_signup_date() if random.random() < 0.97 else None
+            signup_date = sample_signup_date()
             dob = generate_dob(signup_date)
-
-            loyalty_points = 0
 
             email_marketing_opt_in = random.choices(
                 [True, False], weights=[0.28, 0.72], k=1
@@ -158,12 +175,11 @@ def generate_customer_profile(ctx, customer_type):
             first_name = fake.first_name()
             last_name = fake.last_name()
             name = first_name + " " + last_name
-            email = f"{first_name}.{last_name}@{fake.safe_domain_name()}".lower()
+            email = generate_unique_email(first_name, last_name)
             gender = random.choice(["Female", "Male"])
             region, area = get_random_region_area(ctx)
-            signup_date = sample_signup_date() if random.random() < 0.97 else None
+            signup_date = sample_signup_date()
             dob = generate_dob(signup_date)
-            loyalty_points = 0
 
             email_marketing_opt_in = random.choices(
                 [True, False], weights=[0.28, 0.72], k=1
@@ -197,7 +213,6 @@ def generate_customer_profile(ctx, customer_type):
         "area": area,
         "region": region,
         "signup_date": signup_date,
-        "loyalty_points": loyalty_points,
         "customer_segment": customer_segment,
         "email_marketing_opt_in": email_marketing_opt_in,
         "sms_marketing_opt_in": sms_marketing_opt_in,

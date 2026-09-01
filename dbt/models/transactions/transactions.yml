@@ -1,0 +1,439 @@
+version: 2
+
+models:
+  # --- TRANSACTIONS ---
+  - name: transactions
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - customer_id
+              - store_id
+              - transaction_time
+
+          config:
+            meta:
+              title: Duplicate Transaction
+              category: Business Rule Violations
+              severity: High
+              description: A transaction must only appear once per customer, store, and transaction_time.
+
+      - transactions_without_items:
+          arguments:
+            transaction_item_model: ref('transaction_items')
+
+          config:
+            meta:
+              title: Transaction without Items
+              category: Business Rule Violations
+              severity: High
+              description: A transaction must have at least one item in the transaction_items table.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "num_unique_items <= basket_size"
+
+          config:
+            meta:
+              title: Number of Unique Items Exceeds Basket Size
+              category: Business Rule Violations
+              severity: High
+              description: num_unique_items must be less than or equal to basket_size.
+
+      - basket_size_matches_items:
+          arguments:
+            transaction_item_model: ref('transaction_items')
+
+          config:
+            meta:
+              title: Basket Size Does Not Match Number of Items
+              category: Business Rule Violations
+              severity: High
+              description: basket_size must equal the total quantity of items in the transaction_items table.
+
+      - num_unique_items_matches_items:
+          arguments:
+            transaction_item_model: ref('transaction_items')
+
+          config:
+            meta:
+              title: Number of Unique Items Mismatch
+              category: Business Rule Violations
+              severity: High
+              description: num_unique_items must equal the number of unique items in the transaction_items table.
+
+      - transaction_discount_matches_item_discounts:
+          arguments:
+            transaction_item_model: ref('transaction_items')
+
+          config:
+            meta:
+              title: Transaction Discount Does Not Match Item Discounts
+              category: Business Rule Violations
+              severity: High
+              description: total_discount must equal the sum of item_discount values in the transaction_items table.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "total_discount <= cart_subtotal"
+
+          config:
+            meta:
+              title: Total Discount Exceeds Cart Subtotal
+              category: Business Rule Violations
+              severity: High
+              description: total_discount must be less than or equal to cart_subtotal.
+
+      - dbt_utils.expression_is_true:
+            arguments:
+              expression: >
+                shipping_discount = 0
+                OR shipping_fee > 0
+
+            config:
+              meta:
+                title: Shipping Discount without Shipping Fee
+                category: Business Rule Violations
+                severity: High
+                description: shipping_discount must be 0 if shipping_fee is 0.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              shipping_discount = 0
+              OR ABS(shipping_discount - shipping_fee) < 0.01
+
+          config:
+            meta:
+              title: Shipping Discount Does Not Match Shipping Fee
+              category: Business Rule Violations
+              severity: High
+              description: shipping_discount must either be 0 or equal to shipping_fee. Partial discounts are not allowed.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              (total_discount + shipping_discount > 0)
+              =
+              (COALESCE(ARRAY_LENGTH(applied_promotions),0)>0)
+
+          config:
+            meta:
+              title: Applied Promotions Do Not Match Discounts
+              category: Business Rule Violations
+              severity: High
+              description: Discounts must be reflected when promotions are applied.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              ABS(
+                transaction_total -
+                (
+                  cart_subtotal
+                  - total_discount
+                  + shipping_fee
+                  - shipping_discount
+                )
+              ) < 0.01
+
+          config:
+            meta:
+              title: Transaction Total Reconciliation Failed
+              category: Business Rule Violations
+              severity: High
+              description: transaction_total must equal cart_subtotal minus discounts plus shipping.
+
+    # --- Column Constraints ---
+    columns:
+      - name: transaction_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Transaction ID
+                  category: Missing Values
+                  severity: High
+                  description: transaction_id is required.
+
+          - unique:
+              config:
+                meta:
+                  title: Duplicate Transaction ID
+                  category: Duplicate Records
+                  severity: High
+                  description: transaction_id must be unique.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^TRAN[0-9]{3,}$"
+
+              config:
+                meta:
+                  title: Invalid Transaction ID Format
+                  category: Formatting
+                  severity: High
+                  description: transaction_id must follow the expected format.
+
+      - name: customer_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Customer ID
+                  category: Missing Values
+                  severity: Medium
+                  description: customer_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('customers')
+                field: customer_id
+
+              config:
+                meta:
+                  title: Invalid Customer Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: customer_id must exist in the customers table.
+
+      - name: store_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store ID
+                  category: Missing Values
+                  severity: Medium
+                  description: store_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('stores')
+                field: store_id
+
+              config:
+                meta:
+                  title: Invalid Store Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: store_id must exist in the stores table.
+
+      - name: transaction_time
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Transaction Time
+                  category: Missing Values
+                  severity: Medium
+                  description: transaction_time is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: TIMESTAMP
+
+              config:
+                meta:
+                  title: Invalid Transaction Time Type
+                  category: Date Type
+                  severity: Low
+                  description: transaction_time must be stored as a TIMESTAMP.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_timestamp()"
+
+              config:
+                meta:
+                  title: Future Transaction Time
+                  category: Date Issues
+                  severity: Medium
+                  description: transaction_time must not be in the future.
+
+      - name: cart_subtotal
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Cart Subtotal
+                  category: Missing Values
+                  severity: High
+                  description: cart_subtotal is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Cart Subtotal Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: cart_subtotal must be more than 0 and less than 100000.
+
+      - name: total_discount
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Total Discount
+                  category: Missing Values
+                  severity: High
+                  description: total_discount is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Total Discount Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: total_discount must be between 0 and 100000 inclusive.
+
+      - name: shipping_fee
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Shipping Fee
+                  category: Missing Values
+                  severity: High
+                  description: shipping_fee is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Shipping Fee Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: shipping_fee must be between 0 and 100000 inclusive.
+
+      - name: shipping_discount
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Shipping Discount
+                  category: Missing Values
+                  severity: High
+                  description: shipping_discount is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Shipping Discount Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: shipping_discount must be between 0 and 100000 inclusive.
+
+      - name: transaction_total
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Transaction Total
+                  category: Missing Values
+                  severity: High
+                  description: transaction_total is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: true
+
+              config:
+                meta:
+                  title: Transaction Total Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: transaction_total must be more than 0 and less than 100000.
+
+      - name: payment_method
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Payment Method
+                  category: Missing Values
+                  severity: High
+                  description: payment_method is required.
+
+          - accepted_values:
+              arguments:
+                values: ['Credit Card', 'Debit Card', 'Digital Wallet', 'Buy Now Pay Later', 'Cash']
+
+              config:
+                meta:
+                  title: Invalid Payment Method
+                  category: Data Quality
+                  severity: Low
+                  description: payment_method must be one of the supported values.
+
+      - name: basket_size
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Basket Size
+                  category: Missing Values
+                  severity: High
+                  description: basket_size is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Basket Size Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: basket_size must be between 1 and 100000 inclusive.
+
+      - name: num_unique_items
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Number of Unique Items
+                  category: Missing Values
+                  severity: High
+                  description: num_unique_items is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Number of Unique Items Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: num_unique_items must be between 1 and 100000 inclusive.
+
+      - name: applied_promotions
+        tests: []

@@ -1,70 +1,130 @@
+# dirty_data_generation/generators/bundles_dirty.py
+
 from dirty_data_generation.context.generation_context import GenerationContext
-from dirty_data_generation.registry import register
-from dirty_data_generation.utils.dirty_helpers import (
-    append_error,
-    duplicate_rows,
-    inject_nulls,
-    inject_whitespace,
+from dirty_data_generation.corruption_rules.bundle_items_rules import (
+    bundle_item_category_mismatch,
+    bundle_type_category_mismatch,
+    bundle_type_quantity_mismatch,
+    duplicate_product_within_bundle,
+    invalid_bundle_item_quantity,
+    missing_quantity,
 )
+from dirty_data_generation.corruption_rules.bundle_pricings_rules import (
+    bundle_price_below_cost,
+    bundle_price_out_of_range,
+    bundle_price_progression_violation,
+    bundle_pricing_lifecycle_gap,
+    bundle_pricing_phase_out_of_order,
+    discount_exceeds_bundle_price,
+    discount_value_out_of_range,
+    discount_value_progression_violation,
+    duplicate_bundle_pricing_phase,
+    end_date_before_start_date,
+    invalid_bundle_pricing_lifecycle,
+    missing_bundle_price,
+    missing_discount_value,
+    missing_pricing_phase,
+)
+from dirty_data_generation.corruption_rules.bundles_rules import (
+    duplicate_category_inside_bundle,
+    empty_bundle_categories,
+    invalid_bundle_id_format,
+    missing_bundle_name,
+    missing_bundle_type,
+    missing_categories,
+)
+from dirty_data_generation.helpers.dirty_utils import apply_corruption
+from dirty_data_generation.registry import register
 from dirty_data_generation.utils.io_utils import save
+
+BUNDLE_RULES = [
+    # Missing Values
+    (0.03, missing_bundle_name),
+    (0.03, missing_bundle_type),
+    (0.03, missing_categories),
+    # Formatting
+    (0.02, invalid_bundle_id_format),
+    # Business Rule Violations
+    (0.02, duplicate_category_inside_bundle),
+    (0.02, empty_bundle_categories),
+]
+
+BUNDLE_PRICINGS_RULES = [
+    # Missing Values
+    (0.03, missing_bundle_price),
+    (0.03, missing_discount_value),
+    (0.03, missing_pricing_phase),
+    # Range Validation
+    (0.02, bundle_price_out_of_range),
+    (0.02, discount_value_out_of_range),
+    # Business Rule Violations
+    (0.02, end_date_before_start_date),
+    (0.02, duplicate_bundle_pricing_phase),
+    (0.02, discount_exceeds_bundle_price),
+    (0.02, invalid_bundle_pricing_lifecycle),
+    (0.02, bundle_pricing_phase_out_of_order),
+    (0.02, bundle_pricing_lifecycle_gap),
+    (0.02, bundle_price_progression_violation),
+    (0.02, discount_value_progression_violation),
+    (0.02, bundle_price_below_cost),
+]
+
+
+BUNDLE_ITEMS_RULES = [
+    # Missing Values
+    (0.03, missing_quantity),
+    # Business Rule Violations
+    (0.02, duplicate_product_within_bundle),
+    (0.02, bundle_item_category_mismatch),
+    (0.02, invalid_bundle_item_quantity),
+    (0.02, bundle_type_quantity_mismatch),
+    (0.02, bundle_type_category_mismatch),
+]
 
 
 @register("dirty_bundles")
 def dirty_bundles(ctx: GenerationContext):
-    bdf = ctx.bundles.bundles_df.copy()
 
-    bdf["error_types"] = [[] for _ in range(len(bdf))]
+    df = ctx.bundles.bundles_df.copy()
 
-    # Mixed-case/whitespace in bundle name
-    bdf = inject_whitespace(
-        bdf, col="bundle_name", rate=0.02, error_label="bundle name formatting anomaly"
-    )
+    for rate, rule in BUNDLE_RULES:
+        apply_corruption(
+            df=df,
+            rate=rate,
+            corruption=rule,
+            ctx=ctx,
+        )
 
-    # Duplicate bundle_id
-    dup_idx = bdf.sample(frac=0.02, random_state=40).index
-    replacement_ids = (
-        bdf["bundle_id"].sample(n=len(dup_idx), replace=True, random_state=40).values
-    )
-    bdf.loc[dup_idx, "bundle_id"] = replacement_ids
-    append_error(bdf, dup_idx, "duplicate bundle id")
-
-    return save(bdf, "bundles_dirty.csv")
+    return save(df, "bundles_dirty.csv")
 
 
 @register("dirty_bundle_pricings")
 def dirty_bundle_pricings(ctx: GenerationContext):
-    bpdf = ctx.bundles.bundle_pricings_df.copy()
 
-    bpdf["error_types"] = [[] for _ in range(len(bpdf))]
+    df = ctx.bundles.bundle_pricings_df.copy()
 
-    # Negative discount value
-    neg_idx = (
-        bpdf[bpdf["discount_value"].notna()].sample(frac=0.03, random_state=41).index
-    )
-    bpdf.loc[neg_idx, "discount_value"] = -abs(bpdf.loc[neg_idx, "discount_value"])
-    append_error(bpdf, neg_idx, "negative discount value")
+    for rate, rule in BUNDLE_PRICINGS_RULES:
+        apply_corruption(
+            df=df,
+            rate=rate,
+            corruption=rule,
+            ctx=ctx,
+        )
 
-    # Null discount
-    bpdf = inject_nulls(
-        bpdf,
-        bpdf["discount_value"].notna(),
-        "discount_value",
-        rate=0.02,
-        error_label="missing discount value",
-    )
+    return save(df, "bundle_pricings_dirty.csv")
 
-    # effective_end_date < effective_start_date
-    inv_idx = bpdf.sample(frac=0.02, random_state=43).index
-    for idx in inv_idx:
-        bpdf.loc[idx, ["effective_start_date", "effective_end_date"]] = bpdf.loc[
-            idx, ["effective_end_date", "effective_start_date"]
-        ].values
-    append_error(bpdf, inv_idx, "inverted date range")
 
-    # Duplicate pricing rows
-    bpdf = duplicate_rows(
-        bpdf,
-        rate=0.03,
-    )
+@register("dirty_bundle_items")
+def dirty_bundle_items(ctx: GenerationContext):
 
-    return save(bpdf, "bundle_pricings_dirty.csv")
+    df = ctx.bundles.bundle_items_df.copy()
+
+    for rate, rule in BUNDLE_ITEMS_RULES:
+        apply_corruption(
+            df=df,
+            rate=rate,
+            corruption=rule,
+            ctx=ctx,
+        )
+
+    return save(df, "bundle_items_dirty.csv")

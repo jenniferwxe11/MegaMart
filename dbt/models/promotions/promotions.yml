@@ -1,0 +1,295 @@
+version: 2
+
+models:
+  # --- PROMOTIONS ---
+  - name: promotions
+
+    # --- Business Rules ---
+    tests:
+      - promotion_bundle_reference:
+          config:
+            meta:
+              title: Invalid Bundle Promotion Reference
+              category: Referential Integrity
+              severity: High
+              description: Bundle promotions must reference an existing bundle.
+
+      - promotion_product_reference:
+          config:
+            meta:
+              title: Invalid Product Promotion Reference
+              category: Referential Integrity
+              severity: High
+              description: Product promotions must reference an existing product.
+
+      - discontinued_product_promotion_overlap:
+          config:
+            meta:
+              title: Promotion During Product Discontinuation
+              category: Business Rule Violations
+              severity: Medium
+              description: Promotion periods must not overlap with a product's discontinued lifecycle period.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "effective_start_date <= effective_end_date"
+
+          config:
+            meta:
+              title: Invalid Effective Period
+              category: Business Rule Violations
+              severity: High
+              description: effective_end_date must occur on or after effective_start_date.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: |
+              promotion_mechanic = 'free_shipping'
+              OR promotion_value > 0
+
+          config:
+            meta:
+              title: Non-Free Shipping Promotion Has Zero Discount Value
+              category: Business Rule Violations
+              severity: High
+              description: Non-free shipping promotions must have a promotion value greater than 0.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: |
+              promotion_mechanic != 'free_shipping'
+              OR promotion_scope = 'cart'
+
+          config:
+            meta:
+              title: Free Shipping Promotion Uses Invalid Scope
+              category: Business Rule Violations
+              severity: High
+              description: Free shipping promotions must only be applied at the cart level.
+
+    # --- Column Constraints ---
+    columns:
+      - name: promotion_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Promotion ID
+                  category: Missing Values
+                  severity: High
+                  description: promotion_id is required.
+
+          - unique:
+              config:
+                meta:
+                  title: Duplicate Promotion ID
+                  category: Duplicate Records
+                  severity: High
+                  description: promotion_id must be unique.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^PROMO[0-9]{3,}$"
+
+              config:
+                meta:
+                  title: Invalid Promotion ID Format
+                  category: Formatting
+                  severity: High
+                  description: promotion_id must follow the expected format.
+
+      - name: promotion_name
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Promotion Name
+                  category: Missing Values
+                  severity: Low
+                  description: promotion_name is required.
+
+      - name: promotion_theme
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Promotion Theme
+                  category: Missing Values
+                  severity: Low
+                  description: promotion_theme is required.
+
+      - name: campaign_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('campaigns')
+                field: campaign_id
+
+              config:
+                where: "campaign_id IS NOT NULL"
+
+                meta:
+                  title: Invalid Campaign Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: campaign_id must exist in the campaigns table.
+
+      - name: promotion_mechanic
+        tests:
+          - accepted_values:
+              arguments:
+                values:
+                  [
+                    "percentage_discount",
+                    "dollar_discount",
+                    "free_shipping",
+                    "bundle",
+                  ]
+
+              config:
+                meta:
+                  title: Invalid Promotion Mechanic
+                  category: Data Quality
+                  severity: High
+                  description: promotion_mechanic must be one of the supported values.
+
+      - name: promotion_scope
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["cart", "category", "product", "bundle"]
+
+              config:
+                meta:
+                  title: Invalid Promotion Scope
+                  category: Data Quality
+                  severity: High
+                  description: promotion_scope must be one of the supported values.
+
+      - name: promotion_target_id
+        tests:
+          - not_null:
+              config:
+                where: "promotion_scope != 'cart'"
+                meta:
+                  title: Missing Promotion Target ID
+                  category: Missing Values
+                  severity: High
+                  description: promotion_target_id is required.
+
+
+      - name: promotion_value
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Promotion Value
+                  category: Missing Values
+                  severity: High
+                  description: promotion_value is required.
+
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Promotion Value Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: promotion_value must be between 0 and 100000 inclusive.
+
+      - name: min_spend
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+                strictly: false
+
+              config:
+                meta:
+                  title: Minimum Spend Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: min_spend must be between 0 and 100000 inclusive.
+
+      - name: discount_code
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Discount Code
+                  category: Missing Values
+                  severity: High
+                  description: discount_code is required.
+
+          - dbt_expectations.expect_column_values_to_match_regex:
+              arguments:
+                regex: "^[A-Z0-9_]+$"
+
+              config:
+                meta:
+                  title: Invalid Discount Code Format
+                  category: Formatting
+                  severity: Medium
+                  description: discount_code must contain uppercase letters, numbers and underscores only.
+
+      - name: effective_start_date
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Effective Start Date
+                  category: Missing Values
+                  severity: High
+                  description: effective_start_date is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Effective Start Date Type
+                  category: Date Type
+                  severity: Medium
+                  description: effective_start_date must be stored as a DATE.
+
+      - name: effective_end_date
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Effective End Date
+                  category: Missing Values
+                  severity: High
+                  description: effective_end_date is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Effective End Date Type
+                  category: Date Type
+                  severity: Medium
+                  description: effective_end_date must be stored as a DATE.
+
+      - name: priority
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 4
+                strictly: false
+
+              config:
+                meta:
+                  title: Priority Out of Valid Range
+                  category: Range Validation
+                  severity: Medium
+                  description: priority must be between 1 and 4 inclusive.

@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      python: ${{ steps.filter.outputs.python }}
+      lint: ${{ steps.filter.outputs.lint }}
       test: ${{ steps.filter.outputs.test }}
       dbt: ${{ steps.filter.outputs.dbt }}
 
@@ -40,29 +40,35 @@ jobs:
         id: filter
         with:
           filters: |
-            python:
+            lint:
               - '**/*.py'
             test:
               - 'data_generation/**/*.py'
               - 'tests/**/*.py'
             dbt:
-              - 'models/**'
-              - 'seeds/**'
-              - 'snapshots/**'
-              - 'dbt_project.yml'
+              - 'dbt/**'
+              - 'dbt_profiles/**'
+              - 'data_generation/**/*.py'
+              - 'dirty_data_generation/**/*.py'
 
   # --- CI ---
   ci:
     runs-on: ubuntu-latest
     needs: [changes]
     timeout-minutes: 20
-    if: needs.changes.outputs.python == 'true'
+    if: needs.changes.outputs.lint == 'true'
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Debug filters
+        run: |
+          echo "lint=${{ needs.changes.outputs.lint }}"
+          echo "test=${{ needs.changes.outputs.test }}"
+          echo "dbt=${{ needs.changes.outputs.dbt }}"
 
       - name: Get changed files
         id: changes
@@ -88,9 +94,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pip-tools
-          pip install -r requirements.txt
+          python -m pip install "pip==26.1.2"
+          python -m pip install "setuptools>=83.0.0"
+          python -m pip install "pip-tools==7.6.0"
+          python -m pip install -r requirements.txt
+
+      - name: Show tool versions
+        run: |
+          python --version
+          python -m pip --version
+          pip-compile --version
 
       - name: Validate requirements.txt
         run: |
@@ -100,8 +113,18 @@ jobs:
       - name: Run pre-commit hooks (lint, format)
         run: pre-commit run --all-files --show-diff-on-failure
 
+      - name: Upgrade pip
+        run: python -m pip install --upgrade "pip>=26.2"
+
       - name: Dependency security scan
-        run: pip-audit
+        run: |
+          # sqlparse 0.5.5 is required by dbt-core (<0.6.0).
+          # Ignore known CVEs until dbt supports sqlparse >=0.6.0.
+          pip-audit \
+            --ignore-vuln CVE-2026-71491 \
+            --ignore-vuln CVE-2026-59894 \
+            --ignore-vuln CVE-2026-59893 \
+            --ignore-vuln CVE-2026-54284
 
       - name: Code security scan (Bandit)
         run: |
@@ -109,7 +132,7 @@ jobs:
 
           PY_FILES=$(echo "$FILES" \
             | tr ' ' '\n' \
-            | grep '^data_generation/.*\.py$\|^tests/.*\.py$' \
+            | grep -E '^data_generation/.*\.py$|^dirty_data_generation/.*\.py$|^tests/.*\.py$' \
             || true)
 
           if [ -z "$PY_FILES" ]; then
@@ -145,15 +168,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: [changes]
     timeout-minutes: 20
-    if: needs.changes.outputs.dbt == 'true'
+    if: |
+      github.event_name == 'pull_request' &&
+      needs.changes.outputs.dbt == 'true'
+
+    env:
+      DBT_PROJECT_DIR: dbt
+      DBT_PROFILES_DIR: dbt_profiles
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Get changed files
-        id: changes
-        uses: tj-actions/changed-files@v44
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -170,56 +195,63 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pip-tools
-          pip install -r requirements.txt
+          python -m pip install "pip==26.1.2"
+          python -m pip install "setuptools>=83.0.0"
+          python -m pip install "pip-tools==7.6.0"
+          python -m pip install -r requirements.txt
+
+      - name: Authenticate to Google Cloud Platform
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: access_token
+          workload_identity_provider: projects/594876062374/locations/global/workloadIdentityPools/mega-mart-pool/providers/github
+          service_account: mega-mart-service@mega-mart-storage.iam.gserviceaccount.com
+
+      - name: Verify authentication
+        run: gcloud auth list
 
       - name: Install dbt dependencies
-        run: dbt deps
+        run: |
+          dbt deps \
+            --project-dir $DBT_PROJECT_DIR \
+            --profiles-dir $DBT_PROFILES_DIR
 
       - name: Download previous dbt artifacts
         uses: actions/download-artifact@v4
         with:
           name: dbt-target
-          path: target
+          path: dbt/target
         continue-on-error: true
 
-      - name: Check modified dbt files
-        id: dbt-files
-        run: |
-          FILES="${{ steps.changes.outputs.all_changed_files }}"
-
-          DBT_FILES=$(echo "$FILES" \
-            | tr ' ' '\n' \
-            | grep -E '^models/|^seeds/|^snapshots/|^dbt_project.yml' \
-            || true)
-
-          if [ -z "$DBT_FILES" ]; then
-            echo "dbt_changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "dbt_changed=true" >> $GITHUB_OUTPUT
-          fi
-
       - name: Parse dbt project
-        if: steps.dbt-files.outputs.dbt_changed == 'true'
         run: |
-          dbt parse
+          dbt parse \
+            --project-dir $DBT_PROJECT_DIR \
+            --profiles-dir $DBT_PROFILES_DIR
 
       - name: Compile dbt models
-        if: steps.dbt-files.outputs.dbt_changed == 'true'
         run: |
-          dbt compile
+          dbt compile \
+            --project-dir $DBT_PROJECT_DIR \
+            --profiles-dir $DBT_PROFILES_DIR
+
+      # Future enhancement:
+      # - name: Build dbt project
+      #   run: |
+      #     dbt build \
+      #       --project-dir $DBT_PROJECT_DIR \
+      #       --profiles-dir $DBT_PROFILES_DIR
 
       - name: Upload dbt target artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dbt-target
-          path: target/
+          path: dbt/target/
 
       - name: Upload dbt logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dbt-logs
-          path: logs/
+          path: dbt/logs/

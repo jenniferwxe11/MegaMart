@@ -1,3 +1,5 @@
+# dirty_data_generation/context/generation_context.py
+
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Tuple
@@ -89,6 +91,7 @@ class StockoutEventContext:
 @dataclass(frozen=True)
 class StockSnapshotContext:
     stock_snapshots_df: pd.DataFrame
+    inventory_change_events_df: pd.DataFrame
 
 
 @dataclass(frozen=True)

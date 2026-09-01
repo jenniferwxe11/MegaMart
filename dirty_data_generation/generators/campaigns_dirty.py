@@ -1,67 +1,72 @@
-import random
-
-import pandas as pd
+# dirty_data_generation/generators/campaigns_dirty.py
 
 from dirty_data_generation.context.generation_context import GenerationContext
-from dirty_data_generation.registry import register
-from dirty_data_generation.utils.dirty_helpers import (
-    append_error,
-    inject_nulls,
-    inject_whitespace,
+from dirty_data_generation.corruption_rules.campaigns_rules import (
+    budget_out_of_range,
+    campaign_without_marketing_channels,
+    completed_campaign_future_end_date,
+    duplicate_channel_inside_channels,
+    invalid_campaign_id_format,
+    invalid_campaign_name,
+    invalid_campaign_period,
+    invalid_campaign_type,
+    invalid_status,
+    invalid_target_segment,
+    missing_budget,
+    missing_campaign_name,
+    missing_campaign_type,
+    missing_channels,
+    missing_end_date,
+    missing_is_ab_test,
+    missing_start_date,
+    missing_status,
+    missing_target_segment,
+    season_campaign_type_inconsistency,
 )
+from dirty_data_generation.helpers.dirty_utils import apply_corruption
+from dirty_data_generation.registry import register
 from dirty_data_generation.utils.io_utils import save
+
+CAMPAIGN_RULES = [
+    # Missing Values
+    (0.03, missing_campaign_name),
+    (0.03, missing_campaign_type),
+    (0.03, missing_target_segment),
+    (0.03, missing_channels),
+    (0.03, missing_start_date),
+    (0.03, missing_end_date),
+    (0.03, missing_budget),
+    (0.03, missing_is_ab_test),
+    (0.03, missing_status),
+    # Accepted Values
+    (0.02, invalid_campaign_type),
+    (0.02, invalid_target_segment),
+    (0.02, invalid_status),
+    # Formatting
+    (0.02, invalid_campaign_id_format),
+    (0.02, invalid_campaign_name),
+    # Range Validation
+    (0.02, budget_out_of_range),
+    # Business Rule Violations
+    (0.03, duplicate_channel_inside_channels),
+    (0.03, invalid_campaign_period),
+    (0.03, season_campaign_type_inconsistency),
+    (0.03, campaign_without_marketing_channels),
+    (0.03, completed_campaign_future_end_date),
+]
 
 
 @register("dirty_campaigns")
 def dirty_campaigns(ctx: GenerationContext):
+
     df = ctx.campaigns.campaigns_df.copy()
 
-    df["error_types"] = [[] for _ in range(len(df))]
-
-    # Negative budget
-    neg_idx = df.sample(frac=0.02, random_state=30).index
-    df.loc[neg_idx, "budget"] = -abs(df.loc[neg_idx, "budget"])
-    append_error(df, neg_idx, "negative budget")
-
-    # Astronomical budget
-    big_idx = df.sample(frac=0.01, random_state=31).index
-    df.loc[big_idx, "budget"] = [
-        random.randint(10_000_000, 5_000_000_000) for _ in range(len(big_idx))
-    ]
-    append_error(df, big_idx, "astronomical budget")
-
-    # end_date < start_date
-    inv_idx = df.sample(frac=0.02, random_state=32).index
-    df.loc[inv_idx, ["start_date", "end_date"]] = df.loc[
-        inv_idx, ["end_date", "start_date"]
-    ].values
-    append_error(df, inv_idx, "inverted date range")
-
-    # Missing target_segment
-    df = inject_nulls(
-        df,
-        df["target_segment"].isna(),
-        "target_segment",
-        rate=0.03,
-        error_label="missing target segment",
-    )
-
-    # is_ab_test stored as "True"/"False" string
-    df = df.astype({"is_ab_test": "object"})
-    str_mask = pd.Series(
-        [random.random() < 0.05 for _ in range(len(df))], index=df.index
-    )
-    df.loc[str_mask, "is_ab_test"] = df.loc[str_mask, "is_ab_test"].map(
-        {True: "True", False: "False"}
-    )
-    append_error(df, str_mask[str_mask].index, "is_ab_test stored as string")
-
-    # Whitespace in campaign_name
-    df = inject_whitespace(
-        df,
-        col="campaign_name",
-        rate=0.04,
-        error_label="campaign name formatting anomaly",
-    )
+    for rate, rule in CAMPAIGN_RULES:
+        apply_corruption(
+            df=df,
+            rate=rate,
+            corruption=rule,
+            ctx=ctx,
+        )
 
     return save(df, "campaigns_dirty.csv")

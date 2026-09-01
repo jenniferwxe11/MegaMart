@@ -1,0 +1,203 @@
+version: 2
+
+models:
+
+  # --- STOCK SNAPSHOTS ---
+  - name: stock_snapshots
+
+    # --- Business Rules ---
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - week_start_date
+              - store_id
+              - product_id
+
+          config:
+            meta:
+              title: Duplicate Stock Snapshot
+              category: Business Rule Violations
+              severity: High
+              description: Each store product must have at most one stock snapshot for a given week.
+
+      - snapshot_period_within_product_lifecycle:
+          config:
+            meta:
+              title: Snapshot Period Outside Product Lifecycle
+              category: Business Rule Violations
+              severity: High
+              description: Snapshot records must only exist during a product's active lifecycle.
+
+      - no_consecutive_duplicate_status:
+          config:
+            meta:
+              title: Consecutive Duplicate Stock Snapshot
+              category: Business Rule Violations
+              severity: High
+              description: Consecutive weekly snapshot for the same store product must differ in stock_band or stock_status.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              EXTRACT(DAYOFWEEK FROM week_start_date)=1
+
+          config:
+            meta:
+              title: Invalid Weekly Snapshot Date
+              category: Date Issues
+              severity: Low
+              description: week_start_date must be a Monday.
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: >
+              (
+                (stock_band = '0' AND stock_status = 'Out of Stock') OR
+                (stock_band = '1-5' AND stock_status = 'Limited Stock') OR
+                (stock_band = '6-20' AND stock_status = 'Low Stock') OR
+                (stock_band = '21-100' AND stock_status = 'In Stock') OR
+                (stock_band = '101+' AND stock_status = 'Overstocked')
+              )
+
+          config:
+            meta:
+              title: Invalid Stock Band and Status Combination
+              category: Business Rule Violations
+              severity: Medium
+              description: stock_band and stock_status must represent a valid inventory classification.
+
+      - store_product_pair_exists_in_catalogue:
+          config:
+            meta:
+              title: Store Product Not In Catalogue
+              category: Business Rule Violations
+              severity: High
+              description: Each stock snapshot must reference a product that is carried by the specified store.
+
+    # --- Column Constraints ---
+    columns:
+      - name: week_start_date
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Week Start Date
+                  category: Missing Values
+                  severity: High
+                  description: week_start_date is required.
+
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              arguments:
+                column_type: DATE
+
+              config:
+                meta:
+                  title: Invalid Week Start Date Type
+                  category: Date Type
+                  severity: Low
+                  description: week_start_date must be stored as a DATE.
+
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "<= current_date()"
+
+              config:
+                meta:
+                  title: Future Week Start Date
+                  category: Date Issues
+                  severity: Medium
+                  description: week_start_date must not be in the future.
+
+      - name: store_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Store ID
+                  category: Missing Values
+                  severity: High
+                  description: store_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('stores')
+                field: store_id
+
+              config:
+                meta:
+                  title: Invalid Store Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: store_id must exist in the stores table.
+
+      - name: product_id
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Product ID
+                  category: Missing Values
+                  severity: High
+                  description: product_id is required.
+
+          - relationships:
+              arguments:
+                to: ref('products')
+                field: product_id
+
+              config:
+                meta:
+                  title: Invalid Product Reference
+                  category: Referential Integrity
+                  severity: High
+                  description: product_id must exist in the products table.
+
+      - name: stock_status
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Stock Status
+                  category: Missing Values
+                  severity: High
+                  description: stock_status is required.
+
+          - accepted_values:
+              arguments:
+                values:
+                  [
+                    "Out of Stock",
+                    "Low Stock",
+                    "Limited Stock",
+                    "In Stock",
+                    "Overstocked",
+                  ]
+
+              config:
+                meta:
+                  title: Invalid Stock Status
+                  category: Data Quality
+                  severity: Low
+                  description: stock_status must be one of the supported values.
+
+      - name: stock_band
+        tests:
+          - not_null:
+              config:
+                meta:
+                  title: Missing Stock Band
+                  category: Missing Values
+                  severity: High
+                  description: stock_band is required.
+
+          - accepted_values:
+              arguments:
+                values: ["0", "1-5", "6-20", "21-100", "101+"]
+
+              config:
+                meta:
+                  title: Invalid Stock Band
+                  category: Data Quality
+                  severity: Low
+                  description: stock_band must be one of the supported values.

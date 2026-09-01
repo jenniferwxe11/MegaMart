@@ -6,14 +6,18 @@ import pandas as pd
 from data_generation.config.generation_config import LIMIT_STORE_CATALOGUES
 from data_generation.config.store_products_config import (
     NATURAL_BRAND_VARIATION_RATE,
-    NATURAL_NAME_VARIATION_RATE,
+    NATURAL_CATEGORY_VARIATION_RATE,
+    NATURAL_PRODUCT_NAME_VARIATION_RATE,
+    NATURAL_SELLING_PRICE_VARIATION_RATE,
     STORE_TYPE_CONFIG,
 )
 from data_generation.context.generation_context import GenerationContext
 from data_generation.registry import register
-from data_generation.services.products.store_catalogue_service import (
-    inject_brand_error,
-    inject_name_error,
+from data_generation.services.stores.store_catalogue_service import (
+    inject_brand_variation,
+    inject_category_variation,
+    inject_name_variation,
+    inject_price_variation,
 )
 from data_generation.utils.io_utils import save
 
@@ -82,16 +86,27 @@ def store_catalogues_generator(ctx: GenerationContext):
             category = product_row["category"]
             selling_price = product_row["selling_price"]
 
-            # Natural store-level name/brand variation only.
+            # Natural store-level variation only.
             store_product_name = (
-                inject_name_error(product_name)
-                if random.random() < NATURAL_NAME_VARIATION_RATE
+                inject_name_variation(product_name)
+                if random.random() < NATURAL_PRODUCT_NAME_VARIATION_RATE
                 else product_name
             )
             store_brand = (
-                inject_brand_error(brand)
+                inject_brand_variation(brand)
                 if random.random() < NATURAL_BRAND_VARIATION_RATE
                 else brand
+            )
+            store_category = (
+                inject_category_variation(category)
+                if random.random() < NATURAL_CATEGORY_VARIATION_RATE
+                else category
+            )
+
+            store_selling_price = (
+                inject_price_variation(selling_price)
+                if random.random() < NATURAL_SELLING_PRICE_VARIATION_RATE
+                else selling_price
             )
 
             # --- Store Product Listing Record ---
@@ -101,8 +116,8 @@ def store_catalogues_generator(ctx: GenerationContext):
                     "product_id": product_id,
                     "store_product_name": store_product_name,
                     "store_brand": store_brand,
-                    "store_category": category,
-                    "store_selling_price": selling_price,
+                    "store_category": store_category,
+                    "store_selling_price": store_selling_price,
                 }
             )
 

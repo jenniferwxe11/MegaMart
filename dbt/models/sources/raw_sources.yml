@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: raw
+    database: mega-mart-storage
+    schema: synthetic_dirty
+    tables:
+      - name: customers
+      - name: stores
+      - name: products
+      - name: competitor_products
+      - name: competitor_price_history
+      - name: store_catalogues
+      - name: product_lifecycles
+      - name: product_content_quality
+      - name: stockout_events
+      - name: stock_snapshots
+      - name: inventory_change_events
+      - name: campaigns
+      - name: campaign_assignments
+      - name: campaign_exposures
+      - name: bundles
+      - name: bundle_items
+      - name: bundle_pricings
+      - name: promotions
+      - name: clickstreams
+      - name: transactions
+      - name: transaction_items
+      - name: product_reviews

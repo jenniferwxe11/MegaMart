@@ -1,0 +1,148 @@
+# dirty_data_generation/corruption_rules/products_rules.py
+
+import random
+
+import pandas as pd
+
+# =============================================================================
+# Missing Values
+# =============================================================================
+
+
+def missing_product_name(df, idx):
+
+    df.at[idx, "product_name"] = None
+
+
+def missing_brand(df, idx):
+
+    df.at[idx, "brand"] = None
+
+
+def missing_category(df, idx):
+
+    df.at[idx, "category"] = None
+
+
+def missing_selling_price(df, idx):
+
+    df.at[idx, "selling_price"] = None
+
+
+def missing_cost_price(df, idx):
+
+    df.at[idx, "cost_price"] = None
+
+
+# =============================================================================
+# Formatting
+# =============================================================================
+
+
+def invalid_product_id_format(df, idx):
+
+    value = df.at[idx, "product_id"]
+
+    if pd.isna(value):
+        return
+
+    corruptions = [
+        lambda x: x.replace("000", "00", 1),
+        lambda x: x.replace("PROD", "PROD-", 1),
+        lambda x: x.lower(),
+        lambda x: x.replace("PROD", "P", 1),
+        lambda x: x.replace("PROD", "PRODUCT", 1),
+        lambda x: x.replace("PROD", "PROD ", 1),
+    ]
+
+    df.at[idx, "product_id"] = random.choice(corruptions)(value)
+
+
+def invalid_product_name_format(df, idx):
+
+    value = df.at[idx, "product_name"]
+
+    if pd.isna(value):
+        return
+
+    corruptions = [
+        lambda x: " " + x,
+        lambda x: x + " ",
+        lambda x: " " + x + " ",
+    ]
+
+    df.at[idx, "product_name"] = random.choice(corruptions)(value)
+
+
+# =============================================================================
+# Duplicates
+# =============================================================================
+
+
+def duplicate_product_id(df, idx):
+
+    other_product_ids = df[df.index != idx]["product_id"].dropna().tolist()
+
+    if not other_product_ids:
+        return
+
+    df.at[idx, "product_id"] = random.choice(other_product_ids)
+
+
+# =============================================================================
+# Range Validation
+# =============================================================================
+
+
+def selling_price_out_of_range(df, idx):
+    """
+    Selling price must be more than 0 and less than 100000.
+    """
+
+    value = df.at[idx, "selling_price"]
+
+    if pd.isna(value):
+        return
+
+    corruptions = [
+        lambda _: 0,
+        lambda x: -abs(x),
+        lambda _: round(random.uniform(100001, 250000), 2),
+    ]
+
+    df.at[idx, "selling_price"] = random.choice(corruptions)(value)
+
+
+def cost_price_out_of_range(df, idx):
+    """
+    Cost price must be more than 0 and less than 100000.
+    """
+
+    value = df.at[idx, "cost_price"]
+
+    if pd.isna(value):
+        return
+
+    corruptions = [
+        lambda _: 0,
+        lambda x: -abs(x),
+        lambda _: round(random.uniform(100001, 250000), 2),
+    ]
+
+    df.at[idx, "cost_price"] = random.choice(corruptions)(value)
+
+
+# =============================================================================
+# Business Rule Violations
+# =============================================================================
+
+
+def cost_price_greater_than_selling_price(df, idx):
+    """
+    Cost price is greater than selling price.
+    """
+
+    if pd.isna(df.at[idx, "cost_price"]) or pd.isna(df.at[idx, "selling_price"]):
+        return
+
+    df.at[idx, "cost_price"] = df.at[idx, "selling_price"] + random.uniform(1, 100)

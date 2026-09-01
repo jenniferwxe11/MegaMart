@@ -1,7 +1,9 @@
 # How many enrichment events can happen per product (beyond the initial one)
 MAX_ENRICHMENTS = 3
+
 # Minimum and maximum days between enrichment events
 ENRICH_GAP = (30, 365)
+
 # Ordered quality tiers
 TIERS = ["Poor", "Average", "Good", "Excellent"]
 
