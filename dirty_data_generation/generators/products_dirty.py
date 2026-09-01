@@ -3,7 +3,7 @@
 from dirty_data_generation.context.generation_context import GenerationContext
 from dirty_data_generation.corruption_rules.products_rules import (
     cost_price_greater_than_selling_price,
-    cost_price_out_of_bounds,
+    cost_price_out_of_range,
     duplicate_product_id,
     invalid_product_id_format,
     invalid_product_name_format,
@@ -12,7 +12,7 @@ from dirty_data_generation.corruption_rules.products_rules import (
     missing_cost_price,
     missing_product_name,
     missing_selling_price,
-    selling_price_out_of_bounds,
+    selling_price_out_of_range,
 )
 from dirty_data_generation.helpers.dirty_utils import apply_corruption
 from dirty_data_generation.registry import register
@@ -31,8 +31,8 @@ PRODUCT_RULES = [
     # Duplicates
     (0.03, duplicate_product_id),
     # Range Validation
-    (0.03, selling_price_out_of_bounds),
-    (0.03, cost_price_out_of_bounds),
+    (0.03, selling_price_out_of_range),
+    (0.03, cost_price_out_of_range),
     # Business Rule Violations
     (0.03, cost_price_greater_than_selling_price),
 ]

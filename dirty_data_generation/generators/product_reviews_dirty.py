@@ -8,7 +8,7 @@ from dirty_data_generation.corruption_rules.product_reviews_rules import (
     invalid_review_id_format,
     missing_rating,
     missing_review_date,
-    rating_out_of_bounds,
+    rating_out_of_range,
     review_before_transaction,
 )
 from dirty_data_generation.helpers.dirty_utils import apply_corruption
@@ -24,7 +24,7 @@ PRODUCT_REVIEW_RULES = [
     # Duplicates
     (0.02, duplicate_review_id),
     # Range Validation
-    (0.03, rating_out_of_bounds),
+    (0.03, rating_out_of_range),
     # Business Rules
     (0.02, future_review_date),
     (0.02, review_before_transaction),

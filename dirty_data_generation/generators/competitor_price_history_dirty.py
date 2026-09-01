@@ -1,3 +1,5 @@
+# dirty_data_generation/generators/competitor_price_history_dirty.py
+
 from dirty_data_generation.context.generation_context import GenerationContext
 from dirty_data_generation.corruption_rules.competitor_price_history_rules import (
     duplicate_competitor_scrape_record,

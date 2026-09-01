@@ -1,3 +1,5 @@
+# dirty_data_generation/corruption_rules/competitor_price_history_rules.py
+
 import random
 
 import pandas as pd
@@ -9,23 +11,23 @@ from dirty_data_generation.helpers.dirty_utils import generate_future_date
 # =============================================================================
 
 
-def missing_competitor(df, idx, ctx):
+def missing_competitor(df, idx):
     df.at[idx, "competitor"] = None
 
 
-def missing_scraped_product_name(df, idx, ctx):
+def missing_scraped_product_name(df, idx):
     df.at[idx, "scraped_product_name"] = None
 
 
-def missing_scraped_category(df, idx, ctx):
+def missing_scraped_category(df, idx):
     df.at[idx, "scraped_category"] = None
 
 
-def missing_scraped_price(df, idx, ctx):
+def missing_scraped_price(df, idx):
     df.at[idx, "scraped_price"] = None
 
 
-def missing_update_timestamp(df, idx, ctx):
+def missing_update_timestamp(df, idx):
     df.at[idx, "update_timestamp"] = None
 
 
@@ -34,7 +36,7 @@ def missing_update_timestamp(df, idx, ctx):
 # =============================================================================
 
 
-def scraped_price_out_of_range(df, idx, ctx):
+def scraped_price_out_of_range(df, idx):
     """
     scraped_price must be more than 0 and less than 100000.
     """
@@ -58,10 +60,7 @@ def scraped_price_out_of_range(df, idx, ctx):
 # =============================================================================
 
 
-def future_update_timestamp(df, idx, ctx):
-    """
-    update_timestamp must not be in the future.
-    """
+def future_update_timestamp(df, idx):
 
     value = df.at[idx, "update_timestamp"]
 
@@ -71,7 +70,7 @@ def future_update_timestamp(df, idx, ctx):
     df.at[idx, "update_timestamp"] = pd.Timestamp(generate_future_date())
 
 
-def duplicate_competitor_scrape_record(df, idx, ctx):
+def duplicate_competitor_scrape_record(df, idx):
     """
     Creates a duplicate (competitor, scraped_product_name, update_timestamp)
     combination.

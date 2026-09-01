@@ -1,3 +1,5 @@
+# dirty_data_generation/generators/campaigns_dirty.py
+
 from dirty_data_generation.context.generation_context import GenerationContext
 from dirty_data_generation.corruption_rules.campaigns_rules import (
     budget_out_of_range,

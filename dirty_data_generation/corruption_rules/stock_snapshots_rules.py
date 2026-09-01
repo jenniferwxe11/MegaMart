@@ -12,27 +12,27 @@ from dirty_data_generation.helpers.dirty_utils import generate_future_datetime
 # =============================================================================
 
 
-def missing_week_start_date(df, idx, ctx):
+def missing_week_start_date(df, idx):
 
     df.at[idx, "week_start_date"] = None
 
 
-def missing_store_id(df, idx, ctx):
+def missing_store_id(df, idx):
 
     df.at[idx, "store_id"] = None
 
 
-def missing_product_id(df, idx, ctx):
+def missing_product_id(df, idx):
 
     df.at[idx, "product_id"] = None
 
 
-def missing_stock_status(df, idx, ctx):
+def missing_stock_status(df, idx):
 
     df.at[idx, "stock_status"] = None
 
 
-def missing_stock_band(df, idx, ctx):
+def missing_stock_band(df, idx):
 
     df.at[idx, "stock_band"] = None
 
@@ -42,16 +42,7 @@ def missing_stock_band(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_stock_status(df, idx, ctx):
-    """
-    stock_status must be one of:
-
-        Out of Stock
-        Low Stock
-        Limited Stock
-        In Stock
-        Overstocked
-    """
+def invalid_stock_status(df, idx):
 
     if pd.isna(df.at[idx, "stock_status"]):
         return
@@ -68,16 +59,7 @@ def invalid_stock_status(df, idx, ctx):
     )
 
 
-def invalid_stock_band(df, idx, ctx):
-    """
-    stock_band must be one of:
-
-        0
-        1-5
-        6-20
-        21-100
-        101+
-    """
+def invalid_stock_band(df, idx):
 
     if pd.isna(df.at[idx, "stock_band"]):
         return
@@ -99,10 +81,7 @@ def invalid_stock_band(df, idx, ctx):
 # =============================================================================
 
 
-def future_week_start_date(df, idx, ctx):
-    """
-    week_start_date must not be in the future.
-    """
+def future_week_start_date(df, idx):
 
     if pd.isna(df.at[idx, "week_start_date"]):
         return
@@ -110,7 +89,7 @@ def future_week_start_date(df, idx, ctx):
     df.at[idx, "week_start_date"] = pd.Timestamp(generate_future_datetime())
 
 
-def duplicate_stock_snapshot(df, idx, ctx):
+def duplicate_stock_snapshot(df, idx):
 
     key_columns = [
         "week_start_date",
@@ -184,7 +163,7 @@ def snapshot_outside_product_lifecycle(df, idx, ctx):
     df.at[idx, "week_start_date"] = before_start
 
 
-def no_consecutive_duplicate_status(df, idx, ctx):
+def no_consecutive_duplicate_status(df, idx):
     """
     Copies the previous snapshot's stock classification onto the current
     snapshot for the same store/product.
@@ -222,7 +201,7 @@ def no_consecutive_duplicate_status(df, idx, ctx):
     df.at[idx, "stock_status"] = df.at[previous_idx, "stock_status"]
 
 
-def invalid_stock_band_status_combination(df, idx, ctx):
+def invalid_stock_band_status_combination(df, idx):
     """
     stock_band and stock_status must represent the same inventory level.
 

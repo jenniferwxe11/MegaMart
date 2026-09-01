@@ -4,56 +4,58 @@ import random
 
 import pandas as pd
 
+from dirty_data_generation.helpers.dirty_utils import generate_future_datetime
+
 # =============================================================================
 # Missing Values
 # =============================================================================
 
 
-def missing_transaction_id(df, idx, ctx):
+def missing_transaction_id(df, idx):
     df.at[idx, "transaction_id"] = None
 
 
-def missing_customer_id(df, idx, ctx):
+def missing_customer_id(df, idx):
     df.at[idx, "customer_id"] = None
 
 
-def missing_store_id(df, idx, ctx):
+def missing_store_id(df, idx):
     df.at[idx, "store_id"] = None
 
 
-def missing_transaction_time(df, idx, ctx):
+def missing_transaction_time(df, idx):
     df.at[idx, "transaction_time"] = None
 
 
-def missing_cart_subtotal(df, idx, ctx):
+def missing_cart_subtotal(df, idx):
     df.at[idx, "cart_subtotal"] = None
 
 
-def missing_total_discount(df, idx, ctx):
+def missing_total_discount(df, idx):
     df.at[idx, "total_discount"] = None
 
 
-def missing_shipping_fee(df, idx, ctx):
+def missing_shipping_fee(df, idx):
     df.at[idx, "shipping_fee"] = None
 
 
-def missing_shipping_discount(df, idx, ctx):
+def missing_shipping_discount(df, idx):
     df.at[idx, "shipping_discount"] = None
 
 
-def missing_transaction_total(df, idx, ctx):
+def missing_transaction_total(df, idx):
     df.at[idx, "transaction_total"] = None
 
 
-def missing_payment_method(df, idx, ctx):
+def missing_payment_method(df, idx):
     df.at[idx, "payment_method"] = None
 
 
-def missing_basket_size(df, idx, ctx):
+def missing_basket_size(df, idx):
     df.at[idx, "basket_size"] = None
 
 
-def missing_num_unique_items(df, idx, ctx):
+def missing_num_unique_items(df, idx):
     df.at[idx, "num_unique_items"] = None
 
 
@@ -62,10 +64,8 @@ def missing_num_unique_items(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_transaction_id_format(df, idx, ctx):
-    """
-    Transaction ID must follow TRAN followed by at least three digits.
-    """
+def invalid_transaction_id_format(df, idx):
+
     value = df.at[idx, "transaction_id"]
 
     if pd.isna(value):
@@ -86,7 +86,7 @@ def invalid_transaction_id_format(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_cart_subtotal(df, idx, ctx):
+def invalid_cart_subtotal(df, idx):
     """
     Cart subtotal must be more than 0 and less than 100000.
     """
@@ -104,7 +104,7 @@ def invalid_cart_subtotal(df, idx, ctx):
     df.at[idx, "cart_subtotal"] = random.choice(corruptions)(value)
 
 
-def invalid_total_discount(df, idx, ctx):
+def invalid_total_discount(df, idx):
     """
     Total discount must be between 0 and 100000 inclusive.
     """
@@ -121,7 +121,7 @@ def invalid_total_discount(df, idx, ctx):
     df.at[idx, "total_discount"] = random.choice(corruptions)(value)
 
 
-def invalid_shipping_fee(df, idx, ctx):
+def invalid_shipping_fee(df, idx):
     """
     Shipping fee must be between 0 and 100000 inclusive.
     """
@@ -138,7 +138,7 @@ def invalid_shipping_fee(df, idx, ctx):
     df.at[idx, "shipping_fee"] = random.choice(corruptions)(value)
 
 
-def invalid_shipping_discount(df, idx, ctx):
+def invalid_shipping_discount(df, idx):
     """
     Shipping discount must be between 0 and 100000 inclusive.
     """
@@ -155,7 +155,7 @@ def invalid_shipping_discount(df, idx, ctx):
     df.at[idx, "shipping_discount"] = random.choice(corruptions)(value)
 
 
-def invalid_transaction_total(df, idx, ctx):
+def invalid_transaction_total(df, idx):
     """
     Transaction total must be more than 0 and less than 100000.
     """
@@ -173,7 +173,7 @@ def invalid_transaction_total(df, idx, ctx):
     df.at[idx, "transaction_total"] = random.choice(corruptions)(value)
 
 
-def invalid_basket_size(df, idx, ctx):
+def invalid_basket_size(df, idx):
     """
     Basket size must be between 1 and 100000 inclusive.
     """
@@ -191,7 +191,7 @@ def invalid_basket_size(df, idx, ctx):
     df.at[idx, "basket_size"] = random.choice(corruptions)(value)
 
 
-def invalid_num_unique_items(df, idx, ctx):
+def invalid_num_unique_items(df, idx):
     """
     Number of unique items must be between 1 and 100000 inclusive.
     """
@@ -214,10 +214,8 @@ def invalid_num_unique_items(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_payment_method(df, idx, ctx):
-    """
-    Payment method must be one of the supported payment methods.
-    """
+def invalid_payment_method(df, idx):
+
     value = df.at[idx, "payment_method"]
 
     if pd.isna(value):
@@ -239,20 +237,12 @@ def invalid_payment_method(df, idx, ctx):
 # =============================================================================
 
 
-def future_transaction_time(df, idx, ctx):
-    """
-    Transaction time must not be in the future.
-    """
-    value = df.at[idx, "transaction_time"]
+def future_transaction_time(df, idx):
 
-    if pd.isna(value):
+    if pd.isna(df.at[idx, "transaction_time"]):
         return
 
-    df.at[idx, "transaction_time"] = (
-        pd.Timestamp.now().normalize()
-        + pd.Timedelta(days=random.randint(1, 365))
-        + pd.Timedelta(hours=random.randint(1, 23))
-    )
+    df.at[idx, "transaction_time"] = pd.Timestamp(generate_future_datetime())
 
 
 # =============================================================================
@@ -260,7 +250,7 @@ def future_transaction_time(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_transaction_id(df, idx, ctx):
+def duplicate_transaction_id(df, idx):
     """
     Transaction ID must be unique.
     """
@@ -280,7 +270,7 @@ def duplicate_transaction_id(df, idx, ctx):
     df.at[idx, "transaction_id"] = df.at[other_idx, "transaction_id"]
 
 
-def duplicate_transaction(df, idx, ctx):
+def duplicate_transaction(df, idx):
     """
     Each customer/store/timestamp combination should be unique.
 
@@ -427,7 +417,7 @@ def transaction_discount_mismatch(df, idx, ctx):
     )
 
 
-def total_discount_exceeds_subtotal(df, idx, ctx):
+def total_discount_exceeds_subtotal(df, idx):
     """
     total_discount must not exceed cart_subtotal.
     """
@@ -446,7 +436,7 @@ def total_discount_exceeds_subtotal(df, idx, ctx):
     )
 
 
-def shipping_discount_without_fee(df, idx, ctx):
+def shipping_discount_without_fee(df, idx):
     """
     shipping_discount must be zero when shipping_fee is zero.
     """
@@ -465,7 +455,7 @@ def shipping_discount_without_fee(df, idx, ctx):
     )
 
 
-def shipping_discount_not_equal_fee(df, idx, ctx):
+def shipping_discount_not_equal_fee(df, idx):
     """
     Shipping discount must either be zero or equal to shipping_fee.
     """
@@ -519,7 +509,7 @@ def applied_promotions_discount_mismatch(df, idx, ctx):
         ]
 
 
-def transaction_total_reconciliation_error(df, idx, ctx):
+def transaction_total_reconciliation_error(df, idx):
     """
     transaction_total must reconcile with cart subtotal, discounts,
     and shipping.
@@ -549,7 +539,7 @@ def transaction_total_reconciliation_error(df, idx, ctx):
     )
 
 
-def unique_items_exceed_basket_size(df, idx, ctx):
+def unique_items_exceed_basket_size(df, idx):
     """
     num_unique_items must not exceed basket_size.
     """
@@ -576,7 +566,7 @@ def _get_applied_promotions(df, idx):
     return promotions
 
 
-def missing_applied_promotion_id(df, idx, ctx):
+def missing_applied_promotion_id(df, idx):
     promotions = _get_applied_promotions(df, idx)
 
     if promotions is None:
@@ -588,7 +578,7 @@ def missing_applied_promotion_id(df, idx, ctx):
         promotion["promotion_id"] = None
 
 
-def missing_applied_promotion_type(df, idx, ctx):
+def missing_applied_promotion_type(df, idx):
     promotions = _get_applied_promotions(df, idx)
 
     if promotions is None:
@@ -600,7 +590,7 @@ def missing_applied_promotion_type(df, idx, ctx):
         promotion["promotion_type"] = None
 
 
-def missing_applied_promotion_amount(df, idx, ctx):
+def missing_applied_promotion_amount(df, idx):
     promotions = _get_applied_promotions(df, idx)
 
     if promotions is None:
@@ -612,7 +602,7 @@ def missing_applied_promotion_amount(df, idx, ctx):
         promotion["amount"] = None
 
 
-def invalid_applied_promotion_amount(df, idx, ctx):
+def invalid_applied_promotion_amount(df, idx):
     """
     Promotion amount must be more than 0 and less than 100000.
     """
@@ -641,7 +631,7 @@ def invalid_applied_promotion_amount(df, idx, ctx):
     promotion["amount"] = random.choice(corruptions)(value)
 
 
-def duplicate_applied_promotion(df, idx, ctx):
+def duplicate_applied_promotion(df, idx):
     """
     A promotion may only appear once per transaction.
     """

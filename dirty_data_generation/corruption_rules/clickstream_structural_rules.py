@@ -6,14 +6,78 @@ from datetime import timedelta
 
 from faker import Faker
 
+from data_generation.config.clickstreams_config import (
+    LANDING_PAGE_BEHAVIOUR,
+    VALID_EVENT_TRANSITIONS,
+)
+from data_generation.config.constants import (
+    DATA_END_DATE,
+    DATA_START_DATE,
+)
 from data_generation.config.products_config import CATEGORIES
 
 fake = Faker()
 
+# =============================================================================
+# Config derived Event Types
+# =============================================================================
 
-# ---------------------------------------------------------------------------
+
+ALL_EVENT_TYPES = sorted(
+    set(VALID_EVENT_TRANSITIONS)
+    | {
+        next_event
+        for transitions in VALID_EVENT_TRANSITIONS.values()
+        for next_event in transitions
+    }
+)
+
+
+def _choose_invalid_first_event(referrer: str) -> str | None:
+    """
+    Choose an event that is invalid as the first event for the given referrer.
+    """
+
+    valid_first_events = set(LANDING_PAGE_BEHAVIOUR.get(referrer, {}))
+
+    invalid_events = [
+        event_type
+        for event_type in ALL_EVENT_TYPES
+        if event_type not in valid_first_events
+    ]
+
+    if not invalid_events:
+        return None
+
+    return random.choice(invalid_events)
+
+
+def _choose_next_event(previous_event: str) -> str | None:
+    """
+    Choose the next event according to VALID_EVENT_TRANSITIONS.
+
+    This keeps the non corrupted portion of the generated session
+    behaviourally valid.
+    """
+
+    transitions = VALID_EVENT_TRANSITIONS.get(previous_event)
+
+    if not transitions:
+        return None
+
+    events = list(transitions.keys())
+    probabilities = list(transitions.values())
+
+    return random.choices(
+        events,
+        weights=probabilities,
+        k=1,
+    )[0]
+
+
+# =============================================================================
 # Orphan / Invalid Landing Sessions
-# ---------------------------------------------------------------------------
+# =============================================================================
 
 
 def inject_orphan_sessions(
@@ -24,9 +88,9 @@ def inject_orphan_sessions(
     """
     Creates sessions whose first event is not a valid landing event.
 
-    This is a structural corruption rather than a row-level corruption.
+    This is a structural corruption rather than a row level corruption.
 
-    Intended to violate:
+    Violates:
         first_event_matches_landing_behaviour
         invalid_first_event
     """
@@ -36,7 +100,6 @@ def inject_orphan_sessions(
     product_category_map = ctx.products.product_category_map
     customer_ids = ctx.customers.customer_ids
 
-    # Nothing to inject if the required source data is unavailable.
     if source_df.empty or not product_ids or not customer_ids:
         return []
 
@@ -45,28 +108,11 @@ def inject_orphan_sessions(
 
     orphan_rows = []
 
-    # Deliberately invalid first event types.
-    invalid_first_event_types = [
-        "Product View",
-        "Add to Cart",
-        "Cart View",
-        "Checkout Start",
-        "Payment Attempt",
-    ]
-
-    # Valid events that can follow the first event.
-    subsequent_event_types = [
-        "Home View",
-        "Search View",
-        "Category View",
-        "Product View",
-        "Add to Cart",
-        "Cart View",
-        "Checkout Start",
-        "Payment Attempt",
-    ]
-
     for _ in range(n_sessions):
+
+        # ---------------------------------------------------------------------
+        # Select a source session/customer context
+        # ---------------------------------------------------------------------
 
         source_row = source_df.sample(1).iloc[0]
 
@@ -79,21 +125,42 @@ def inject_orphan_sessions(
         session_id = str(uuid.uuid4())
 
         current_time = fake.date_time_between(
-            start_date="-2y",
-            end_date="now",
+            start_date=DATA_START_DATE,
+            end_date=DATA_END_DATE,
         )
 
         n_events = random.randint(3, 12)
 
-        # ---------------------------------------------------------------
-        # Ensure the FIRST event is deliberately invalid.
-        # ---------------------------------------------------------------
+        # ---------------------------------------------------------------------
+        # First Event
+        # ---------------------------------------------------------------------
 
-        event_types = [random.choice(invalid_first_event_types)]
+        first_event = _choose_invalid_first_event(referrer)
 
-        event_types.extend(
-            random.choice(subsequent_event_types) for _ in range(n_events - 1)
-        )
+        if first_event is None:
+            continue
+
+        event_types = [first_event]
+
+        # ---------------------------------------------------------------------
+        # Subsequent Events
+        # ---------------------------------------------------------------------
+
+        previous_event = first_event
+
+        for _ in range(n_events - 1):
+
+            next_event = _choose_next_event(previous_event)
+
+            if next_event is None:
+                break
+
+            event_types.append(next_event)
+            previous_event = next_event
+
+        # ---------------------------------------------------------------------
+        # Build session
+        # ---------------------------------------------------------------------
 
         cart_content = []
 
@@ -108,9 +175,9 @@ def inject_orphan_sessions(
             page = None
             scroll_depth: float | None = random.uniform(0, 100)
 
-            # -----------------------------------------------------------
-            # Event-specific construction
-            # -----------------------------------------------------------
+            # -----------------------------------------------------------------
+            # Event specific construction
+            # -----------------------------------------------------------------
 
             if event_type == "Home View":
 
@@ -161,15 +228,40 @@ def inject_orphan_sessions(
 
                 page = "/payment"
 
-            # -----------------------------------------------------------
+            elif event_type == "Remove from Cart":
+
+                product_id = random.choice(product_ids)
+
+                product_name = product_name_map.get(product_id)
+
+                category = product_category_map.get(product_id)
+
+                page = f"/remove_from_cart/{product_id}"
+
+                if cart_content:
+                    product_to_remove = random.choice(cart_content)
+
+                    cart_content.remove(product_to_remove)
+
+            elif event_type == "Payment Successful":
+
+                page = "/payment/success"
+
+                cart_content = []
+
+            elif event_type == "Payment Failed":
+
+                page = "/payment/fail"
+
+            # -----------------------------------------------------------------
             # Timestamp
-            # -----------------------------------------------------------
+            # -----------------------------------------------------------------
 
             current_time += timedelta(seconds=random.randint(10, 300))
 
-            # -----------------------------------------------------------
+            # -----------------------------------------------------------------
             # Build row
-            # -----------------------------------------------------------
+            # -----------------------------------------------------------------
 
             row = {
                 "clickstream_id": f"{session_id}_{event_order}",
@@ -204,144 +296,9 @@ def inject_orphan_sessions(
     return orphan_rows
 
 
-# ---------------------------------------------------------------------------
-# Bot Traffic
-# ---------------------------------------------------------------------------
-
-
-def inject_bot_traffic(
-    ctx,
-    row,
-    n_events: int | None = None,
-):
-    """
-    Generates a synthetic bot session.
-
-    This is intentionally structural and should not be mixed with
-    ordinary row-level corruption.
-
-    NOTE:
-        There is currently no dbt test specifically validating bot traffic.
-        Keep this injector unused unless bot traffic is an explicit
-        dirty-data requirement.
-    """
-
-    product_ids = ctx.products.product_ids
-    product_name_map = ctx.products.product_name_map
-
-    if not product_ids:
-        return []
-
-    if n_events is None:
-        n_events = random.randint(5, 20)
-
-    bot_session_id = str(uuid.uuid4())
-
-    # Use the supplied row only as a template.
-    source_row = row.copy()
-
-    current_time = source_row.get("event_timestamp") or fake.date_time_between(
-        start_date="-30d",
-        end_date="now",
-    )
-
-    bot_rows = []
-
-    event_types = [
-        "Home View",
-        "Search View",
-        "Category View",
-        "Product View",
-        "Cart View",
-    ]
-
-    for event_order in range(1, n_events + 1):
-
-        # ---------------------------------------------------------------
-        # Create a NEW dictionary for every event.
-        # ---------------------------------------------------------------
-
-        bot_row = source_row.copy()
-
-        event_type = random.choice(event_types)
-
-        current_time += timedelta(
-            seconds=random.choice(
-                [
-                    random.uniform(0.1, 0.5),
-                    random.uniform(1, 5),
-                    random.uniform(10, 60),
-                ]
-            )
-        )
-
-        bot_row["session_id"] = bot_session_id
-
-        bot_row["event_order"] = event_order
-
-        bot_row["clickstream_id"] = f"{bot_session_id}_{event_order}"
-
-        bot_row["event_timestamp"] = current_time
-
-        bot_row["event_type"] = event_type
-
-        bot_row["bounce_flag"] = 0
-
-        # Reset event-specific fields.
-        bot_row["product_id"] = None
-        bot_row["product_name"] = None
-        bot_row["category"] = None
-        bot_row["promotion_ids"] = []
-        bot_row["bundle_ids"] = []
-        bot_row["cart_content"] = []
-        bot_row["cart_size"] = 0
-        bot_row["purchased_items"] = []
-        bot_row["stock_status"] = None
-
-        # ---------------------------------------------------------------
-        # Event-specific fields
-        # ---------------------------------------------------------------
-
-        if event_type == "Home View":
-
-            bot_row["page"] = "/home"
-            bot_row["scroll_depth"] = random.uniform(0, 20)
-
-        elif event_type == "Search View":
-
-            bot_row["page"] = "/search?q=bot"
-            bot_row["scroll_depth"] = random.uniform(0, 20)
-
-        elif event_type == "Category View":
-
-            category = random.choice(CATEGORIES)
-
-            bot_row["category"] = category
-            bot_row["page"] = f"/category/{category}"
-            bot_row["scroll_depth"] = random.uniform(0, 20)
-
-        elif event_type == "Product View":
-
-            product_id = random.choice(product_ids)
-
-            bot_row["product_id"] = product_id
-            bot_row["product_name"] = product_name_map.get(product_id)
-            bot_row["page"] = f"/product/{product_id}"
-            bot_row["scroll_depth"] = random.uniform(0, 20)
-
-        elif event_type == "Cart View":
-
-            bot_row["page"] = "/cart"
-            bot_row["scroll_depth"] = None
-
-        bot_rows.append(bot_row)
-
-    return bot_rows
-
-
-# ---------------------------------------------------------------------------
+# =============================================================================
 # Structural Corruption Registry
-# ---------------------------------------------------------------------------
+# =============================================================================
 
 
 CLICKSTREAM_STRUCTURAL_RULES = [

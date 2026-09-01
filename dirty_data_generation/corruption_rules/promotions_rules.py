@@ -1,6 +1,5 @@
 # dirty_data_generation/corruption_rules/promotions_rules.py
 
-
 import random
 from datetime import timedelta
 
@@ -11,17 +10,17 @@ import pandas as pd
 # =============================================================================
 
 
-def missing_promotion_name(df, idx, ctx):
+def missing_promotion_name(df, idx):
 
     df.at[idx, "promotion_name"] = None
 
 
-def missing_promotion_theme(df, idx, ctx):
+def missing_promotion_theme(df, idx):
 
     df.at[idx, "promotion_theme"] = None
 
 
-def missing_promotion_target_id(df, idx, ctx):
+def missing_promotion_target_id(df, idx):
     """
     promotion_target_id is required whenever promotion_scope != 'cart'.
     """
@@ -35,22 +34,22 @@ def missing_promotion_target_id(df, idx, ctx):
     df.at[idx, "promotion_target_id"] = None
 
 
-def missing_promotion_value(df, idx, ctx):
+def missing_promotion_value(df, idx):
 
     df.at[idx, "promotion_value"] = None
 
 
-def missing_discount_code(df, idx, ctx):
+def missing_discount_code(df, idx):
 
     df.at[idx, "discount_code"] = None
 
 
-def missing_effective_start_date(df, idx, ctx):
+def missing_effective_start_date(df, idx):
 
     df.at[idx, "effective_start_date"] = None
 
 
-def missing_effective_end_date(df, idx, ctx):
+def missing_effective_end_date(df, idx):
 
     df.at[idx, "effective_end_date"] = None
 
@@ -60,14 +59,7 @@ def missing_effective_end_date(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_promotion_mechanic(df, idx, ctx):
-    """
-    promotion_mechanic must be one of:
-        percentage_discount
-        dollar_discount
-        free_shipping
-        bundle
-    """
+def invalid_promotion_mechanic(df, idx):
 
     if pd.isna(df.at[idx, "promotion_mechanic"]):
         return
@@ -83,14 +75,7 @@ def invalid_promotion_mechanic(df, idx, ctx):
     )
 
 
-def invalid_promotion_scope(df, idx, ctx):
-    """
-    promotion_scope must be one of:
-        cart
-        category
-        product
-        bundle
-    """
+def invalid_promotion_scope(df, idx):
 
     if pd.isna(df.at[idx, "promotion_scope"]):
         return
@@ -111,7 +96,7 @@ def invalid_promotion_scope(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_promotion_id_format(df, idx, ctx):
+def invalid_promotion_id_format(df, idx):
 
     value = df.at[idx, "promotion_id"]
 
@@ -134,13 +119,10 @@ def invalid_promotion_id_format(df, idx, ctx):
     df.at[idx, "promotion_id"] = random.choice(corruptions)(value)
 
 
-def invalid_discount_code_format(df, idx, ctx):
+def invalid_discount_code_format(df, idx):
     """
     discount_code must contain uppercase letters,
     numbers and underscores only.
-
-    Valid regex:
-        ^[A-Z0-9_]+$
     """
 
     value = df.at[idx, "discount_code"]
@@ -170,7 +152,7 @@ def invalid_discount_code_format(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_promotion_id(df, idx, ctx):
+def duplicate_promotion_id(df, idx):
 
     other_promotion_ids = (
         df[df.index != idx]["promotion_id"].dropna().astype(str).tolist()
@@ -187,9 +169,9 @@ def duplicate_promotion_id(df, idx, ctx):
 # =============================================================================
 
 
-def promotion_value_out_of_range(df, idx, ctx):
+def promotion_value_out_of_range(df, idx):
     """
-    promotion_value must be between 0 and 100000.
+    promotion_value must be more than 0 and less than 100000.
     """
 
     value = df.at[idx, "promotion_value"]
@@ -206,9 +188,9 @@ def promotion_value_out_of_range(df, idx, ctx):
     df.at[idx, "promotion_value"] = random.choice(corruptions)(value)
 
 
-def min_spend_out_of_range(df, idx, ctx):
+def min_spend_out_of_range(df, idx):
     """
-    min_spend must be between 0 and 100000.
+    min_spend must be more than 0 and less than 100000.
     """
 
     value = df.at[idx, "min_spend"]
@@ -225,7 +207,7 @@ def min_spend_out_of_range(df, idx, ctx):
     df.at[idx, "min_spend"] = random.choice(corruptions)(value)
 
 
-def priority_out_of_range(df, idx, ctx):
+def priority_out_of_range(df, idx):
     """
     priority must be between 1 and 4 inclusive.
     """
@@ -249,7 +231,7 @@ def priority_out_of_range(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_effective_period(df, idx, ctx):
+def invalid_effective_period(df, idx):
 
     start = df.at[idx, "effective_start_date"]
     end = df.at[idx, "effective_end_date"]
@@ -263,7 +245,7 @@ def invalid_effective_period(df, idx, ctx):
     df.at[idx, "effective_start_date"] = end + timedelta(days=1)
 
 
-def zero_value_non_free_shipping(df, idx, ctx):
+def zero_value_non_free_shipping(df, idx):
     """
     Non-free-shipping promotions must have promotion_value > 0.
 
@@ -285,7 +267,7 @@ def free_shipping_invalid_scope(df, idx, ctx):
     """
     Free shipping promotions must use cart scope.
 
-    We deliberately select a non-cart scope and make sure the target
+    We deliberately select a non cart scope and make sure the target
     remains a valid target for that scope so that the promotion
     reference tests do not fail unnecessarily.
     """

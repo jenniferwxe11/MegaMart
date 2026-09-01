@@ -1,3 +1,5 @@
+# dirty_data_generation/corruption_rules/store_catalogues_rules.py
+
 import random
 
 import pandas as pd
@@ -7,19 +9,19 @@ import pandas as pd
 # =============================================================================
 
 
-def missing_store_id(df, idx, ctx):
+def missing_store_id(df, idx):
     df.at[idx, "store_id"] = None
 
 
-def missing_product_id(df, idx, ctx):
+def missing_product_id(df, idx):
     df.at[idx, "product_id"] = None
 
 
-def missing_store_product_name(df, idx, ctx):
+def missing_store_product_name(df, idx):
     df.at[idx, "store_product_name"] = None
 
 
-def blank_store_product_name(df, idx, ctx):
+def blank_store_product_name(df, idx):
     df.at[idx, "store_product_name"] = random.choice(
         [
             "",
@@ -29,15 +31,15 @@ def blank_store_product_name(df, idx, ctx):
     )
 
 
-def missing_store_brand(df, idx, ctx):
+def missing_store_brand(df, idx):
     df.at[idx, "store_brand"] = None
 
 
-def missing_store_category(df, idx, ctx):
+def missing_store_category(df, idx):
     df.at[idx, "store_category"] = None
 
 
-def missing_store_selling_price(df, idx, ctx):
+def missing_store_selling_price(df, idx):
     df.at[idx, "store_selling_price"] = None
 
 
@@ -46,7 +48,7 @@ def missing_store_selling_price(df, idx, ctx):
 # =============================================================================
 
 
-def store_selling_price_out_of_range(df, idx, ctx):
+def store_selling_price_out_of_range(df, idx):
     """
     store_selling_price must be greater than 0 and less than 100000.
     """
@@ -70,7 +72,7 @@ def store_selling_price_out_of_range(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_store_product(df, idx, ctx):
+def duplicate_store_product(df, idx):
     """
     A product must appear only once in each store's catalogue.
 
@@ -94,7 +96,7 @@ def duplicate_store_product(df, idx, ctx):
     df.at[idx, "product_id"] = source["product_id"]
 
 
-def store_price_product_price_mismatch(df, idx, ctx):
+def store_price_product_price_mismatch(df, idx):
     """
     store_selling_price must be within 20% of the corresponding
     product selling_price.

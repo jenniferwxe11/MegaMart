@@ -11,17 +11,17 @@ from dirty_data_generation.helpers.dirty_utils import generate_future_datetime
 # =============================================================================
 
 
-def missing_store_id(df, idx, ctx):
+def missing_store_id(df, idx):
 
     df.at[idx, "store_id"] = None
 
 
-def missing_product_id(df, idx, ctx):
+def missing_product_id(df, idx):
 
     df.at[idx, "product_id"] = None
 
 
-def missing_event_timestamp(df, idx, ctx):
+def missing_event_timestamp(df, idx):
 
     df.at[idx, "event_timestamp"] = None
 
@@ -31,10 +31,7 @@ def missing_event_timestamp(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_reason(df, idx, ctx):
-    """
-    reason must be one of the supported inventory change reasons.
-    """
+def invalid_reason(df, idx):
 
     if pd.isna(df.at[idx, "reason"]):
         return
@@ -56,7 +53,7 @@ def invalid_reason(df, idx, ctx):
 # =============================================================================
 
 
-def stock_after_out_of_range(df, idx, ctx):
+def stock_after_out_of_range(df, idx):
     """
     stock_after must be between 0 and 100000 inclusive.
     """
@@ -80,10 +77,7 @@ def stock_after_out_of_range(df, idx, ctx):
 # =============================================================================
 
 
-def future_event_timestamp(df, idx, ctx):
-    """
-    event_timestamp must not be in the future.
-    """
+def future_event_timestamp(df, idx):
 
     if pd.isna(df.at[idx, "event_timestamp"]):
         return
@@ -91,7 +85,7 @@ def future_event_timestamp(df, idx, ctx):
     df.at[idx, "event_timestamp"] = pd.Timestamp(generate_future_datetime())
 
 
-def duplicate_inventory_change_event(df, idx, ctx):
+def duplicate_inventory_change_event(df, idx):
     """
     store_id + product_id + event_timestamp must be unique.
 
@@ -115,7 +109,7 @@ def duplicate_inventory_change_event(df, idx, ctx):
         df.at[idx, column] = df.at[source_idx, column]
 
 
-def delta_matches_stock_after_movement(df, idx, ctx):
+def delta_matches_stock_after_movement(df, idx):
     """
     delta must equal the change in stock_after between consecutive
     inventory change events for the same store/product.
@@ -171,7 +165,7 @@ def delta_matches_stock_after_movement(df, idx, ctx):
     df.at[idx, "delta"] = invalid_delta
 
 
-def zero_delta(df, idx, ctx):
+def zero_delta(df, idx):
     """
     delta must not be zero.
     """
@@ -187,7 +181,7 @@ def zero_delta(df, idx, ctx):
 # =============================================================================
 
 
-def opening_balance_first_record(df, idx, ctx):
+def opening_balance_first_record(df, idx):
     """
     The first inventory event for every store/product must be the
     Opening balance event.
@@ -231,7 +225,7 @@ def opening_balance_first_record(df, idx, ctx):
     df.at[idx, "reason"] = random.choice(non_opening_reasons)
 
 
-def opening_balance_uniqueness(df, idx, ctx):
+def opening_balance_uniqueness(df, idx):
     """
     Each store/product must have exactly one Opening balance event.
 
@@ -272,7 +266,7 @@ def opening_balance_uniqueness(df, idx, ctx):
     df.at[source_idx, "reason"] = "Opening balance"
 
 
-def opening_balance_delta_matches_stock_after(df, idx, ctx):
+def opening_balance_delta_matches_stock_after(df, idx):
     """
     Opening balance delta must equal stock_after.
     """
@@ -280,20 +274,10 @@ def opening_balance_delta_matches_stock_after(df, idx, ctx):
     if df.at[idx, "reason"] != "Opening balance":
         return
 
-    if pd.isna(df.at[idx, "stock_after"]):
-        return
-
-    current_delta = df.at[idx, "delta"]
-
-    if pd.isna(current_delta):
-        return
-
+    delta = df.at[idx, "delta"]
     stock_after = df.at[idx, "stock_after"]
 
-    # Ensure delta is different from stock_after.
-    invalid_delta = stock_after + random.choice([-10, -1, 1, 10])
+    if pd.isna(delta) or pd.isna(stock_after):
+        return
 
-    if invalid_delta == stock_after:
-        invalid_delta += 1
-
-    df.at[idx, "delta"] = invalid_delta
+    df.at[idx, "delta"] = stock_after + 1

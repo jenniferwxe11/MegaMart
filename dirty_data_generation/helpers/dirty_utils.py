@@ -1,5 +1,6 @@
 # dirty_data_generation/helpers/dirty_utils.py
 
+import inspect
 import random
 from datetime import datetime, timedelta
 
@@ -7,6 +8,7 @@ import pandas as pd
 from faker import Faker
 
 fake = Faker()
+
 
 # =============================================================================
 # Row Sampling
@@ -17,7 +19,7 @@ def apply_corruption(
     df: pd.DataFrame,
     rate: float,
     corruption,
-    ctx,
+    ctx=None,
     mask: pd.Series | None = None,
 ):
 
@@ -37,11 +39,17 @@ def apply_corruption(
     )
 
     for idx in chosen:
-        corruption(
-            df=df,
-            idx=idx,
-            ctx=ctx,
-        )
+        if "ctx" in inspect.signature(corruption).parameters:
+            corruption(
+                df=df,
+                idx=idx,
+                ctx=ctx,
+            )
+        else:
+            corruption(
+                df=df,
+                idx=idx,
+            )
 
 
 def generate_future_date():

@@ -4,14 +4,14 @@ from dirty_data_generation.context.generation_context import GenerationContext
 from dirty_data_generation.corruption_rules.product_content_quality_rules import (
     current_record_has_end_date,
     description_indicator_mismatch,
-    description_length_out_of_bounds,
+    description_length_out_of_range,
     duplicate_content_version_id,
     image_indicator_mismatch,
-    image_quality_score_out_of_bounds,
+    image_quality_score_out_of_range,
     invalid_content_version_id_format,
     invalid_validity_period,
     missing_attribute_count,
-    missing_attribute_count_out_of_bounds,
+    missing_attribute_count_out_of_range,
     missing_description_length,
     missing_has_description,
     missing_has_image,
@@ -35,9 +35,9 @@ PRODUCT_CONTENT_QUALITY_RULES = [
     # Duplicates
     (0.02, duplicate_content_version_id),
     # Range Validation
-    (0.02, image_quality_score_out_of_bounds),
-    (0.02, description_length_out_of_bounds),
-    (0.02, missing_attribute_count_out_of_bounds),
+    (0.02, image_quality_score_out_of_range),
+    (0.02, description_length_out_of_range),
+    (0.02, missing_attribute_count_out_of_range),
     # Business Rules
     (0.03, image_indicator_mismatch),
     (0.03, description_indicator_mismatch),

@@ -5,7 +5,13 @@ import random
 import pandas as pd
 from faker import Faker
 
-from data_generation.config.clickstreams_config import EVENT_PAGE_MAPPING
+from data_generation.config.clickstreams_config import (
+    CATEGORY_EVENTS,
+    EVENT_PAGE_MAPPING,
+    NON_PRODUCT_EVENTS,
+    PRODUCT_EVENTS,
+    SCROLL_EVENTS,
+)
 from data_generation.config.customers_config import (
     DEVICE_CATEGORY,
     TARGET_SEGMENT,
@@ -15,7 +21,6 @@ from data_generation.config.stocks_config import STOCK_STATUSES
 from dirty_data_generation.config.constants import MAX_ERRORS_PER_ROW
 
 fake = Faker()
-
 
 # =============================================================================
 # Error Helpers
@@ -625,10 +630,7 @@ def duplicate_campaign_within_clickstream(df, idx):
 # =============================================================================
 
 
-def promotion_ids_without_bundle_for_bundle_reference(
-    df,
-    idx,
-):
+def promotion_ids_without_bundle_for_bundle_reference(df, idx):
     """
     Bundle references require a promotion associated with the bundle.
 
@@ -693,6 +695,13 @@ def duplicate_bundle_within_clickstream(df, idx):
 # =============================================================================
 
 
+REQUIRED_COLUMNS = {
+    "promotion_id",
+    "promotion_scope",
+    "promotion_target_id",
+}
+
+
 def bundle_does_not_belong_to_promotion(df, idx, ctx):
 
     bundle_ids = df.at[idx, "bundle_ids"]
@@ -712,13 +721,7 @@ def bundle_does_not_belong_to_promotion(df, idx, ctx):
 
     promotions_df = ctx.promotions.promotions_df
 
-    required_columns = {
-        "promotion_id",
-        "promotion_scope",
-        "promotion_target_id",
-    }
-
-    if not required_columns.issubset(promotions_df.columns):
+    if not REQUIRED_COLUMNS.issubset(promotions_df.columns):
         return
 
     valid_bundle_promotions = promotions_df[
@@ -775,13 +778,7 @@ def product_promotion_target_mismatch(df, idx, ctx):
 
     promotions_df = ctx.promotions.promotions_df
 
-    required_columns = {
-        "promotion_id",
-        "promotion_scope",
-        "promotion_target_id",
-    }
-
-    if not required_columns.issubset(promotions_df.columns):
+    if not REQUIRED_COLUMNS.issubset(promotions_df.columns):
         return
 
     promotion_rows = promotions_df[
@@ -820,13 +817,7 @@ def category_promotion_target_mismatch(df, idx, ctx):
 
     promotions_df = ctx.promotions.promotions_df
 
-    required_columns = {
-        "promotion_id",
-        "promotion_scope",
-        "promotion_target_id",
-    }
-
-    if not required_columns.issubset(promotions_df.columns):
+    if not REQUIRED_COLUMNS.issubset(promotions_df.columns):
         return
 
     promotion_rows = promotions_df[
@@ -851,38 +842,6 @@ def category_promotion_target_mismatch(df, idx, ctx):
 # =============================================================================
 # Event Content Rules
 # =============================================================================
-
-
-PRODUCT_EVENTS = {
-    "Product View",
-    "Add to Cart",
-    "Remove from Cart",
-}
-
-NON_PRODUCT_EVENTS = {
-    "Home View",
-    "Category View",
-    "Search View",
-    "Cart View",
-    "Checkout Start",
-    "Payment Attempt",
-    "Payment Successful",
-    "Payment Failed",
-}
-
-CATEGORY_EVENTS = {
-    "Product View",
-    "Add to Cart",
-    "Remove from Cart",
-    "Category View",
-}
-
-SCROLL_EVENTS = {
-    "Home View",
-    "Search View",
-    "Category View",
-    "Product View",
-}
 
 
 def product_event_missing_product_id(df, idx):

@@ -1,3 +1,5 @@
+# dirty_data_generation/generators/store_catalogues_dirty.py
+
 from dirty_data_generation.context.generation_context import GenerationContext
 from dirty_data_generation.corruption_rules.store_catalogues_rules import (
     blank_store_product_name,

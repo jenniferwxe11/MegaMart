@@ -9,39 +9,39 @@ import pandas as pd
 # =============================================================================
 
 
-def missing_transaction_id(df, idx, ctx):
+def missing_transaction_id(df, idx):
     df.at[idx, "transaction_id"] = None
 
 
-def missing_product_id(df, idx, ctx):
+def missing_product_id(df, idx):
     df.at[idx, "product_id"] = None
 
 
-def missing_product_name(df, idx, ctx):
+def missing_product_name(df, idx):
     df.at[idx, "product_name"] = None
 
 
-def missing_category(df, idx, ctx):
+def missing_category(df, idx):
     df.at[idx, "category"] = None
 
 
-def missing_quantity(df, idx, ctx):
+def missing_quantity(df, idx):
     df.at[idx, "quantity"] = None
 
 
-def missing_unit_price(df, idx, ctx):
+def missing_unit_price(df, idx):
     df.at[idx, "unit_price"] = None
 
 
-def missing_item_subtotal(df, idx, ctx):
+def missing_item_subtotal(df, idx):
     df.at[idx, "item_subtotal"] = None
 
 
-def missing_item_discount(df, idx, ctx):
+def missing_item_discount(df, idx):
     df.at[idx, "item_discount"] = None
 
 
-def missing_final_item_price(df, idx, ctx):
+def missing_final_item_price(df, idx):
     df.at[idx, "final_item_price"] = None
 
 
@@ -50,7 +50,7 @@ def missing_final_item_price(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_quantity(df, idx, ctx):
+def invalid_quantity(df, idx):
     """
     Quantity must be between 1 and 100000 inclusive.
     """
@@ -69,7 +69,7 @@ def invalid_quantity(df, idx, ctx):
     df.at[idx, "quantity"] = random.choice(corruptions)(value)
 
 
-def invalid_unit_price(df, idx, ctx):
+def invalid_unit_price(df, idx):
     """
     Unit price must be more than 0 and less than 100000.
     """
@@ -88,7 +88,7 @@ def invalid_unit_price(df, idx, ctx):
     df.at[idx, "unit_price"] = random.choice(corruptions)(value)
 
 
-def invalid_item_subtotal(df, idx, ctx):
+def invalid_item_subtotal(df, idx):
     """
     Item subtotal must be more than 0 and less than 100000.
     """
@@ -107,7 +107,7 @@ def invalid_item_subtotal(df, idx, ctx):
     df.at[idx, "item_subtotal"] = random.choice(corruptions)(value)
 
 
-def invalid_item_discount(df, idx, ctx):
+def invalid_item_discount(df, idx):
     """
     Item discount must be between 0 and 100000 inclusive.
     """
@@ -125,7 +125,7 @@ def invalid_item_discount(df, idx, ctx):
     df.at[idx, "item_discount"] = random.choice(corruptions)(value)
 
 
-def invalid_final_item_price(df, idx, ctx):
+def invalid_final_item_price(df, idx):
     """
     Final item price must be more than 0 and less than 100000.
     """
@@ -149,7 +149,7 @@ def invalid_final_item_price(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_product_in_transaction(df, idx, ctx):
+def duplicate_product_in_transaction(df, idx):
     """
     Each product may only appear once per transaction.
     Copies another product_id from the same transaction.
@@ -170,7 +170,7 @@ def duplicate_product_in_transaction(df, idx, ctx):
     df.at[idx, "product_id"] = df.at[other_idx, "product_id"]
 
 
-def item_subtotal_calculation_error(df, idx, ctx):
+def item_subtotal_calculation_error(df, idx):
     """
     item_subtotal must equal unit_price * quantity.
     """
@@ -189,7 +189,7 @@ def item_subtotal_calculation_error(df, idx, ctx):
     )
 
 
-def item_discount_exceeds_subtotal(df, idx, ctx):
+def item_discount_exceeds_subtotal(df, idx):
     """
     item_discount must not exceed item_subtotal.
     """
@@ -205,7 +205,7 @@ def item_discount_exceeds_subtotal(df, idx, ctx):
     )
 
 
-def final_item_price_reconciliation_error(df, idx, ctx):
+def final_item_price_reconciliation_error(df, idx):
     """
     final_item_price must equal item_subtotal - item_discount.
     """

@@ -9,27 +9,27 @@ import pandas as pd
 # =============================================================================
 
 
-def missing_product_name(df, idx, ctx):
+def missing_product_name(df, idx):
 
     df.at[idx, "product_name"] = None
 
 
-def missing_brand(df, idx, ctx):
+def missing_brand(df, idx):
 
     df.at[idx, "brand"] = None
 
 
-def missing_category(df, idx, ctx):
+def missing_category(df, idx):
 
     df.at[idx, "category"] = None
 
 
-def missing_selling_price(df, idx, ctx):
+def missing_selling_price(df, idx):
 
     df.at[idx, "selling_price"] = None
 
 
-def missing_cost_price(df, idx, ctx):
+def missing_cost_price(df, idx):
 
     df.at[idx, "cost_price"] = None
 
@@ -39,7 +39,7 @@ def missing_cost_price(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_product_id_format(df, idx, ctx):
+def invalid_product_id_format(df, idx):
 
     value = df.at[idx, "product_id"]
 
@@ -58,7 +58,7 @@ def invalid_product_id_format(df, idx, ctx):
     df.at[idx, "product_id"] = random.choice(corruptions)(value)
 
 
-def invalid_product_name_format(df, idx, ctx):
+def invalid_product_name_format(df, idx):
 
     value = df.at[idx, "product_name"]
 
@@ -79,7 +79,7 @@ def invalid_product_name_format(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_product_id(df, idx, ctx):
+def duplicate_product_id(df, idx):
 
     other_product_ids = df[df.index != idx]["product_id"].dropna().tolist()
 
@@ -94,9 +94,9 @@ def duplicate_product_id(df, idx, ctx):
 # =============================================================================
 
 
-def selling_price_out_of_bounds(df, idx, ctx):
+def selling_price_out_of_range(df, idx):
     """
-    Selling price should be between 0 and 100000.
+    Selling price must be more than 0 and less than 100000.
     """
 
     value = df.at[idx, "selling_price"]
@@ -107,15 +107,15 @@ def selling_price_out_of_bounds(df, idx, ctx):
     corruptions = [
         lambda _: 0,
         lambda x: -abs(x),
-        lambda _: random.uniform(100001, 250000),
+        lambda _: round(random.uniform(100001, 250000), 2),
     ]
 
     df.at[idx, "selling_price"] = random.choice(corruptions)(value)
 
 
-def cost_price_out_of_bounds(df, idx, ctx):
+def cost_price_out_of_range(df, idx):
     """
-    Cost price should be between 0 and 100000.
+    Cost price must be more than 0 and less than 100000.
     """
 
     value = df.at[idx, "cost_price"]
@@ -126,7 +126,7 @@ def cost_price_out_of_bounds(df, idx, ctx):
     corruptions = [
         lambda _: 0,
         lambda x: -abs(x),
-        lambda _: random.uniform(100001, 250000),
+        lambda _: round(random.uniform(100001, 250000), 2),
     ]
 
     df.at[idx, "cost_price"] = random.choice(corruptions)(value)
@@ -137,7 +137,7 @@ def cost_price_out_of_bounds(df, idx, ctx):
 # =============================================================================
 
 
-def cost_price_greater_than_selling_price(df, idx, ctx):
+def cost_price_greater_than_selling_price(df, idx):
     """
     Cost price is greater than selling price.
     """

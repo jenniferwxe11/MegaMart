@@ -1,3 +1,5 @@
+# dirty_data_generation/generators/inventory_change_events_dirty.py
+
 from dirty_data_generation.context.generation_context import GenerationContext
 from dirty_data_generation.corruption_rules.inventory_change_events_rules import (
     delta_matches_stock_after_movement,

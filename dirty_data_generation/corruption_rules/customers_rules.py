@@ -6,12 +6,25 @@ from datetime import date
 import pandas as pd
 from faker import Faker
 
+from data_generation.config.customers_config import (
+    DIGITAL_CUSTOMERS,
+    MEMBER_CUSTOMERS,
+)
+from dirty_data_generation.helpers.dirty_utils import generate_future_date
+
 fake = Faker()
 
-ONLINE_CUSTOMERS = [
-    "Online Only",
-    "Omnichannel",
-]
+# =============================================================================
+# Helpers
+# =============================================================================
+
+
+def _is_digital_customer(df, idx) -> bool:
+    return df.at[idx, "customer_type"] in DIGITAL_CUSTOMERS
+
+
+def _is_member_customer(df, idx) -> bool:
+    return df.at[idx, "customer_type"] in MEMBER_CUSTOMERS
 
 
 # =============================================================================
@@ -19,60 +32,124 @@ ONLINE_CUSTOMERS = [
 # =============================================================================
 
 
-def missing_customer_name(df, idx, ctx):
+def missing_customer_name(df, idx):
+    if not _is_digital_customer(df, idx):
+        return
 
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
+    if pd.isna(df.at[idx, "customer_name"]):
         return
 
     df.at[idx, "customer_name"] = None
 
 
-def missing_email(df, idx, ctx):
+def missing_email(df, idx):
+    if not _is_member_customer(df, idx):
+        return
 
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
+    if pd.isna(df.at[idx, "email"]):
         return
 
     df.at[idx, "email"] = None
 
 
-def missing_gender(df, idx, ctx):
+def missing_gender(df, idx):
+    if not _is_digital_customer(df, idx):
+        return
 
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
+    if pd.isna(df.at[idx, "gender"]):
         return
 
     df.at[idx, "gender"] = None
 
 
-def missing_dob(df, idx, ctx):
+def missing_dob(df, idx):
+    if not _is_digital_customer(df, idx):
+        return
 
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
+    if pd.isna(df.at[idx, "dob"]):
         return
 
     df.at[idx, "dob"] = None
 
 
-def missing_area(df, idx, ctx):
+def missing_area(df, idx):
+    if not _is_digital_customer(df, idx):
+        return
 
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
+    if pd.isna(df.at[idx, "area"]):
         return
 
     df.at[idx, "area"] = None
 
 
-def missing_region(df, idx, ctx):
+def missing_region(df, idx):
+    if not _is_digital_customer(df, idx):
+        return
 
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
+    if pd.isna(df.at[idx, "region"]):
         return
 
     df.at[idx, "region"] = None
 
 
-def missing_customer_segment(df, idx, ctx):
+def missing_customer_segment(df, idx):
+    if pd.isna(df.at[idx, "customer_segment"]):
+        return
 
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
+    if df.at[idx, "customer_type"] == "Retail Walk-In":
         return
 
     df.at[idx, "customer_segment"] = None
+
+
+def missing_email_marketing_preference(df, idx):
+    if not _is_digital_customer(df, idx):
+        return
+
+    if pd.isna(df.at[idx, "email_marketing_opt_in"]):
+        return
+
+    df.at[idx, "email_marketing_opt_in"] = None
+
+
+def missing_sms_marketing_preference(df, idx):
+    if not _is_digital_customer(df, idx):
+        return
+
+    if pd.isna(df.at[idx, "sms_marketing_opt_in"]):
+        return
+
+    df.at[idx, "sms_marketing_opt_in"] = None
+
+
+def missing_push_notifications_preference(df, idx):
+    if not _is_digital_customer(df, idx):
+        return
+
+    if pd.isna(df.at[idx, "push_notifications_opt_in"]):
+        return
+
+    df.at[idx, "push_notifications_opt_in"] = None
+
+
+def missing_device_category(df, idx):
+    if not _is_digital_customer(df, idx):
+        return
+
+    if pd.isna(df.at[idx, "device_category"]):
+        return
+
+    df.at[idx, "device_category"] = None
+
+
+def missing_device_platform(df, idx):
+    if not _is_digital_customer(df, idx):
+        return
+
+    if pd.isna(df.at[idx, "device_platform"]):
+        return
+
+    df.at[idx, "device_platform"] = None
 
 
 # =============================================================================
@@ -80,7 +157,7 @@ def missing_customer_segment(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_gender(df, idx, ctx):
+def invalid_gender(df, idx):
 
     if pd.isna(df.at[idx, "gender"]):
         return
@@ -97,7 +174,7 @@ def invalid_gender(df, idx, ctx):
     )
 
 
-def invalid_customer_type(df, idx, ctx):
+def invalid_customer_type(df, idx):
 
     if pd.isna(df.at[idx, "customer_type"]):
         return
@@ -112,7 +189,7 @@ def invalid_customer_type(df, idx, ctx):
     )
 
 
-def invalid_customer_segment(df, idx, ctx):
+def invalid_customer_segment(df, idx):
 
     if pd.isna(df.at[idx, "customer_segment"]):
         return
@@ -127,7 +204,7 @@ def invalid_customer_segment(df, idx, ctx):
     )
 
 
-def invalid_device_platform(df, idx, ctx):
+def invalid_device_platform(df, idx):
 
     if pd.isna(df.at[idx, "device_platform"]):
         return
@@ -142,7 +219,7 @@ def invalid_device_platform(df, idx, ctx):
     )
 
 
-def invalid_device_category(df, idx, ctx):
+def invalid_device_category(df, idx):
 
     if pd.isna(df.at[idx, "device_category"]):
         return
@@ -162,7 +239,7 @@ def invalid_device_category(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_customer_id_format(df, idx, ctx):
+def invalid_customer_id_format(df, idx):
 
     value = df.at[idx, "customer_id"]
 
@@ -181,7 +258,7 @@ def invalid_customer_id_format(df, idx, ctx):
     df.at[idx, "customer_id"] = random.choice(corruptions)(value)
 
 
-def invalid_customer_name(df, idx, ctx):
+def invalid_customer_name(df, idx):
 
     value = df.at[idx, "customer_name"]
 
@@ -197,7 +274,7 @@ def invalid_customer_name(df, idx, ctx):
     df.at[idx, "customer_name"] = random.choice(corruptions)(value)
 
 
-def invalid_email_format(df, idx, ctx):
+def invalid_email_format(df, idx):
 
     value = df.at[idx, "email"]
 
@@ -221,7 +298,7 @@ def invalid_email_format(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_email(df, idx, ctx):
+def duplicate_email(df, idx):
 
     other_emails = df[df.index != idx]["email"].dropna().tolist()
 
@@ -231,7 +308,7 @@ def duplicate_email(df, idx, ctx):
     df.at[idx, "email"] = random.choice(other_emails)
 
 
-def duplicate_customer_id(df, idx, ctx):
+def duplicate_customer_id(df, idx):
 
     other_customer_ids = df[df.index != idx]["customer_id"].dropna().tolist()
 
@@ -246,22 +323,22 @@ def duplicate_customer_id(df, idx, ctx):
 # =============================================================================
 
 
-def future_signup_date(df, idx, ctx):
+def future_signup_date(df, idx):
 
     if pd.isna(df.at[idx, "signup_date"]):
         return
 
-    df.at[idx, "signup_date"] = pd.Timestamp(fake.future_date("+5y"))
+    df.at[idx, "signup_date"] = pd.Timestamp(generate_future_date())
 
 
-def invalid_dob(df, idx, ctx):
+def invalid_dob(df, idx):
 
     if pd.isna(df.at[idx, "dob"]):
         return
 
     df.at[idx, "dob"] = random.choice(
         [
-            fake.future_date("+5y"),
+            generate_future_date(),
             fake.date_between(
                 start_date=date(1800, 1, 1),
                 end_date=date(1899, 12, 31),
@@ -270,7 +347,7 @@ def invalid_dob(df, idx, ctx):
     )
 
 
-def signup_before_dob(df, idx, ctx):
+def signup_before_dob(df, idx):
 
     if pd.isna(df.at[idx, "signup_date"]) or pd.isna(df.at[idx, "dob"]):
         return
@@ -280,7 +357,7 @@ def signup_before_dob(df, idx, ctx):
     )
 
 
-def underage_customer(df, idx, ctx):
+def underage_customer(df, idx):
 
     if pd.isna(df.at[idx, "signup_date"]):
         return
@@ -310,63 +387,25 @@ def area_region_mismatch(df, idx, ctx):
     df.at[idx, "region"] = random.choice(wrong)
 
 
-def missing_email_marketing_preference(df, idx, ctx):
-
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
-        return
-
-    df.at[idx, "email_marketing_opt_in"] = None
-
-
-def missing_sms_marketing_preference(df, idx, ctx):
-
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
-        return
-
-    df.at[idx, "sms_marketing_opt_in"] = None
-
-
-def missing_push_notifications_preference(df, idx, ctx):
-
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
-        return
-
-    df.at[idx, "push_notifications_opt_in"] = None
-
-
-def email_marketing_without_email(df, idx, ctx):
+def email_marketing_without_email(df, idx):
     """
     email_marketing_opt_in = TRUE
     while email = NULL
     """
-
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
+    if not _is_digital_customer(df, idx):
         return
 
     df.at[idx, "email"] = None
     df.at[idx, "email_marketing_opt_in"] = True
 
 
-def push_notifications_without_device_platform(df, idx, ctx):
+def push_notifications_without_device_platform(df, idx):
     """
     Push notifications enabled
     but no device platform.
     """
-
-    if df.at[idx, "customer_type"] not in ONLINE_CUSTOMERS:
+    if not _is_digital_customer(df, idx):
         return
 
     df.at[idx, "push_notifications_opt_in"] = True
     df.at[idx, "device_platform"] = None
-
-
-def missing_device_category(df, idx, ctx):
-    """
-    device_platform exists
-    but device_category is missing.
-    """
-
-    if pd.isna(df.at[idx, "device_platform"]):
-        return
-
-    df.at[idx, "device_category"] = None

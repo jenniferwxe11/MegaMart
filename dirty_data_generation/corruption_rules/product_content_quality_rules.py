@@ -3,47 +3,46 @@
 import random
 
 import pandas as pd
-from faker import Faker
 
-fake = Faker()
-
+from data_generation.config.product_content_config import TIERS
+from dirty_data_generation.helpers.dirty_utils import generate_future_date
 
 # =============================================================================
 # Missing Values
 # =============================================================================
 
 
-def missing_quality_tier(df, idx, ctx):
+def missing_quality_tier(df, idx):
 
     df.at[idx, "quality_tier"] = None
 
 
-def missing_has_image(df, idx, ctx):
+def missing_has_image(df, idx):
 
     df.at[idx, "has_image"] = pd.NA
 
 
-def missing_image_count(df, idx, ctx):
+def missing_image_count(df, idx):
 
     df.at[idx, "image_count"] = None
 
 
-def missing_has_description(df, idx, ctx):
+def missing_has_description(df, idx):
 
     df.at[idx, "has_description"] = pd.NA
 
 
-def missing_description_length(df, idx, ctx):
+def missing_description_length(df, idx):
 
     df.at[idx, "description_length"] = None
 
 
-def missing_attribute_count(df, idx, ctx):
+def missing_attribute_count(df, idx):
 
     df.at[idx, "missing_attribute_count"] = None
 
 
-def missing_has_nutritional_info(df, idx, ctx):
+def missing_has_nutritional_info(df, idx):
     df.at[idx, "has_nutritional_info"] = pd.NA
 
 
@@ -52,7 +51,7 @@ def missing_has_nutritional_info(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_content_version_id_format(df, idx, ctx):
+def invalid_content_version_id_format(df, idx):
 
     value = df.at[idx, "content_version_id"]
 
@@ -75,7 +74,7 @@ def invalid_content_version_id_format(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_content_version_id(df, idx, ctx):
+def duplicate_content_version_id(df, idx):
 
     other_content_version_ids = (
         df[df.index != idx]["content_version_id"].dropna().tolist()
@@ -92,9 +91,9 @@ def duplicate_content_version_id(df, idx, ctx):
 # =============================================================================
 
 
-def image_quality_score_out_of_bounds(df, idx, ctx):
+def image_quality_score_out_of_range(df, idx):
     """
-    The image_quality_score should be between 0 and 1.
+    The image_quality_score must be between 0 and 1 inclusive.
     """
 
     value = df.at[idx, "image_quality_score"]
@@ -107,9 +106,9 @@ def image_quality_score_out_of_bounds(df, idx, ctx):
     df.at[idx, "image_quality_score"] = random.choice(corruptions)(value)
 
 
-def description_length_out_of_bounds(df, idx, ctx):
+def description_length_out_of_range(df, idx):
     """
-    The description_length should be between 0 and 400.
+    The description_length must be between 0 and 400 inclusive.
     """
 
     value = df.at[idx, "description_length"]
@@ -122,9 +121,9 @@ def description_length_out_of_bounds(df, idx, ctx):
     df.at[idx, "description_length"] = random.choice(corruptions)(value)
 
 
-def missing_attribute_count_out_of_bounds(df, idx, ctx):
+def missing_attribute_count_out_of_range(df, idx):
     """
-    The missing_attribute_count should be between 0 and 20.
+    The missing_attribute_count must be between 0 and 20 inclusive.
     """
 
     value = df.at[idx, "missing_attribute_count"]
@@ -142,7 +141,7 @@ def missing_attribute_count_out_of_bounds(df, idx, ctx):
 # =============================================================================
 
 
-def no_current_record(df, idx, ctx):
+def no_current_record(df, idx):
 
     product_id = df.at[idx, "product_id"]
 
@@ -157,15 +156,15 @@ def no_current_record(df, idx, ctx):
     )
 
 
-def future_valid_from(df, idx, ctx):
+def future_valid_from(df, idx):
 
     if pd.isna(df.at[idx, "valid_from"]):
         return
 
-    df.at[idx, "valid_from"] = pd.Timestamp(fake.future_date("+5y"))
+    df.at[idx, "valid_from"] = pd.Timestamp(generate_future_date())
 
 
-def image_indicator_mismatch(df, idx, ctx):
+def image_indicator_mismatch(df, idx):
     """
     If has_image is False, then image_count should be 0.
     If has_image is True, then image_count should be greater than 0.
@@ -179,7 +178,7 @@ def image_indicator_mismatch(df, idx, ctx):
         df.at[idx, "image_count"] = 0
 
 
-def image_quality_indicator_mismatch(df, idx, ctx):
+def image_quality_indicator_mismatch(df, idx):
     """
     If has_image is False, then image_quality_score should be None.
     If has_image is True, then image_quality_score should not be None.
@@ -194,7 +193,7 @@ def image_quality_indicator_mismatch(df, idx, ctx):
         df.at[idx, "image_quality_score"] = None
 
 
-def image_quality_without_image_count(df, idx, ctx):
+def image_quality_without_image_count(df, idx):
     """
     If image_count is missing, image_quality_score should also be missing.
     """
@@ -203,7 +202,7 @@ def image_quality_without_image_count(df, idx, ctx):
         df.at[idx, "image_quality_score"] = round(random.uniform(0.1, 1.0), 2)
 
 
-def description_indicator_mismatch(df, idx, ctx):
+def description_indicator_mismatch(df, idx):
     """
     If has_description is False, then description_length should be 0.
     If has_description is True, then description_length should be greater than 0.
@@ -217,7 +216,7 @@ def description_indicator_mismatch(df, idx, ctx):
         df.at[idx, "description_length"] = 0
 
 
-def invalid_validity_period(df, idx, ctx):
+def invalid_validity_period(df, idx):
     """
     The valid_from date should be less than or equal to the valid_to date.
     """
@@ -230,7 +229,7 @@ def invalid_validity_period(df, idx, ctx):
     )
 
 
-def current_record_has_end_date(df, idx, ctx):
+def current_record_has_end_date(df, idx):
     """
     If is_current is True, then valid_to should be None.
     """
@@ -243,7 +242,7 @@ def current_record_has_end_date(df, idx, ctx):
             df.at[idx, "valid_to"] = df.at[idx, "valid_from"]
 
 
-def historical_record_without_end_date(df, idx, ctx):
+def historical_record_without_end_date(df, idx):
 
     if pd.isna(df.at[idx, "is_current"]):
         return
@@ -252,7 +251,7 @@ def historical_record_without_end_date(df, idx, ctx):
         df.at[idx, "valid_to"] = pd.NaT
 
 
-def multiple_current_records(df, idx, ctx):
+def multiple_current_records(df, idx):
     """
     The same product should only have one current record.
     Creates two records for the same product
@@ -275,7 +274,7 @@ def multiple_current_records(df, idx, ctx):
     df.at[other_idx, "valid_to"] = pd.NaT
 
 
-def overlapping_validity_period(df, idx, ctx):
+def overlapping_validity_period(df, idx):
     """
     Products with the same product_id should not have overlapping validity periods.
     Creates two records for the same product with overlapping validity periods.
@@ -307,29 +306,22 @@ def overlapping_validity_period(df, idx, ctx):
     df.at[idx, "valid_to"] = other_to
 
 
-def incorrect_quality_tier(df, idx, ctx):
+def incorrect_quality_tier(df, idx):
     """
     Quality tier inconsistent with content metrics.
     """
 
     quality_tier = df.at[idx, "quality_tier"]
 
-    TIERS = ["Poor", "Average", "Good", "Excellent"]
-
     other_quality_tiers = [tier for tier in TIERS if tier != quality_tier]
     df.at[idx, "quality_tier"] = random.choice(other_quality_tiers)
 
 
-def quality_tier_regression(df, idx, ctx):
-
-    TIER_ORDER = {
-        "Poor": 0,
-        "Average": 1,
-        "Good": 2,
-        "Excellent": 3,
-    }
-
-    TIERS = ["Poor", "Average", "Good", "Excellent"]
+def quality_tier_regression(df, idx):
+    """
+    Makes the latest content version regress one quality tier
+    from the previous version.
+    """
 
     product_id = df.at[idx, "product_id"]
 
@@ -343,7 +335,12 @@ def quality_tier_regression(df, idx, ctx):
 
     previous_tier = df.at[previous_idx, "quality_tier"]
 
-    if previous_tier == "Poor":
+    if previous_tier not in TIERS:
         return
 
-    df.at[latest_idx, "quality_tier"] = TIERS[TIER_ORDER[previous_tier] - 1]
+    tier_index = TIERS.index(previous_tier)
+
+    if tier_index == 0:
+        return
+
+    df.at[latest_idx, "quality_tier"] = TIERS[tier_index - 1]

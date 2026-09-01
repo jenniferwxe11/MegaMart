@@ -5,9 +5,15 @@ from datetime import timedelta
 
 import pandas as pd
 
+from data_generation.config.clickstreams_config import (
+    CART_STATE_PRESERVING_EVENTS,
+    LANDING_PAGE_BEHAVIOUR,
+    VALID_EVENT_TRANSITIONS,
+)
 from dirty_data_generation.config.constants import (
     MAX_ERRORS_PER_ROW,
 )
+from dirty_data_generation.helpers.dirty_utils import generate_future_datetime
 
 # =============================================================================
 # Error Helpers
@@ -17,6 +23,8 @@ from dirty_data_generation.config.constants import (
 def _can_add_error(df, idx) -> bool:
     """
     Check whether another corruption can be applied to this row.
+
+    error_count stores the number of corruptions applied to the row.
     """
 
     value = df.at[idx, "error_count"]
@@ -30,6 +38,8 @@ def _can_add_error(df, idx) -> bool:
 def _add_error(df, idx) -> bool:
     """
     Increment error_count by one.
+
+    Returns True if the error was successfully recorded.
     """
 
     if not _can_add_error(df, idx):
@@ -90,13 +100,14 @@ def _previous_row(df, idx):
 # =============================================================================
 
 
-def duplicate_event_order_within_session(df, idx, ctx=None):
+def duplicate_event_order_within_session(df, idx):
     """
     Makes the current event share event_order with another event
     in the same session.
 
     Violates:
         unique_event_order_within_session
+        unique_combination_of_columns(session_id, event_order)
     """
 
     session_id = df.at[idx, "session_id"]
@@ -125,7 +136,7 @@ def duplicate_event_order_within_session(df, idx, ctx=None):
         df.at[idx, "event_order"] = target_order
 
 
-def non_sequential_event_order(df, idx, ctx=None):
+def non_sequential_event_order(df, idx):
     """
     Creates a deliberate gap in event_order.
 
@@ -186,7 +197,7 @@ def non_sequential_event_order(df, idx, ctx=None):
 # =============================================================================
 
 
-def timestamp_out_of_order(df, idx, ctx=None):
+def timestamp_out_of_order(df, idx):
     """
     Makes the current timestamp earlier than the previous event.
 
@@ -213,10 +224,7 @@ def timestamp_out_of_order(df, idx, ctx=None):
         )
 
 
-def future_event_timestamp(df, idx, ctx=None):
-    """
-    Moves an event timestamp into the future.
-    """
+def future_event_timestamp(df, idx):
 
     value = df.at[idx, "event_timestamp"]
 
@@ -224,9 +232,7 @@ def future_event_timestamp(df, idx, ctx=None):
         return
 
     if _add_error(df, idx):
-        df.at[idx, "event_timestamp"] = pd.Timestamp.now() + timedelta(
-            days=random.randint(1, 30)
-        )
+        df.at[idx, "event_timestamp"] = pd.Timestamp(generate_future_datetime())
 
 
 # =============================================================================
@@ -234,7 +240,7 @@ def future_event_timestamp(df, idx, ctx=None):
 # =============================================================================
 
 
-def bounce_session_multiple_events(df, idx, ctx=None):
+def bounce_session_multiple_events(df, idx):
     """
     Marks a multi-event session as bounced.
 
@@ -260,7 +266,7 @@ def bounce_session_multiple_events(df, idx, ctx=None):
         df.at[first_idx, "bounce_flag"] = 1
 
 
-def bounce_flag_on_non_first_event(df, idx, ctx=None):
+def bounce_flag_on_non_first_event(df, idx):
     """
     Sets bounce_flag = 1 on an event that is not the first event.
 
@@ -285,37 +291,7 @@ def bounce_flag_on_non_first_event(df, idx, ctx=None):
 # =============================================================================
 
 
-ALLOWED_FIRST_EVENTS = {
-    "organic_search": {
-        "Home View",
-        "Search View",
-        "Product View",
-    },
-    "direct": {
-        "Home View",
-        "Category View",
-        "Product View",
-    },
-    "social_media": {
-        "Home View",
-        "Product View",
-        "Category View",
-    },
-    "email": {
-        "Home View",
-        "Product View",
-        "Category View",
-    },
-    "unknown": {
-        "Home View",
-        "Product View",
-        "Category View",
-        "Search View",
-    },
-}
-
-
-def invalid_first_event_for_referrer(df, idx, ctx=None):
+def invalid_first_event_for_referrer(df, idx):
     """
     Changes the first event to one that is invalid for its referrer.
     """
@@ -323,38 +299,37 @@ def invalid_first_event_for_referrer(df, idx, ctx=None):
     event_order = df.at[idx, "event_order"]
     referrer = df.at[idx, "referrer"]
 
-    if pd.isna(event_order):
+    if pd.isna(event_order) or event_order != 1:
         return
 
-    if event_order != 1:
+    if referrer not in LANDING_PAGE_BEHAVIOUR:
         return
 
-    if referrer not in ALLOWED_FIRST_EVENTS:
-        return
+    valid_first_events = set(LANDING_PAGE_BEHAVIOUR[referrer])
 
-    allowed = ALLOWED_FIRST_EVENTS[referrer]
+    all_event_types = set(VALID_EVENT_TRANSITIONS)
 
-    all_events = {
-        "Home View",
-        "Category View",
-        "Search View",
-        "Product View",
-        "Cart View",
-        "Add to Cart",
-        "Remove from Cart",
-        "Checkout Start",
-        "Payment Attempt",
-        "Payment Successful",
-        "Payment Failed",
-    }
+    # Include event types that only appear as destinations.
+    all_event_types.update(
+        next_event
+        for transitions in VALID_EVENT_TRANSITIONS.values()
+        for next_event in transitions
+    )
 
-    invalid_events = [event for event in all_events if event not in allowed]
+    invalid_events = sorted(all_event_types - valid_first_events)
 
     if not invalid_events:
         return
 
+    current_event = df.at[idx, "event_type"]
+
+    candidates = [event for event in invalid_events if event != current_event]
+
+    if not candidates:
+        return
+
     if _add_error(df, idx):
-        df.at[idx, "event_type"] = random.choice(invalid_events)
+        df.at[idx, "event_type"] = random.choice(candidates)
 
 
 # =============================================================================
@@ -362,83 +337,23 @@ def invalid_first_event_for_referrer(df, idx, ctx=None):
 # =============================================================================
 
 
-VALID_TRANSITIONS = {
-    "Home View": {
-        "Category View",
-        "Search View",
-        "Product View",
-    },
-    "Category View": {
-        "Category View",
-        "Search View",
-        "Product View",
-        "Home View",
-    },
-    "Search View": {
-        "Search View",
-        "Category View",
-        "Product View",
-        "Home View",
-    },
-    "Product View": {
-        "Product View",
-        "Add to Cart",
-        "Remove from Cart",
-        "Category View",
-        "Search View",
-        "Cart View",
-    },
-    "Add to Cart": {
-        "Product View",
-        "Add to Cart",
-        "Remove from Cart",
-        "Cart View",
-        "Checkout Start",
-    },
-    "Remove from Cart": {
-        "Product View",
-        "Add to Cart",
-        "Remove from Cart",
-        "Cart View",
-        "Checkout Start",
-    },
-    "Cart View": {
-        "Product View",
-        "Add to Cart",
-        "Remove from Cart",
-        "Checkout Start",
-        "Category View",
-        "Search View",
-    },
-    "Checkout Start": {
-        "Payment Attempt",
-        "Cart View",
-    },
-    "Payment Attempt": {
-        "Payment Successful",
-        "Payment Failed",
-    },
-    "Payment Successful": {
-        "Home View",
-        "Category View",
-        "Search View",
-        "Product View",
-    },
-    "Payment Failed": {
-        "Payment Attempt",
-        "Checkout Start",
-        "Cart View",
-    },
-}
+ALL_EVENT_TYPES = sorted(
+    set(VALID_EVENT_TRANSITIONS)
+    | {
+        next_event
+        for transitions in VALID_EVENT_TRANSITIONS.values()
+        for next_event in transitions
+    }
+)
 
 
-ALL_EVENT_TYPES = list(VALID_TRANSITIONS.keys())
-
-
-def invalid_event_transition(df, idx, ctx=None):
+def invalid_event_transition(df, idx):
     """
     Changes the current event_type to one that is invalid
     after the previous event.
+
+    Violates:
+        valid_transition_between_adjacent_events
     """
 
     if not _can_add_error(df, idx):
@@ -451,10 +366,7 @@ def invalid_event_transition(df, idx, ctx=None):
 
     previous_event = previous_row["event_type"]
 
-    valid_next_events = VALID_TRANSITIONS.get(
-        previous_event,
-        set(),
-    )
+    valid_next_events = set(VALID_EVENT_TRANSITIONS.get(previous_event, {}))
 
     invalid_events = [
         event for event in ALL_EVENT_TYPES if event not in valid_next_events
@@ -479,9 +391,9 @@ def invalid_event_transition(df, idx, ctx=None):
 # =============================================================================
 
 
-def checkout_start_without_cart(df, idx, ctx=None):
+def checkout_start_without_cart(df, idx):
     """
-    Checkout Start requires a non-empty cart.
+    Checkout Start requires a non empty cart.
 
     Corruption:
         Clears the cart immediately before checkout.
@@ -516,11 +428,7 @@ def checkout_start_without_cart(df, idx, ctx=None):
 # =============================================================================
 
 
-def add_to_cart_does_not_increase_cart(
-    df,
-    idx,
-    ctx=None,
-):
+def add_to_cart_does_not_increase_cart(df, idx):
     """
     Add to Cart should add product_id to the previous cart.
 
@@ -551,11 +459,7 @@ def add_to_cart_does_not_increase_cart(
         df.at[idx, "cart_size"] = len(previous_cart)
 
 
-def remove_from_cart_does_not_reduce_cart(
-    df,
-    idx,
-    ctx=None,
-):
+def remove_from_cart_does_not_reduce_cart(df, idx):
     """
     Remove from Cart should remove product_id from the previous cart.
 
@@ -589,11 +493,7 @@ def remove_from_cart_does_not_reduce_cart(
         df.at[idx, "cart_size"] = len(previous_cart)
 
 
-def non_cart_event_changes_cart(
-    df,
-    idx,
-    ctx=None,
-):
+def non_cart_event_changes_cart(df, idx, ctx):
     """
     Non-cart events should preserve cart state.
 
@@ -603,17 +503,7 @@ def non_cart_event_changes_cart(
 
     event_type = df.at[idx, "event_type"]
 
-    if event_type not in {
-        "Home View",
-        "Category View",
-        "Search View",
-        "Product View",
-        "Cart View",
-        "Checkout Start",
-        "Payment Attempt",
-        "Payment Successful",
-        "Payment Failed",
-    }:
+    if event_type not in CART_STATE_PRESERVING_EVENTS:
         return
 
     if not _can_add_error(df, idx):
@@ -631,15 +521,12 @@ def non_cart_event_changes_cart(
 
     new_cart = list(previous_cart)
 
-    if ctx is not None:
-        product_ids = ctx.products.products_df["product_id"].dropna().tolist()
-    else:
-        product_ids = []
+    product_ids = ctx.products.products_df["product_id"].dropna().tolist()
 
-    if product_ids:
-        new_cart.append(random.choice(product_ids))
-    else:
-        new_cart.append("__CORRUPTED_CART_PRODUCT__")
+    if not product_ids:
+        return
+
+    new_cart.append(random.choice(product_ids))
 
     if _add_error(df, idx):
         df.at[idx, "cart_content"] = new_cart
@@ -651,11 +538,7 @@ def non_cart_event_changes_cart(
 # =============================================================================
 
 
-def payment_successful_cart_mismatch(
-    df,
-    idx,
-    ctx=None,
-):
+def payment_successful_cart_mismatch(df, idx):
     """
     Payment Successful should remove purchased items from the cart.
 
@@ -700,11 +583,7 @@ def payment_successful_cart_mismatch(
         df.at[idx, "cart_size"] = len(new_cart)
 
 
-def payment_failed_cart_mismatch(
-    df,
-    idx,
-    ctx=None,
-):
+def payment_failed_cart_mismatch(df, idx):
     """
     Payment Failed should preserve the cart.
 
@@ -747,11 +626,7 @@ def payment_failed_cart_mismatch(
 # =============================================================================
 
 
-def purchased_items_not_in_previous_cart(
-    df,
-    idx,
-    ctx,
-):
+def purchased_items_not_in_previous_cart(df, idx, ctx):
     """
     purchased_items should be a subset of the previous cart.
 

@@ -3,21 +3,20 @@
 import random
 
 import pandas as pd
-from faker import Faker
 
-fake = Faker()
+from dirty_data_generation.helpers.dirty_utils import generate_future_date
 
 # =============================================================================
 # Missing Values
 # =============================================================================
 
 
-def missing_review_date(df, idx, ctx):
+def missing_review_date(df, idx):
 
     df.at[idx, "review_date"] = None
 
 
-def missing_rating(df, idx, ctx):
+def missing_rating(df, idx):
 
     df.at[idx, "rating"] = None
 
@@ -27,7 +26,7 @@ def missing_rating(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_review_id_format(df, idx, ctx):
+def invalid_review_id_format(df, idx):
 
     value = df.at[idx, "review_id"]
 
@@ -51,7 +50,7 @@ def invalid_review_id_format(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_review_id(df, idx, ctx):
+def duplicate_review_id(df, idx):
 
     other_review_ids = df[df.index != idx]["review_id"].dropna().tolist()
 
@@ -66,9 +65,9 @@ def duplicate_review_id(df, idx, ctx):
 # =============================================================================
 
 
-def rating_out_of_bounds(df, idx, ctx):
+def rating_out_of_range(df, idx):
     """
-    Rating should be between 1 and 5.
+    Rating must be between 1 and 5 inclusive.
     """
 
     value = df.at[idx, "rating"]
@@ -90,12 +89,12 @@ def rating_out_of_bounds(df, idx, ctx):
 # =============================================================================
 
 
-def future_review_date(df, idx, ctx):
+def future_review_date(df, idx):
 
     if pd.isna(df.at[idx, "review_date"]):
         return
 
-    df.at[idx, "review_date"] = pd.Timestamp(fake.future_date("+5y"))
+    df.at[idx, "review_date"] = pd.Timestamp(generate_future_date())
 
 
 def review_before_transaction(df, idx, ctx):
@@ -119,16 +118,18 @@ def review_before_transaction(df, idx, ctx):
     )
 
 
-def duplicate_transaction_product_pair(df, idx, ctx):
+def duplicate_transaction_product_pair(df, idx):
     """
-    Duplicate (transaction_id, product_id) combination.
+    Creates a duplicate (transaction_id, product_id) combination.
     """
-    others = df[df.index != idx]
 
-    if others.empty:
+    key_columns = ["transaction_id", "product_id"]
+    other_rows = df[df.index != idx]
+
+    if other_rows.empty:
         return
 
-    other = others.sample(1).iloc[0]
+    source_idx = random.choice(other_rows.index.tolist())
 
-    df.at[idx, "transaction_id"] = other["transaction_id"]
-    df.at[idx, "product_id"] = other["product_id"]
+    for column in key_columns:
+        df.at[idx, column] = df.at[source_idx, column]

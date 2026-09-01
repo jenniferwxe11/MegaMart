@@ -11,12 +11,12 @@ from dirty_data_generation.corruption_rules.bundle_items_rules import (
 )
 from dirty_data_generation.corruption_rules.bundle_pricings_rules import (
     bundle_price_below_cost,
-    bundle_price_out_of_bounds,
+    bundle_price_out_of_range,
     bundle_price_progression_violation,
     bundle_pricing_lifecycle_gap,
     bundle_pricing_phase_out_of_order,
     discount_exceeds_bundle_price,
-    discount_value_out_of_bounds,
+    discount_value_out_of_range,
     discount_value_progression_violation,
     duplicate_bundle_pricing_phase,
     end_date_before_start_date,
@@ -55,8 +55,8 @@ BUNDLE_PRICINGS_RULES = [
     (0.03, missing_discount_value),
     (0.03, missing_pricing_phase),
     # Range Validation
-    (0.02, bundle_price_out_of_bounds),
-    (0.02, discount_value_out_of_bounds),
+    (0.02, bundle_price_out_of_range),
+    (0.02, discount_value_out_of_range),
     # Business Rule Violations
     (0.02, end_date_before_start_date),
     (0.02, duplicate_bundle_pricing_phase),

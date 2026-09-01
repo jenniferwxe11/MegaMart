@@ -1,54 +1,59 @@
+# dirty_data_generation/corruption_rules/campaigns_rules.py
+
 import random
 from datetime import timedelta
 
 import pandas as pd
+
+from data_generation.config.campaigns_config import SEASON_CODE_MAP
+from dirty_data_generation.helpers.dirty_utils import generate_future_date
 
 # =============================================================================
 # Missing Values
 # =============================================================================
 
 
-def missing_campaign_name(df, idx, ctx):
+def missing_campaign_name(df, idx):
 
     df.at[idx, "campaign_name"] = None
 
 
-def missing_campaign_type(df, idx, ctx):
+def missing_campaign_type(df, idx):
 
     df.at[idx, "campaign_type"] = None
 
 
-def missing_target_segment(df, idx, ctx):
+def missing_target_segment(df, idx):
 
     df.at[idx, "target_segment"] = None
 
 
-def missing_channels(df, idx, ctx):
+def missing_channels(df, idx):
 
     df.at[idx, "channels"] = []
 
 
-def missing_start_date(df, idx, ctx):
+def missing_start_date(df, idx):
 
     df.at[idx, "start_date"] = None
 
 
-def missing_end_date(df, idx, ctx):
+def missing_end_date(df, idx):
 
     df.at[idx, "end_date"] = None
 
 
-def missing_budget(df, idx, ctx):
+def missing_budget(df, idx):
 
     df.at[idx, "budget"] = None
 
 
-def missing_is_ab_test(df, idx, ctx):
+def missing_is_ab_test(df, idx):
 
     df.at[idx, "is_ab_test"] = pd.NA
 
 
-def missing_status(df, idx, ctx):
+def missing_status(df, idx):
 
     df.at[idx, "status"] = None
 
@@ -58,14 +63,7 @@ def missing_status(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_campaign_type(df, idx, ctx):
-    """
-    campaign_type must be one of:
-        Acquisition
-        Retention
-        Clearance
-        Seasonal
-    """
+def invalid_campaign_type(df, idx):
 
     if pd.isna(df.at[idx, "campaign_type"]):
         return
@@ -81,15 +79,7 @@ def invalid_campaign_type(df, idx, ctx):
     )
 
 
-def invalid_target_segment(df, idx, ctx):
-    """
-    target_segment must be one of:
-        New Customers
-        Active Customers
-        Churn Risk Customers
-        High Spenders
-        Budget Shoppers
-    """
+def invalid_target_segment(df, idx):
 
     if pd.isna(df.at[idx, "target_segment"]):
         return
@@ -105,14 +95,7 @@ def invalid_target_segment(df, idx, ctx):
     )
 
 
-def invalid_status(df, idx, ctx):
-    """
-    status must be one of:
-        Planned
-        Active
-        Completed
-        Cancelled
-    """
+def invalid_status(df, idx):
 
     if pd.isna(df.at[idx, "status"]):
         return
@@ -133,7 +116,7 @@ def invalid_status(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_campaign_id_format(df, idx, ctx):
+def invalid_campaign_id_format(df, idx):
 
     value = df.at[idx, "campaign_id"]
 
@@ -156,7 +139,7 @@ def invalid_campaign_id_format(df, idx, ctx):
     df.at[idx, "campaign_id"] = random.choice(corruptions)(value)
 
 
-def invalid_campaign_name(df, idx, ctx):
+def invalid_campaign_name(df, idx):
     """
     campaign_name must start with 'MegaMart'.
     """
@@ -184,7 +167,7 @@ def invalid_campaign_name(df, idx, ctx):
 # =============================================================================
 
 
-def budget_out_of_range(df, idx, ctx):
+def budget_out_of_range(df, idx):
     """
     budget must be more than 0 and less than 10000000.
     """
@@ -208,7 +191,7 @@ def budget_out_of_range(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_channel_inside_channels(df, idx, ctx):
+def duplicate_channel_inside_channels(df, idx):
     """
     channels must not contain duplicate channel values.
     """
@@ -222,7 +205,7 @@ def duplicate_channel_inside_channels(df, idx, ctx):
     df.at[idx, "channels"] = channels + [channel]
 
 
-def invalid_campaign_period(df, idx, ctx):
+def invalid_campaign_period(df, idx):
     """
     start_date must be <= end_date.
     """
@@ -240,7 +223,7 @@ def invalid_campaign_period(df, idx, ctx):
         df.at[idx, "start_date"] = end + timedelta(days=random.randint(1, 30))
 
 
-def season_campaign_type_inconsistency(df, idx, ctx):
+def season_campaign_type_inconsistency(df, idx):
     """
     Seasonal campaigns must have a season.
     Non-seasonal campaigns must have NULL season.
@@ -254,18 +237,10 @@ def season_campaign_type_inconsistency(df, idx, ctx):
     if campaign_type == "Seasonal":
         df.at[idx, "season"] = None
     else:
-        df.at[idx, "season"] = random.choice(
-            [
-                "Chinese New Year",
-                "Christmas",
-                "11.11",
-                "Hari Raya",
-                "Black Friday",
-            ]
-        )
+        df.at[idx, "season"] = random.choice(list(SEASON_CODE_MAP.keys()))
 
 
-def campaign_without_marketing_channels(df, idx, ctx):
+def campaign_without_marketing_channels(df, idx):
     """
     Campaign must contain at least one marketing channel.
     """
@@ -284,7 +259,7 @@ def campaign_without_marketing_channels(df, idx, ctx):
     df.at[idx, "channels"] = []
 
 
-def completed_campaign_future_end_date(df, idx, ctx):
+def completed_campaign_future_end_date(df, idx):
     """
     Completed campaigns must not have an end_date in the future.
     """
@@ -297,6 +272,4 @@ def completed_campaign_future_end_date(df, idx, ctx):
     if status != "Completed":
         return
 
-    df.at[idx, "end_date"] = pd.Timestamp.today().normalize() + pd.Timedelta(
-        days=random.randint(1, 365)
-    )
+    df.at[idx, "end_date"] = pd.Timestamp(generate_future_date())

@@ -21,9 +21,9 @@ def missing_quantity(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_bundle_item_quantity(df, idx, ctx):
+def invalid_bundle_item_quantity(df, idx):
     """
-    Bundle item quantity must be at least 1.
+    Bundle item quantity must be more than 0 and less than 100000.
     """
     value = df.at[idx, "quantity"]
 
@@ -44,7 +44,7 @@ def invalid_bundle_item_quantity(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_product_within_bundle(df, idx, ctx):
+def duplicate_product_within_bundle(df, idx):
     """
     Each bundle-product combination should be unique.
     Creates a duplicate product within the same bundle.

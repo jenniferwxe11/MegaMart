@@ -9,17 +9,17 @@ import pandas as pd
 # =============================================================================
 
 
-def missing_bundle_price(df, idx, ctx):
+def missing_bundle_price(df, idx):
 
     df.at[idx, "bundle_price"] = None
 
 
-def missing_discount_value(df, idx, ctx):
+def missing_discount_value(df, idx):
 
     df.at[idx, "discount_value"] = None
 
 
-def missing_pricing_phase(df, idx, ctx):
+def missing_pricing_phase(df, idx):
 
     df.at[idx, "pricing_phase"] = None
 
@@ -29,9 +29,9 @@ def missing_pricing_phase(df, idx, ctx):
 # =============================================================================
 
 
-def bundle_price_out_of_bounds(df, idx, ctx):
+def bundle_price_out_of_range(df, idx):
     """
-    Bundle price should be between 0 and 100000.
+    Bundle price must be more than 0 and less than 100000.
     """
 
     value = df.at[idx, "bundle_price"]
@@ -42,15 +42,15 @@ def bundle_price_out_of_bounds(df, idx, ctx):
     corruptions = [
         lambda _: 0,
         lambda x: -abs(x),
-        lambda _: random.uniform(100001, 250000),
+        lambda _: round(random.uniform(100001, 250000), 2),
     ]
 
     df.at[idx, "bundle_price"] = random.choice(corruptions)(value)
 
 
-def discount_value_out_of_bounds(df, idx, ctx):
+def discount_value_out_of_range(df, idx):
     """
-    Discount value should be between 0 and 100000.
+    Discount value must be more than 0 and less than 100000.
     """
 
     value = df.at[idx, "discount_value"]
@@ -61,7 +61,7 @@ def discount_value_out_of_bounds(df, idx, ctx):
     corruptions = [
         lambda _: 0,
         lambda x: -abs(x),
-        lambda _: random.uniform(100001, 250000),
+        lambda _: round(random.uniform(100001, 250000), 2),
     ]
 
     df.at[idx, "discount_value"] = random.choice(corruptions)(value)
@@ -72,7 +72,7 @@ def discount_value_out_of_bounds(df, idx, ctx):
 # =============================================================================
 
 
-def end_date_before_start_date(df, idx, ctx):
+def end_date_before_start_date(df, idx):
 
     if pd.isna(df.at[idx, "effective_start_date"]) or pd.isna(
         df.at[idx, "effective_end_date"]
@@ -84,12 +84,12 @@ def end_date_before_start_date(df, idx, ctx):
     ] - pd.Timedelta(days=random.randint(30, 365))
 
 
-def duplicate_bundle_pricing_phase(df, idx, ctx):
+def duplicate_bundle_pricing_phase(df, idx):
     """
-    Each bundle should only have one pricing record for each pricing phase.
-    Creates a duplicate pricing phase for the same bundle.
+    Creates a duplicate (bundle_id, pricing_phase) combination.
     """
 
+    key_columns = ["bundle_id", "pricing_phase"]
     bundle_id = df.at[idx, "bundle_id"]
 
     other_rows = df[(df["bundle_id"] == bundle_id) & (df.index != idx)]
@@ -97,12 +97,13 @@ def duplicate_bundle_pricing_phase(df, idx, ctx):
     if other_rows.empty:
         return
 
-    other_idx = random.choice(other_rows.index.tolist())
+    source_idx = random.choice(other_rows.index.tolist())
 
-    df.at[idx, "pricing_phase"] = df.at[other_idx, "pricing_phase"]
+    for column in key_columns:
+        df.at[idx, column] = df.at[source_idx, column]
 
 
-def discount_exceeds_bundle_price(df, idx, ctx):
+def discount_exceeds_bundle_price(df, idx):
     """
     discount_value must be less than or equal to bundle_price.
     """
@@ -122,7 +123,7 @@ def discount_exceeds_bundle_price(df, idx, ctx):
     )
 
 
-def invalid_bundle_pricing_lifecycle(df, idx, ctx):
+def invalid_bundle_pricing_lifecycle(df, idx):
     """
     Bundle pricing phases must follow a continuous,
     chronological, non-overlapping lifecycle.
@@ -170,7 +171,7 @@ def invalid_bundle_pricing_lifecycle(df, idx, ctx):
         df.at[idx, "effective_end_date"] = other_start
 
 
-def bundle_pricing_phase_out_of_order(df, idx, ctx):
+def bundle_pricing_phase_out_of_order(df, idx):
     """
     Pricing phases should follow:
     LAUNCH -> PROMO -> EOL.
@@ -197,9 +198,10 @@ def bundle_pricing_phase_out_of_order(df, idx, ctx):
     df.at[idx, "pricing_phase"] = random.choice(possible_phases)
 
 
-def bundle_pricing_lifecycle_gap(df, idx, ctx):
+def bundle_pricing_lifecycle_gap(df, idx):
     """
     Consecutive bundle pricing phases should not contain gaps.
+
     Creates a gap between pricing periods.
     """
 
@@ -240,7 +242,7 @@ def bundle_pricing_lifecycle_gap(df, idx, ctx):
         )
 
 
-def bundle_price_progression_violation(df, idx, ctx):
+def bundle_price_progression_violation(df, idx):
     """
     Bundle prices should remain flat or decrease
     from LAUNCH -> PROMO -> EOL.
@@ -280,7 +282,7 @@ def bundle_price_progression_violation(df, idx, ctx):
     )
 
 
-def discount_value_progression_violation(df, idx, ctx):
+def discount_value_progression_violation(df, idx):
     """
     Bundle discount values should remain flat or increase
     from LAUNCH -> PROMO -> EOL.

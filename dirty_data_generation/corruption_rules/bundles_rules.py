@@ -9,17 +9,17 @@ import pandas as pd
 # =============================================================================
 
 
-def missing_bundle_name(df, idx, ctx):
+def missing_bundle_name(df, idx):
 
     df.at[idx, "bundle_name"] = None
 
 
-def missing_bundle_type(df, idx, ctx):
+def missing_bundle_type(df, idx):
 
     df.at[idx, "bundle_type"] = None
 
 
-def missing_categories(df, idx, ctx):
+def missing_categories(df, idx):
 
     df.at[idx, "categories"] = None
 
@@ -29,7 +29,7 @@ def missing_categories(df, idx, ctx):
 # =============================================================================
 
 
-def invalid_bundle_id_format(df, idx, ctx):
+def invalid_bundle_id_format(df, idx):
 
     value = df.at[idx, "bundle_id"]
 
@@ -53,41 +53,38 @@ def invalid_bundle_id_format(df, idx, ctx):
 # =============================================================================
 
 
-def duplicate_category_inside_bundle(df, idx, ctx):
+def duplicate_category_inside_bundle(df, idx):
     """
     Categories within a bundle should not contain duplicate values.
     """
 
     categories = df.at[idx, "categories"]
 
-    if categories is None or pd.isna(categories):
+    if not isinstance(categories, (list, tuple)) or not categories:
         return
 
-    if len(categories) == 0:
-        return
+    category = random.choice(categories)
 
-    unique_categories = list(dict.fromkeys(categories))
-
-    if len(unique_categories) < 2:
-        return
-
-    category = random.choice(unique_categories)
-
-    # Add a duplicate category.
     corrupted_categories = list(categories)
     corrupted_categories.append(category)
 
     df.at[idx, "categories"] = corrupted_categories
 
 
-def empty_bundle_categories(df, idx, ctx):
+def empty_bundle_categories(df, idx):
     """
     Every bundle should contain at least one category.
     """
 
     categories = df.at[idx, "categories"]
 
-    if categories is None or pd.isna(categories):
+    if categories is None:
+        return
+
+    if not isinstance(categories, (list, tuple)):
+        return
+
+    if len(categories) == 0:
         return
 
     df.at[idx, "categories"] = []
