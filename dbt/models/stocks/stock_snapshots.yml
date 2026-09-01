@@ -67,6 +67,14 @@ models:
               severity: Medium
               description: stock_band and stock_status must represent a valid inventory classification.
 
+      - store_product_pair_exists_in_catalogue:
+          config:
+            meta:
+              title: Store Product Not In Catalogue
+              category: Business Rule Violations
+              severity: High
+              description: Each stock snapshot must reference a product that is carried by the specified store.
+
     # --- Column Constraints ---
     columns:
       - name: week_start_date
